@@ -306,8 +306,9 @@
 <section class="card">
   <h2><span class="n">4</span>Экспорт</h2>
   <div class="row">
-    <div><label>Имя конфигурации</label><input type="text" id="cfgName" value="IAEA lines" style="width:260px"></div>
+    <div><label>Имя конфигурации</label><input type="text" id="cfgName" value="IAEA lines" style="width:220px"></div>
     <div><button class="primary" id="btnXml">Скачать ROI .xml</button></div>
+    <div><label>Имя файла библиотеки</label><input type="text" id="libName" value="NuclideDefinition" style="width:200px"></div>
     <div><button class="primary" id="btnNucXml">Скачать библиотеку нуклидов</button></div>
     <div><button id="btnPreview">Предпросмотр</button></div>
     <div class="stat" id="expStat"></div>
@@ -1027,7 +1028,8 @@ $("btnNucXml").addEventListener("click", function(){
   var blob = new Blob([xml], {type:"application/xml;charset=utf-8"});
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "NuclideDefinition.xml";
+  var fn = ($("libName").value||"NuclideDefinition").replace(/\.xml$/i,"");
+  a.download = fn+".xml";
   document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
 });
@@ -1083,6 +1085,7 @@ var RU2EN = {
   "R на 662 кэВ, % / множитель k":"R at 662 keV, % / factor k","Цвета":"Colors",
   "По цепочке/семейству":"By chain/family","Каждому нуклиду свой":"Per nuclide",
   "Экспорт":"Export","Имя конфигурации":"Configuration name","Скачать ROI .xml":"Download ROI .xml",
+  "Имя файла библиотеки":"Library file name",
   "Скачать библиотеку нуклидов":"Download nuclide library",
   "Предпросмотр":"Preview","◑ тема":"◑ theme"
 };
