@@ -307,12 +307,17 @@
   <h2><span class="n">4</span>Экспорт</h2>
   <div class="row">
     <div><label>Имя конфигурации</label><input type="text" id="cfgName" value="IAEA lines" style="width:260px"></div>
-    <div><button class="primary" id="btnXml">Скачать .xml</button></div>
+    <div><button class="primary" id="btnXml">Скачать ROI .xml</button></div>
+    <div><button class="primary" id="btnNucXml">Скачать библиотеку нуклидов</button></div>
     <div><button id="btnPreview">Предпросмотр</button></div>
     <div class="stat" id="expStat"></div>
   </div>
-  <p class="hint" id="expHint">Файл кладётся в <code>%APPDATA%\BecqMoni\config\ROI\</code> (обычно
-    <code>C:\Users\&lt;имя&gt;\AppData\Roaming\BecqMoni\config\ROI\</code>), после чего появится в списке ROI-конфигураций BecqMoni.</p>
+  <p class="hint" id="expHint"><b>ROI-конфигурация</b> кладётся в <code>%APPDATA%\BecqMoni\config\ROI\</code> (обычно
+    <code>C:\Users\&lt;имя&gt;\AppData\Roaming\BecqMoni\config\ROI\</code>) и появляется в списке ROI-конфигураций BecqMoni.
+    <b>Библиотека нуклидов</b> — симметричный экспорт того же набора линий в формате
+    <code>NuclideDefinition.xml</code> (маркеры нуклидов на спектре): файл заменяет единый
+    <code>%APPDATA%\BecqMoni\config\NuclideDefinition.xml</code> — <b>сделайте резервную копию</b>,
+    он перезаписывается целиком.</p>
   <pre id="xmlPrev" style="display:none"></pre>
 </section>
 
@@ -815,6 +820,30 @@ function toXml(){
   s += '  </ROIDefinitions>\n  <ROIEfficiency />\n  <Note />\n</ROIConfigData>';
   return s;
 }
+// симметричный экспорт: библиотека нуклидов BecqMoni (NuclideDefinition.xml)
+// формат — как в %APPDATA%\BecqMoni\config\NuclideDefinition.xml: плоский список маркеров
+function toNuclideXml(){
+  var lines = sel.lines.filter(function(L){ return L.sel; });
+  lines.sort(function(a,b){ return a.E-b.E; });
+  var s = '<?xml version="1.0"?>\n'+
+    '<NuclideDefinitionFile xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+
+    '  <NuclideDefinitions>\n';
+  lines.forEach(function(L){
+    // конвенция файла-образца: у нераспадных записей (ХРИ, вторичные) HalfLife = 0
+    var hl = (L.type==="xrf"||L.type==="sec") ? 0 : (L.hlY && isFinite(L.hlY) ? L.hlY : 0);
+    s += '    <Nuclide>\n'+
+      '      <Name>'+esc(L.label)+'</Name>\n'+
+      '      <Energy>'+L.E+'</Energy>\n'+
+      '      <HalfLife>'+hl+'</HalfLife>\n'+
+      '      <NuclideColor>'+lineColor(L).toUpperCase()+'</NuclideColor>\n'+
+      '      <Note />\n'+
+      '      <Visible>true</Visible>\n'+
+      '      <Intencity>'+L.I+'</Intencity>\n'+
+      '    </Nuclide>\n';
+  });
+  s += '  </NuclideDefinitions>\n</NuclideDefinitionFile>';
+  return s;
+}
 function renderExpStat(){
   var n = sel.lines.filter(function(L){return L.sel;}).length;
   $("expStat").innerHTML = T("ROI к экспорту: ","ROI to export: ")+"<b>"+n+"</b>";
@@ -978,6 +1007,18 @@ $("btnXml").addEventListener("click", function(){
   document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
 });
+$("btnNucXml").addEventListener("click", function(){
+  var iss = checkIssues();
+  if (iss.length && !confirm(T("Проверка данных нашла ","Data check found ")+iss.length+T(" замечаний:\n\n⚠ "," issues:\n\n⚠ ")+
+      iss.slice(0,8).join("\n⚠ ")+(iss.length>8?"\n…":"")+T("\n\nВсё равно сохранить?","\n\nSave anyway?"))) return;
+  var xml = toNuclideXml();
+  var blob = new Blob([xml], {type:"application/xml;charset=utf-8"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "NuclideDefinition.xml";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+});
 $("themeBtn").addEventListener("click", function(){
   var cur = document.documentElement.getAttribute("data-theme");
   var next = cur==="dark" ? "light" : (cur==="light" ? "dark" :
@@ -1029,7 +1070,8 @@ var RU2EN = {
   "k × FWHM (сцинтиллятор)":"k × FWHM (scintillator)","Ширина, % от E":"Width, % of E",
   "R на 662 кэВ, % / множитель k":"R at 662 keV, % / factor k","Цвета":"Colors",
   "По цепочке/семейству":"By chain/family","Каждому нуклиду свой":"Per nuclide",
-  "Экспорт":"Export","Имя конфигурации":"Configuration name","Скачать .xml":"Download .xml",
+  "Экспорт":"Export","Имя конфигурации":"Configuration name","Скачать ROI .xml":"Download ROI .xml",
+  "Скачать библиотеку нуклидов":"Download nuclide library",
   "Предпросмотр":"Preview","◑ тема":"◑ theme"
 };
 var PARA_EN = {
@@ -1039,7 +1081,7 @@ var PARA_EN = {
   resHint:'<b>R</b> — detector resolution (FWHM at 662 keV): NaI(Tl) 6.5–8 %, CsI(Tl) 8–10 %, SrI₂(Eu) 3–3.5 %, LaBr₃ 2.7–3.3 %. Peaks broaden as √E: FWHM(E) = R·√(662·E)/100 — a <b>scintillator</b> model (LaBr₃/NaI/SrI₂/CsI); for HPGe (R ~0.15 %) it underestimates the width at low energies — a √(a+bE) law would be needed (not implemented here). <b>Window</b> — how far apart lines are treated as unresolvable: 2×FWHM — conservative, 3×FWHM — standard identification window, 4–5 — coarse, for NaI with poor statistics. <span id="mergeHint"></span>',
   eqHint:'Unchecked: I is “per 100 decays of the emitting nuclide”, as in the IAEA database and BecqMoni “Intensities” files: the Tl-208 2614 keV line has I = 99.75 %. But in the equilibrium Th-232 series only 35.94 % of decays pass through Tl-208 (Bi-212 branching: β 64 % / α 36 %), so <b>per one Th-232 decay</b> this line yields 99.75 × 0.3594 ≈ 35.85 %. The checkbox applies this factor to members behind branch points (Tl-208 ×0.3594, Po-212 ×0.6406; in the U-235 series: Th-227 ×0.9862, Fr-223 ×0.0138, Tl-207 ×0.99724, Po-211 ×0.00276); all other members — ×1. Enable when the ROI set describes an equilibrium series as a whole; disable for handbook values.',
   secHint:'BS = E/(1+2E/511); CE = E−BS; SE = E−511 (E&gt;1122); DE = E−1022 (E&gt;1222); I-escape for E&lt;200 keV. <b>SUM</b> = E1+E2 — true-coincidence summing of cascade lines of one nuclide (close geometry: Co-60 → 2505, Y-88 → 2734); <b>PU</b> = 2×E — pulse pile-up of one strong line at high count rate (Cs-137 → 1324). Marker intensity: 10 % of the parent line (for SUM — of the weaker of the pair). Formulas: Knoll ch. 10–12, 17.',
-  expHint:'Place the file into <code>%APPDATA%\\BecqMoni\\config\\ROI\\</code> (usually <code>C:\\Users\\&lt;name&gt;\\AppData\\Roaming\\BecqMoni\\config\\ROI\\</code>) — the configuration will appear in the BecqMoni ROI list.',
+  expHint:'<b>ROI configuration</b> goes into <code>%APPDATA%\\BecqMoni\\config\\ROI\\</code> (usually <code>C:\\Users\\&lt;name&gt;\\AppData\\Roaming\\BecqMoni\\config\\ROI\\</code>) and appears in the BecqMoni ROI list. <b>Nuclide library</b> — a symmetric export of the same line set in <code>NuclideDefinition.xml</code> format (nuclide markers on the spectrum): the file replaces the single <code>%APPDATA%\\BecqMoni\\config\\NuclideDefinition.xml</code> — <b>make a backup</b>, it is overwritten entirely.',
   wHint:'FWHM(E) = R₆₆₂·√(662·E)/100; zone = E ± k·FWHM/2. Limits are rounded outward to whole keV.',
   footerText:'Data: IAEA Live Chart of Nuclides API snapshot (ENSDF) — <code>data/nuclides.js</code>, updated by <code>update_nuclides.py</code> (the API sends no CORS headers, so updates run via the script; the page is fully offline). XRF: NIST/Bearden. Secondary peaks: computed (Knoll, Gilmore &amp; Joss). Bq/cps coefficients are left at 0 — set them in BecqMoni from your efficiency curve. <a href="https://github.com/VibeEngineering-LLC/becqmoni-roi-wizard" target="_blank" rel="noopener">Sources on GitHub</a> · VibeEngineering · 2026 · unofficial tool, not part of <a href="https://github.com/Am6er/BecqMoni" target="_blank" rel="noopener">BecqMoni</a>.'
 };
