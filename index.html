@@ -95,6 +95,7 @@
 <div class="wrap">
 
 <h1>ROI-мастер для BecqMoni</h1>
+<p class="sub" id="sub0" style="font-weight:700; color:var(--accent-ink)">ROI-конфигурации и библиотеки нуклидов из ядерных данных IAEA</p>
 <p class="sub" id="sub1">Гамма-линии и ХРИ из снимка IAEA Live Chart (ENSDF) → выбор изотопов/семейств/цепочек →
 оформление → экспорт <code>.xml</code> в формате BecqMoni (FormatVersion 120920).</p>
 <p class="sub" id="dbinfo"></p>
@@ -308,17 +309,21 @@
   <div class="row">
     <div><label>Имя конфигурации</label><input type="text" id="cfgName" value="IAEA lines" style="width:220px"></div>
     <div><button class="primary" id="btnXml">Скачать ROI .xml</button></div>
-    <div><label>Имя файла библиотеки</label><input type="text" id="libName" value="NuclideDefinition" style="width:200px"></div>
+    <div><label>Имя набора (NuclideSet)</label><input type="text" id="libName" value="NuclideSet" style="width:200px"></div>
     <div><button class="primary" id="btnNucXml">Скачать библиотеку нуклидов</button></div>
+    <div><button id="btnNucMerge" title="Выбрать текущий NuclideDefinition.xml — набор добавится к нему, существующие маркеры сохранятся">Влить в существующий…</button>
+      <input type="file" id="mergeFile" accept=".xml" style="display:none"></div>
     <div><button id="btnPreview">Предпросмотр</button></div>
     <div class="stat" id="expStat"></div>
   </div>
   <p class="hint" id="expHint"><b>ROI-конфигурация</b> кладётся в <code>%APPDATA%\BecqMoni\config\ROI\</code> (обычно
     <code>C:\Users\&lt;имя&gt;\AppData\Roaming\BecqMoni\config\ROI\</code>) и появляется в списке ROI-конфигураций BecqMoni.
-    <b>Библиотека нуклидов</b> — симметричный экспорт того же набора линий в формате
-    <code>NuclideDefinition.xml</code> (маркеры нуклидов на спектре): файл заменяет единый
-    <code>%APPDATA%\BecqMoni\config\NuclideDefinition.xml</code> — <b>сделайте резервную копию</b>,
-    он перезаписывается целиком.</p>
+    <b>Библиотека нуклидов</b> — симметричный экспорт того же набора линий как
+    <b>набор нуклидов (NuclideSet)</b> в формате <code>NuclideDefinition.xml</code>: записи получают
+    guid-привязку к именованному набору. «Скачать» даёт отдельный файл (замена
+    <code>%APPDATA%\BecqMoni\config\NuclideDefinition.xml</code> — сделайте резервную копию);
+    «<b>Влить в существующий…</b>» — выбираете свой текущий файл, набор добавляется к нему,
+    все ваши маркеры и наборы сохраняются.</p>
   <pre id="xmlPrev" style="display:none"></pre>
 </section>
 
@@ -333,8 +338,8 @@
 </footer>
 </div>
 
-<script src="data/nuclides.js?v=20260724b"></script>
-<script src="data/xrf.js?v=20260724b"></script>
+<script src="data/nuclides.js?v=20260725"></script>
+<script src="data/xrf.js?v=20260725"></script>
 <script>
 "use strict";
 var DB = window.NUCLIDE_DB, XRF = window.XRF_DB;
@@ -364,7 +369,8 @@ function T(ru,en){ return LANG==="en" ? en : ru; }
 var CHAIN_EN = {u238:"U-238 series (uranium–radium)", th232:"Th-232 series (thorium)",
                 u235:"U-235 series (uranium–actinium)"};
 var FAM_EN = {erh:"NORM (natural)", med:"Medical", fission:"Fission products",
-              tech:"Industrial & calibration"};
+              tech:"Industrial & calibration", naa:"Neutron activation (NAA)",
+              waste:"Nuclear waste / spent fuel"};
 function chainTitle(c){ return LANG==="en" ? CHAIN_EN[c] : DB.chains[c].title; }
 function famTitle(f){ return LANG==="en" ? FAM_EN[f] : DB.families[f]; }
 function locHl(s){
@@ -833,18 +839,21 @@ function toXml(){
   s += '  </ROIDefinitions>\n  <ROIEfficiency />\n  <Note />\n</ROIConfigData>';
   return s;
 }
-// симметричный экспорт: библиотека нуклидов BecqMoni (NuclideDefinition.xml)
-// формат — как в %APPDATA%\BecqMoni\config\NuclideDefinition.xml: плоский список маркеров
-function toNuclideXml(){
+// симметричный экспорт: библиотека нуклидов BecqMoni как НАБОР (NuclideSet).
+// Формат NuclideDefinitionFile: секция NuclideDefinitions (записи <Nuclide> c guid-ссылками
+// Sets на наборы) + секция NuclideSets (<NuclideSet> Id/Name/HideUnknownPeaks).
+function newGuid(){
+  return (crypto.randomUUID) ? crypto.randomUUID() :
+    "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){
+      var r=Math.random()*16|0, v=c==="x"?r:(r&3|8); return v.toString(16);});
+}
+function nuclideEntries(setGuid){
   var lines = sel.lines.filter(function(L){ return L.sel; });
   lines.sort(function(a,b){ return a.E-b.E; });
-  var s = '<?xml version="1.0"?>\n'+
-    '<NuclideDefinitionFile xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+
-    '  <NuclideDefinitions>\n';
-  lines.forEach(function(L){
+  return lines.map(function(L){
     // конвенция файла-образца: у нераспадных записей (ХРИ, вторичные) HalfLife = 0
     var hl = (L.type==="xrf"||L.type==="sec") ? 0 : (L.hlY && isFinite(L.hlY) ? L.hlY : 0);
-    s += '    <Nuclide>\n'+
+    return '    <Nuclide>\n'+
       '      <Name>'+esc(L.label)+'</Name>\n'+
       '      <Energy>'+L.E+'</Energy>\n'+
       '      <HalfLife>'+hl+'</HalfLife>\n'+
@@ -852,10 +861,45 @@ function toNuclideXml(){
       '      <Note />\n'+
       '      <Visible>true</Visible>\n'+
       '      <Intencity>'+L.I+'</Intencity>\n'+
+      '      <Sets>\n        <guid>'+setGuid+'</guid>\n      </Sets>\n'+
+      '      <IsAnchor>false</IsAnchor>\n'+
       '    </Nuclide>\n';
+  }).join("");
+}
+function setEntry(setGuid){
+  return '    <NuclideSet>\n'+
+    '      <Id>'+setGuid+'</Id>\n'+
+    '      <Name>'+esc($("libName").value||"NuclideSet")+'</Name>\n'+
+    '      <HideUnknownPeaks>false</HideUnknownPeaks>\n'+
+    '    </NuclideSet>\n';
+}
+function toNuclideXml(){
+  var g = newGuid();
+  return '<?xml version="1.0"?>\n'+
+    '<NuclideDefinitionFile xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+
+    '  <NuclideDefinitions>\n'+ nuclideEntries(g) +
+    '  </NuclideDefinitions>\n'+
+    '  <NuclideSets>\n'+ setEntry(g) +
+    '  </NuclideSets>\n</NuclideDefinitionFile>';
+}
+// вливание набора в существующий NuclideDefinition.xml (маркеры пользователя сохраняются)
+function mergeNuclideXml(existingText){
+  var doc = new DOMParser().parseFromString(existingText, "application/xml");
+  if (doc.querySelector("parsererror") || !doc.querySelector("NuclideDefinitionFile"))
+    throw new Error(T("Файл не похож на NuclideDefinition.xml","Not a NuclideDefinition.xml file"));
+  var g = newGuid();
+  var frag = new DOMParser().parseFromString(
+    '<R>'+nuclideEntries(g)+'</R>', "application/xml");
+  var defs = doc.querySelector("NuclideDefinitions");
+  if (!defs){ defs = doc.createElement("NuclideDefinitions"); doc.documentElement.appendChild(defs); }
+  Array.prototype.slice.call(frag.documentElement.children).forEach(function(n){
+    defs.appendChild(doc.importNode(n, true));
   });
-  s += '  </NuclideDefinitions>\n</NuclideDefinitionFile>';
-  return s;
+  var setsEl = doc.querySelector("NuclideSets");
+  if (!setsEl){ setsEl = doc.createElement("NuclideSets"); doc.documentElement.appendChild(setsEl); }
+  var setFrag = new DOMParser().parseFromString('<R>'+setEntry(g)+'</R>', "application/xml");
+  setsEl.appendChild(doc.importNode(setFrag.documentElement.firstElementChild, true));
+  return '<?xml version="1.0"?>\n'+new XMLSerializer().serializeToString(doc.documentElement);
 }
 function renderExpStat(){
   var n = sel.lines.filter(function(L){return L.sel;}).length;
@@ -1033,6 +1077,24 @@ $("btnNucXml").addEventListener("click", function(){
   document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
 });
+$("btnNucMerge").addEventListener("click", function(){ $("mergeFile").click(); });
+$("mergeFile").addEventListener("change", function(){
+  var f = this.files[0]; this.value = "";
+  if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    var xml;
+    try { xml = mergeNuclideXml(rd.result); }
+    catch(e){ alert(e.message); return; }
+    var blob = new Blob([xml], {type:"application/xml;charset=utf-8"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = f.name || "NuclideDefinition.xml";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  };
+  rd.readAsText(f);
+});
 $("themeBtn").addEventListener("click", function(){
   var cur = document.documentElement.getAttribute("data-theme");
   var next = cur==="dark" ? "light" : (cur==="light" ? "dark" :
@@ -1085,18 +1147,20 @@ var RU2EN = {
   "R на 662 кэВ, % / множитель k":"R at 662 keV, % / factor k","Цвета":"Colors",
   "По цепочке/семейству":"By chain/family","Каждому нуклиду свой":"Per nuclide",
   "Экспорт":"Export","Имя конфигурации":"Configuration name","Скачать ROI .xml":"Download ROI .xml",
-  "Имя файла библиотеки":"Library file name",
+  "Имя набора (NuclideSet)":"Set name (NuclideSet)",
   "Скачать библиотеку нуклидов":"Download nuclide library",
+  "Влить в существующий…":"Merge into existing…",
   "Предпросмотр":"Preview","◑ тема":"◑ theme"
 };
 var PARA_EN = {
+  sub0:'ROI configurations and nuclide libraries from IAEA nuclear data',
   sub1:'Gamma and X-ray lines from an IAEA Live Chart (ENSDF) snapshot → pick nuclides/families/chains → styling → export <code>.xml</code> in BecqMoni format (FormatVersion 120920).',
   chainHint:'Chain members with no γ/X lines above the database threshold are greyed out.',
   xrfHint:'Kα/Kβ (+L for heavy elements). Intensities are relative (Kα1=100) — markers only.',
   resHint:'<b>R</b> — detector resolution (FWHM at 662 keV): NaI(Tl) 6.5–8 %, CsI(Tl) 8–10 %, SrI₂(Eu) 3–3.5 %, LaBr₃ 2.7–3.3 %. Peaks broaden as √E: FWHM(E) = R·√(662·E)/100 — a <b>scintillator</b> model (LaBr₃/NaI/SrI₂/CsI); for HPGe (R ~0.15 %) it underestimates the width at low energies — a √(a+bE) law would be needed (not implemented here). <b>Window</b> — how far apart lines are treated as unresolvable: 2×FWHM — conservative, 3×FWHM — standard identification window, 4–5 — coarse, for NaI with poor statistics. <span id="mergeHint"></span>',
   eqHint:'Unchecked: I is “per 100 decays of the emitting nuclide”, as in the IAEA database and BecqMoni “Intensities” files: the Tl-208 2614 keV line has I = 99.75 %. But in the equilibrium Th-232 series only 35.94 % of decays pass through Tl-208 (Bi-212 branching: β 64 % / α 36 %), so <b>per one Th-232 decay</b> this line yields 99.75 × 0.3594 ≈ 35.85 %. The checkbox applies this factor to members behind branch points (Tl-208 ×0.3594, Po-212 ×0.6406; in the U-235 series: Th-227 ×0.9862, Fr-223 ×0.0138, Tl-207 ×0.99724, Po-211 ×0.00276); all other members — ×1. Enable when the ROI set describes an equilibrium series as a whole; disable for handbook values.',
   secHint:'BS = E/(1+2E/511); CE = E−BS; SE = E−511 (E&gt;1122); DE = E−1022 (E&gt;1222); I-escape for E&lt;200 keV. <b>SUM</b> = E1+E2 — true-coincidence summing of cascade lines of one nuclide (close geometry: Co-60 → 2505, Y-88 → 2734); <b>PU</b> = 2×E — pulse pile-up of one strong line at high count rate (Cs-137 → 1324). Marker intensity: 10 % of the parent line (for SUM — of the weaker of the pair). Formulas: Knoll ch. 10–12, 17.',
-  expHint:'<b>ROI configuration</b> goes into <code>%APPDATA%\\BecqMoni\\config\\ROI\\</code> (usually <code>C:\\Users\\&lt;name&gt;\\AppData\\Roaming\\BecqMoni\\config\\ROI\\</code>) and appears in the BecqMoni ROI list. <b>Nuclide library</b> — a symmetric export of the same line set in <code>NuclideDefinition.xml</code> format (nuclide markers on the spectrum): the file replaces the single <code>%APPDATA%\\BecqMoni\\config\\NuclideDefinition.xml</code> — <b>make a backup</b>, it is overwritten entirely.',
+  expHint:'<b>ROI configuration</b> goes into <code>%APPDATA%\\BecqMoni\\config\\ROI\\</code> (usually <code>C:\\Users\\&lt;name&gt;\\AppData\\Roaming\\BecqMoni\\config\\ROI\\</code>) and appears in the BecqMoni ROI list. <b>Nuclide library</b> — a symmetric export of the same line selection as a named <b>NuclideSet</b> in <code>NuclideDefinition.xml</code> format: entries get a guid link to the set. “Download” gives a standalone file (replaces the single <code>%APPDATA%\\BecqMoni\\config\\NuclideDefinition.xml</code> — make a backup); “<b>Merge into existing…</b>” — pick your current file, the set is appended and all your markers and sets are preserved.',
   wHint:'FWHM(E) = R₆₆₂·√(662·E)/100; zone = E ± k·FWHM/2. Limits are rounded outward to whole keV.',
   footerText:'Data: IAEA Live Chart of Nuclides API snapshot (ENSDF) — <code>data/nuclides.js</code>, updated by <code>update_nuclides.py</code> (the API sends no CORS headers, so updates run via the script; the page is fully offline). XRF: NIST/Bearden. Secondary peaks: computed (Knoll, Gilmore &amp; Joss). Bq/cps coefficients are left at 0 — set them in BecqMoni from your efficiency curve. <a href="https://github.com/VibeEngineering-LLC/becqmoni-roi-wizard" target="_blank" rel="noopener">Sources on GitHub</a> · VibeEngineering · 2026 · unofficial tool, not part of <a href="https://github.com/Am6er/BecqMoni" target="_blank" rel="noopener">BecqMoni</a>.'
 };

@@ -24,8 +24,9 @@ E_MIN   = 4.0                # кэВ — ниже не берём
 # ── Каталог: имя → (api-нуклид, энергия уровня материнского состояния [кэВ] или 0, семейства, цепочка) ──
 # families: erh (ЕРН), med, fission, tech; цепочки: u238, th232, u235
 CAT = {}
-def N(name, api, state=0.0, fam=(), chain=None, note=""):
-    CAT[name] = dict(api=api, state=state, fam=list(fam), chain=chain, note=note)
+def N(name, api, state=0.0, fam=(), chain=None, note="", gmin=None):
+    # gmin — индивидуальный порог интенсивности γ (для слабоизлучающих актинидов)
+    CAT[name] = dict(api=api, state=state, fam=list(fam), chain=chain, note=note, gmin=gmin)
 
 # — цепочка U-238 —
 for nm, api, st in [("U-238","238u",0),("Th-234","234th",0),("Pa-234m","234pa",73.92),
@@ -71,6 +72,29 @@ for nm, api in [("Co-60","60co"),("Co-57","57co"),("Co-58","58co"),("Mn-54","54m
                 ("Y-88","88y"),("Sr-85","85sr"),("Cr-51","51cr")]:
     N(nm, api, 0, fam=("tech",))
 for nm in ("Cs-137","Cs-134"): CAT[nm]["fam"].append("tech")
+# — нейтронная активация (НАА) —
+for nm, api, st in [("Na-24","24na",0),("K-42","42k",0),("Sc-46","46sc",0),("Mn-56","56mn",0),
+                    ("Fe-59","59fe",0),("Cu-64","64cu",0),("Ga-72","72ga",0),("As-76","76as",0),
+                    ("Br-82","82br",0),("In-116m","116in",127.267),("Sb-122","122sb",0),
+                    ("Sb-124","124sb",0),("I-128","128i",0),("W-187","187w",0),
+                    ("Au-198","198au",0),("Hf-181","181hf",0),("Ta-182","182ta",0),
+                    ("Ho-166","166ho",0),("Ar-41","41ar",0),("Cl-38","38cl",0)]:
+    N(nm, api, st, fam=("naa",))
+for nm in ("Cr-51","Co-58","Co-60","Zn-65","Ag-110m","La-140","Sm-153","Eu-152","Mn-54"):
+    CAT[nm]["fam"].append("naa")
+# — ядерные отходы / ОЯТ —
+for nm, api, st in [("Np-237","237np",0),("Am-243","243am",0),("U-232","232u",0),
+                    ("I-129","129i",0),("Nb-94","94nb",0),("Ag-108m","108ag",109.44),
+                    ("Fe-55","55fe",0)]:
+    N(nm, api, st, fam=("waste",))
+# слабоизлучающие актиниды: порог γ понижен, чтобы взять линии safeguards
+# (Pu-239 129.3/375/413.7; Pu-238 152.7; Pu-240 160.3; Pu-241 148.6; Cm-244 152.6)
+for nm, api in [("Pu-238","238pu"),("Pu-239","239pu"),("Pu-240","240pu"),
+                ("Pu-241","241pu"),("Cm-244","244cm")]:
+    N(nm, api, 0, fam=("waste",), gmin=1e-4)
+for nm in ("Cs-137","Cs-134","Sb-125","Rh-106","Ce-144","Pr-144","Eu-154","Eu-155",
+           "Co-60","Am-241"):
+    CAT[nm]["fam"].append("waste")
 
 CHAINS = {
   "u238":  {"title":"Ряд U-238 (уран-радиевый)",  "order":[n for n,c in CAT.items() if c["chain"]=="u238"]},
@@ -82,6 +106,8 @@ FAMILIES = {
   "med":     "Медицинские",
   "fission": "Осколки деления",
   "tech":    "Техногенные и калибровочные",
+  "naa":     "Нейтронная активация (НАА)",
+  "waste":   "Ядерные отходы / ОЯТ",
 }
 
 def fetch(url, tries=3):
@@ -156,7 +182,8 @@ def main():
                 if dm and key not in [(d["mode"], d["to"]) for d in entry["decays"]]:
                     entry["decays"].append(dict(mode=dm, pct=dp, to=dsym))
                 if rad == "g":
-                    if I >= G_MIN_I: entry["g"].append([round(E,3), round(I,4)])
+                    gth = cfg.get("gmin") or G_MIN_I
+                    if I >= gth: entry["g"].append([round(E,3), round(I,6)])
                 else:
                     if I >= X_MIN_I:
                         entry["x"].append([round(E,3), round(I,4), (r.get("shell") or "").strip()])

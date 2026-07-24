@@ -1,0 +1,26 @@
+name: Update nuclide DB from IAEA
+
+on:
+  workflow_dispatch:        # кнопка «Run workflow» на вкладке Actions
+  schedule:
+    - cron: "17 4 1 * *"    # и автоматически 1-го числа каждого месяца
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Rebuild DB from IAEA API
+        run: python update_nuclides.py --refresh
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || { git commit -m "Auto-update nuclide DB from IAEA (ENSDF)"; git push; }
