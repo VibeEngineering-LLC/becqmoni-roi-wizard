@@ -169,6 +169,15 @@
         <input type="number" id="fEmin" value="10" min="0" style="width:84px">
         <input type="number" id="fEmax" value="3000" min="0" style="width:84px">
       </div></div>
+    <div><label style="cursor:pointer"><input type="checkbox" id="fTOn"> T½ от — до</label>
+      <div class="row" style="gap:6px">
+        <input type="number" id="fTmin" value="1" min="0" style="width:64px">
+        <select id="fTminU" style="width:auto"><option value="1">сек</option><option value="3600">ч</option>
+          <option value="86400" selected>сут</option><option value="31557600">лет</option></select>
+        <input type="number" id="fTmax" placeholder="∞" min="0" style="width:64px">
+        <select id="fTmaxU" style="width:auto"><option value="1">сек</option><option value="3600">ч</option>
+          <option value="86400">сут</option><option value="31557600" selected>лет</option></select>
+      </div></div>
     <div><label>Тип линий</label>
       <div style="font-size:13.5px; padding-top:6px; white-space:nowrap">
         <label style="display:inline; text-transform:none; letter-spacing:0; font-size:13.5px; color:var(--ink); font-weight:400"><input type="checkbox" class="fT" value="g" checked> γ</label>&nbsp;&nbsp;
@@ -484,25 +493,40 @@ function nucMaxI(){
 function filterCtx(){
   var types = {};
   document.querySelectorAll(".fT:checked").forEach(function(c){ types[c.value] = true; });
+  var tmax = parseFloat($("fTmax").value);
   return {
-    useI: $("fIOn").checked, useE: $("fEOn").checked,
+    useI: $("fIOn").checked, useE: $("fEOn").checked, useT: $("fTOn").checked,
     mi: parseFloat($("fMinI").value)||0,
     e0: parseFloat($("fEmin").value)||0, e1: parseFloat($("fEmax").value)||1e9,
+    t0: (parseFloat($("fTmin").value)||0)*parseFloat($("fTminU").value),
+    t1: isNaN(tmax) ? Infinity : tmax*parseFloat($("fTmaxU").value),
     rel: $("iMode").value==="rel", mx: nucMaxI(), types: types
   };
 }
-function linePasses(L, c){
-  if (!c.types[L.type]) return false;
+var YEAR_S = 31557600;
+function lineMatches(L, c){   // проверки I/E/T½ (без типа)
   if (c.useE && !(L.E>=c.e0 && L.E<=c.e1)) return false;
+  if (c.useT && L.type!=="xrf"){          // ХРИ материалов — вне T½-фильтра
+    var s = L.hlY*YEAR_S;
+    if (s < c.t0 || s > c.t1) return false;
+  }
   if (c.useI){
     var I = c.rel ? (c.mx[L.nuc] ? 100*L.I/c.mx[L.nuc] : 0) : L.I;
     if (I < c.mi) return false;
   }
   return true;
 }
+function linePasses(L, c){ return !!c.types[L.type] && lineMatches(L, c); }
+// фильтры управляют ВЫБОРОМ: изменение фильтра переставляет галки
+// (линии отжатых типов не трогаем — они просто скрыты из вида)
+function applyFilterSelection(){
+  var c = filterCtx();
+  sel.lines.forEach(function(L){ if (c.types[L.type]) L.sel = lineMatches(L, c); });
+}
+// видимость таблицы: только типы + «скрыть невыбранные»
 function visibleLines(){
   var c = filterCtx(), hideU = $("hideUnsel").checked;
-  return sel.lines.filter(function(L){ return (!hideU || L.sel) && linePasses(L, c); });
+  return sel.lines.filter(function(L){ return (!hideU || L.sel) && c.types[L.type]; });
 }
 
 function renderTable(){
@@ -843,8 +867,10 @@ document.addEventListener("change", function(ev){
   }
   if (t.dataset && t.dataset.owner){ colors[t.dataset.owner] = t.value; return; }
 });
-["fMinI","fEmin","fEmax"].forEach(function(id){ $(id).addEventListener("input", renderTable); });
-["fIOn","fEOn","hideUnsel"].forEach(function(id){ $(id).addEventListener("change", renderTable); });
+function onFilterChange(){ applyFilterSelection(); renderTable(); }
+["fMinI","fEmin","fEmax","fTmin","fTmax"].forEach(function(id){ $(id).addEventListener("input", onFilterChange); });
+["fIOn","fEOn","fTOn","fTminU","fTmaxU","iMode"].forEach(function(id){ $(id).addEventListener("change", onFilterChange); });
+$("hideUnsel").addEventListener("change", renderTable);
 document.querySelectorAll(".fT").forEach(function(c){ c.addEventListener("change", renderTable); });
 $("eqScale").addEventListener("change", function(){ rebuildLines(); renderTable(); });
 $("nucAdd").addEventListener("click", function(){
@@ -971,6 +997,7 @@ var RU2EN = {
   "Вернуть исходные":"Restore originals","Фильтры:":"Filters:",
   "интенсивность ≥, %":"intensity ≥, %","энергия от — до, кэВ":"energy from — to, keV",
   "Тип линий":"Line types","X (распад)":"X (decay)","ХРИ":"XRF","вторичные":"secondary",
+  "T½ от — до":"T½ from — to",
   "Сортировка":"Sorting","энергия ↑":"energy ↑","энергия ↓":"energy ↓",
   "интенсивность ↓":"intensity ↓","интенсивность ↑":"intensity ↑",
   "период полураспада ↓":"half-life ↓","период полураспада ↑":"half-life ↑",
