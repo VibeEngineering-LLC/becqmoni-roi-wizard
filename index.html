@@ -489,7 +489,7 @@ function rebuildLines(){
     if (!ownerAlive(L)) return;
     var main = L.mainKey && byKey[L.mainKey];       // перегенерация подписи/T½ под текущий язык
     if (main){
-      L.label = main.label+" (Σ "+L.elist+")";
+      L.label = main.label+" ("+L.elist+")";
       L.hl = main.hl; L.hlY = main.hlY; L.type = main.type;
     }
     L.sel = L.key in old ? old[L.key] : L.sel;
@@ -662,9 +662,10 @@ function mergeAllLines(){
         cluster.forEach(function(L){ sumI += L.I; cE += L.E*L.I; anySel = anySel||L.sel;
           if (L.I > main.I) main = L; });
         cE = cE/sumI;
-        var elist = cluster.map(function(L){ return L.E<100 ? L.E.toFixed(1) : Math.round(L.E); }).join("+");
+        var fE = function(E){ return E<100 ? E.toFixed(1) : Math.round(E); };
+        var elist = fE(cluster[0].E)+"–"+fE(cluster[cluster.length-1].E);   // интервал слитых линий
         var m = {key:"m|"+n+"|"+cE.toFixed(1), nuc:n,
-          label: main.label+" (Σ "+elist+")",
+          label: main.label+" ("+elist+")",
           mainKey: main.key, elist: elist,          // рецепт для перегенерации при смене языка
           E:+cE.toFixed(2), I:+sumI.toFixed(3), rawI:sumI,
           type: main.type, hlY:main.hlY, hl:main.hl, sel:anySel, mergedFlag:true};
