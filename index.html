@@ -476,12 +476,23 @@ function rebuildLines(){
     });
   });
   sel.secLines.forEach(function(L){ if (sel.nuc[L.nuc]) { L.sel = L.key in old ? old[L.key] : L.sel; out.push(L); } });
+  var byKey = {};                                   // все линии ДО вычета слитых — для рецептов
+  out.forEach(function(L){ byKey[L.key] = L; });
   out = out.filter(function(L){ return !sel.suppressed[L.key]; });
   function ownerAlive(L){   // объединённая линия жива, пока жив её источник (изотоп ИЛИ ХРИ-элемент)
     if (L.nuc.indexOf("ХРИ ")===0) return !!sel.xrf[L.nuc.slice(4)];
     return !!sel.nuc[L.nuc];
   }
-  sel.merged.forEach(function(L){ if (ownerAlive(L)) { L.sel = L.key in old ? old[L.key] : L.sel; out.push(L); } });
+  sel.merged.forEach(function(L){
+    if (!ownerAlive(L)) return;
+    var main = L.mainKey && byKey[L.mainKey];       // перегенерация подписи/T½ под текущий язык
+    if (main){
+      L.label = main.label+T(" (объединение "," (merged ")+L.elist+")";
+      L.hl = main.hl; L.hlY = main.hlY; L.type = main.type;
+    }
+    L.sel = L.key in old ? old[L.key] : L.sel;
+    out.push(L);
+  });
   sel.lines = out;
   // дефолт выбора для НОВЫХ линий: проходит ли активные фильтры
   // (фильтры выключены → выбрано всё; включён порог → авто-выбор только проходящих)
@@ -652,6 +663,7 @@ function mergeAllLines(){
         var elist = cluster.map(function(L){ return L.E<100 ? L.E.toFixed(1) : Math.round(L.E); }).join("+");
         var m = {key:"m|"+n+"|"+cE.toFixed(1), nuc:n,
           label: main.label+T(" (объединение "," (merged ")+elist+")",
+          mainKey: main.key, elist: elist,          // рецепт для перегенерации при смене языка
           E:+cE.toFixed(2), I:+sumI.toFixed(3), rawI:sumI,
           type: main.type, hlY:main.hlY, hl:main.hl, sel:anySel, mergedFlag:true};
         sel.merged.push(m);
