@@ -1,0 +1,8 @@
+energy,unc_en,intensity,unc_i,type,shell,p_z,p_n,p_symbol,p_energy_shift,p_energy,unc_pe,jp,half_life,operator_hl,unc_hl,unit_hl,half_life_sec,unc_hls,decay,decay_%,unc_d,q,unc_q,d_z,d_n,d_symbol,ensdf_publication_cut-off,ensdf_authors,Extraction_date
+13.292,,1.015808439460464,0.11422206077473984,X,L,86,133,Rn,,0,,5/2+,3.96,,1,s,3.96,0.01,A,100,,6946.2,3,84,131,Po,23-SEP-2013,J.K. Tuli and  B. Singh and  S. Bhattacharya and  S. Dasgupta and  J.Y. Lee,2026-07-24
+76.862,,0.547529805787232,0.08681529037851402,X,KA2,86,133,Rn,,0,,5/2+,3.96,,1,s,3.96,0.01,A,100,,6946.2,3,84,131,Po,23-SEP-2013,J.K. Tuli and  B. Singh and  S. Bhattacharya and  S. Dasgupta and  J.Y. Lee,2026-07-24
+79.29,,0.9117898514358568,0.14452183112173878,X,KA1,86,133,Rn,,0,,5/2+,3.96,,1,s,3.96,0.01,A,100,,6946.2,3,84,131,Po,23-SEP-2013,J.K. Tuli and  B. Singh and  S. Bhattacharya and  S. Dasgupta and  J.Y. Lee,2026-07-24
+89.837,,0.3139039994942113,0.049965633514362555,X,KpB1,86,133,Rn,,0,,5/2+,3.96,,1,s,3.96,0.01,A,100,,6946.2,3,84,131,Po,23-SEP-2013,J.K. Tuli and  B. Singh and  S. Bhattacharya and  S. Dasgupta and  J.Y. Lee,2026-07-24
+90.941,,0.41152814333691107,0.06548613973067903,X,KB,86,133,Rn,,0,,5/2+,3.96,,1,s,3.96,0.01,A,100,,6946.2,3,84,131,Po,23-SEP-2013,J.K. Tuli and  B. Singh and  S. Bhattacharya and  S. Dasgupta and  J.Y. Lee,2026-07-24
+92.315,,0.09762414384269971,0.015618374152567248,X,KpB2,86,133,Rn,,0,,5/2+,3.96,,1,s,3.96,0.01,A,100,,6946.2,3,84,131,Po,23-SEP-2013,J.K. Tuli and  B. Singh and  S. Bhattacharya and  S. Dasgupta and  J.Y. Lee,2026-07-24
+

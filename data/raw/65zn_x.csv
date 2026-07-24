@@ -1,0 +1,7 @@
+energy,unc_en,intensity,unc_i,type,shell,p_z,p_n,p_symbol,p_energy_shift,p_energy,unc_pe,jp,half_life,operator_hl,unc_hl,unit_hl,half_life_sec,unc_hls,decay,decay_%,unc_d,q,unc_q,d_z,d_n,d_symbol,ensdf_publication_cut-off,ensdf_authors,Extraction_date
+0.952,,1.2409209724619696,0.051253439314004376,X,L,30,35,Zn,,0,,5/2-,243.93,,9,d,21075552,7776,EC+B+,100,,1351.7,9,29,36,Cu,1-Aug-2009,E. BROWNE and  J. K. TULI,2026-07-24
+8.028,,11.763989923311671,0.12202097355546747,X,KA2,30,35,Zn,,0,,5/2-,243.93,,9,d,21075552,7776,EC+B+,100,,1351.7,9,29,36,Cu,1-Aug-2009,E. BROWNE and  J. K. TULI,2026-07-24
+8.048,,22.91835169162609,0.2098822134556906,X,KA1,30,35,Zn,,0,,5/2-,243.93,,9,d,21075552,7776,EC+B+,100,,1351.7,9,29,36,Cu,1-Aug-2009,E. BROWNE and  J. K. TULI,2026-07-24
+8.94,,4.824313718637843,0.06516124294517184,X,KpB1,30,35,Zn,,0,,5/2-,243.93,,9,d,21075552,7776,EC+B+,100,,1351.7,9,29,36,Cu,1-Aug-2009,E. BROWNE and  J. K. TULI,2026-07-24
+8.94,,4.824313718637843,0.06516124294517184,X,KB,30,35,Zn,,0,,5/2-,243.93,,9,d,21075552,7776,EC+B+,100,,1351.7,9,29,36,Cu,1-Aug-2009,E. BROWNE and  J. K. TULI,2026-07-24
+
