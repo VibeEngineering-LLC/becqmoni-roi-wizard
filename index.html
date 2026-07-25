@@ -44,7 +44,17 @@
   button.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
   .row{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end}
   .cols{display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:18px}
-  @media(max-width:900px){.cols{grid-template-columns:1fr}}
+  /* блок 1: заголовок / панель управления / список / хвост — строки колонок выровнены,
+     поэтому все три списка начинаются на одной линии */
+  .cols.aligned{grid-template-rows:auto auto auto auto}
+  .cols.aligned > div{display:grid; grid-row:span 4; grid-template-rows:subgrid;
+    row-gap:0; align-content:start}
+  .cols.aligned .ctl{align-self:start}
+  @media(max-width:900px){
+    .cols{grid-template-columns:1fr}
+    .cols.aligned{grid-template-rows:none}
+    .cols.aligned > div{display:block; grid-row:auto}
+  }
   .group{border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:8px 0}
   .group .ghead{display:flex; justify-content:space-between; align-items:center; gap:8px;
     font-weight:700; font-size:13.5px; cursor:pointer}
@@ -111,38 +121,45 @@
 <!-- ═══════════ 1. ВЫБОР ИСТОЧНИКОВ ═══════════ -->
 <section class="card">
   <h2><span class="n">1</span>Изотопы, семейства, цепочки</h2>
-  <div class="cols">
+  <div class="cols aligned">
     <div>
       <h3>Поиск изотопа</h3>
-      <div class="row">
-        <input type="text" id="nucSearch" placeholder="напр. Eu-152" style="width:150px">
-        <button id="nucAdd" title="Только выбранный нуклид, его собственные линии">Добавить</button>
-      </div>
-      <div class="row" style="margin-top:6px">
-        <button id="nucAddF" title="Все линии дочерних под именем выбранного нуклида — один изотоп в списке (Mo-99→Tc-99m, Ce-144→Pr-144, члены ЕРН-ряда)">+ линии семейства</button>
-        <button id="nucAddC" title="Дочерние отдельными нуклидами с пометкой родителя: «Tc-99m (Mo-99)»">+ цепочкой</button>
+      <div class="ctl">
+        <div class="row">
+          <input type="text" id="nucSearch" placeholder="напр. Eu-152" style="width:150px">
+          <button id="nucAdd" title="Только выбранный нуклид, его собственные линии">Добавить</button>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button id="nucAddF" title="Все линии дочерних под именем выбранного нуклида — один изотоп в списке (Mo-99→Tc-99m, Ce-144→Pr-144, члены ЕРН-ряда)">+ линии семейства</button>
+          <button id="nucAddC" title="Дочерние отдельными нуклидами с пометкой родителя: «Tc-99m (Mo-99)»">+ цепочкой</button>
+        </div>
       </div>
       <div class="nuclist" id="searchBox"></div>
-      <p class="hint" id="searchHint">Ввод сужает список: совпадение по имени или по семейству. Клик по строке добавляет изотоп.</p>
+      <div><p class="hint" id="searchHint">Ввод сужает список: совпадение по имени или по семейству. Клик по строке добавляет изотоп.</p></div>
     </div>
     <div>
       <h3>Группа</h3>
-      <div class="row">
-        <select id="famSel" style="width:auto; max-width:100%"></select>
-        <button id="famInfoBtn" title="Что означают коды семейств">(i)</button>
-        <span id="famCtl"></span>
+      <div class="ctl">
+        <div class="row">
+          <select id="famSel" style="width:auto; max-width:100%"></select>
+          <button id="famInfoBtn" title="Что означают коды семейств">(i)</button>
+        </div>
+        <div class="row" style="margin-top:6px" id="famCtl"></div>
+        <p class="hint" id="famInfoBox" style="display:none"></p>
       </div>
-      <p class="hint" id="famInfoBox" style="display:none"></p>
       <div class="nuclist" id="famBox"></div>
-      <p class="hint" id="chainHint">Член цепочки без γ/X-линий выше порога базы показан серым.</p>
+      <div><p class="hint" id="chainHint">Член цепочки без γ/X-линий выше порога базы показан серым.</p></div>
     </div>
     <div>
       <h3>ХРИ — элементы</h3>
+      <div class="ctl"></div>
       <div class="nuclist" id="xrfBar"></div>
-      <p class="hint" id="xrfHint">Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1=100) — только маркеры.</p>
-      <h3>Выбрано</h3>
-      <div class="chipbar" id="selBar"></div>
-      <div class="row" style="margin-top:8px"><button id="clearAll">Очистить всё</button></div>
+      <div>
+        <p class="hint" id="xrfHint">Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1=100) — только маркеры.</p>
+        <h3>Выбрано</h3>
+        <div class="chipbar" id="selBar"></div>
+        <div class="row" style="margin-top:8px"><button id="clearAll">Очистить всё</button></div>
+      </div>
     </div>
   </div>
 </section>
@@ -465,8 +482,8 @@ function renderGroup(){
     '<button class="grpAdd" data-mode="all" title="'+T("Каждый член группы — отдельным нуклидом","Every member as a separate nuclide")+'">'+T("добавить все","add all")+'</button> '+
     '<button class="grpAdd" data-mode="one" title="'+(kind==="c"
         ? T("Все линии ряда под именем родителя — один изотоп","All series lines under the parent name — one nuclide")
-        : T("Дочерние — линиями под именем своего родителя","Daughters as lines under their parent’s name"))+'">'+T("одним","as one")+'</button> '+
-    '<button class="grpAdd" data-mode="chain" title="'+T("Дочерние отдельными нуклидами с пометкой родителя в скобках","Daughters as separate nuclides, parent in brackets")+'">'+T("цепочкой","as chain")+'</button>';
+        : T("Дочерние — линиями под именем своего родителя","Daughters as lines under their parent’s name"))+'">'+T("+ линии семейства","+ family lines")+'</button> '+
+    '<button class="grpAdd" data-mode="chain" title="'+T("Дочерние отдельными нуклидами с пометкой родителя в скобках","Daughters as separate nuclides, parent in brackets")+'">'+T("+ цепочкой","+ as chain")+'</button>';
   box.innerHTML = "";
   var members = kind==="c" ? DB.chains[id].order : famNucs(id);
   members.forEach(function(n){ box.appendChild(nucRow(n, false)); });
