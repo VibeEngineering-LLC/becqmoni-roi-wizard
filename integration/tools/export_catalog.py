@@ -118,22 +118,41 @@ def main():
     meta = db.get("meta", {})
     nuclides = db["nuclides"]
     chains = db.get("chains", {})
+    families = db.get("families", {})
 
     out = [u'<?xml version="1.0" encoding="utf-8"?>']
-    out.append(u"<NuclideCatalog%s%s%s>" % (
+    out.append(u"<NuclideCatalog%s%s%s%s%s>" % (
         attr("Generated", meta.get("generated", "")),
         attr("GammaMinIntensity", meta.get("g_min_intensity", "")),
         attr("XrayMinIntensity", meta.get("x_min_intensity", "")),
+        # чем задана классификация — окно показывает это под пояснением кода
+        attr("FamilyStandard", meta.get("fam_standard_en", "")),
+        attr("FamilyStandardRu", meta.get("fam_standard_ru", "")),
     ))
+
+    # порядок семейств задан списком, а не сортировкой: он же в комбобоксе окна
+    out.append(u"  <Families>")
+    for code in ["popular", "norm", "med", "ind", "snm", "fiss", "naa", "waste"]:
+        family = families.get(code)
+        if not family:
+            continue
+        out.append(u"    <Family%s%s%s%s%s />" % (
+            attr("Code", code.upper()),
+            attr("Title", family.get("en", "")),
+            attr("TitleRu", family.get("ru", "")),
+            attr("Info", family.get("info_en", "")),
+            attr("InfoRu", family.get("info_ru", "")),
+        ))
+    out.append(u"  </Families>")
 
     out.append(u"  <Nuclides>")
     for name in sorted(nuclides):
         entry = nuclides[name]
-        families = " ".join(entry.get("fam", []))
+        family_codes = " ".join(entry.get("fam", []))
         out.append(u"    <Nuclide%s%s%s%s%s%s>" % (
             attr("Name", name),
             attr("Chain", entry.get("chain", "") or ""),
-            attr("Families", families),
+            attr("Families", family_codes),
             attr("HalfLifeSeconds", entry.get("hl_s", 0) or 0),
             attr("HalfLifeYears", entry.get("hl_y", 0) or 0),
             attr("HalfLifeText", entry.get("hl_txt", "") or ""),
@@ -188,7 +207,8 @@ def main():
     xrf_lines = sum(len(xrf[e].get("lines", [])) for e in xrf)
     size = os.path.getsize(OUT)
     print("нуклидов: %d, γ-линий: %d, X-линий: %d" % (len(nuclides), gamma, xray))
-    print("рядов: %d, элементов ХРИ: %d, линий ХРИ: %d" % (len(chains), len(xrf), xrf_lines))
+    print("рядов: %d, семейств: %d, элементов ХРИ: %d, линий ХРИ: %d"
+          % (len(chains), len(families), len(xrf), xrf_lines))
     print("записан %s (%.1f КБ)" % (OUT, size / 1024.0))
 
 

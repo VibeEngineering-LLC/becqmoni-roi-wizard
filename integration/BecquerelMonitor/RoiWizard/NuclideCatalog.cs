@@ -22,6 +22,16 @@ namespace BecquerelMonitor.RoiWizard
         [XmlAttribute]
         public double XrayMinIntensity { get; set; }
 
+        // Чем задана классификация семейств — окно показывает это под пояснением кода
+        [XmlAttribute]
+        public string FamilyStandard { get; set; }
+
+        [XmlAttribute]
+        public string FamilyStandardRu { get; set; }
+
+        [XmlArray("Families"), XmlArrayItem("Family")]
+        public List<CatalogFamily> Families { get; set; }
+
         [XmlArray("Nuclides"), XmlArrayItem("Nuclide")]
         public List<CatalogNuclide> Nuclides { get; set; }
 
@@ -40,6 +50,7 @@ namespace BecquerelMonitor.RoiWizard
             this.Nuclides = new List<CatalogNuclide>();
             this.Chains = new List<CatalogChain>();
             this.XrfElements = new List<XrfElement>();
+            this.Families = new List<CatalogFamily>();
         }
 
         const string ResourceName = "BecquerelMonitor.RoiWizard.nuclides.xml";
@@ -150,6 +161,18 @@ namespace BecquerelMonitor.RoiWizard
             return chain == null ? null : chain.Root;
         }
 
+        public CatalogFamily FindFamily(string code)
+        {
+            foreach (CatalogFamily family in this.Families)
+            {
+                if (string.Equals(family.Code, code, StringComparison.OrdinalIgnoreCase))
+                {
+                    return family;
+                }
+            }
+            return null;
+        }
+
         public IEnumerable<CatalogNuclide> ByFamily(string family)
         {
             foreach (CatalogNuclide nuclide in this.Nuclides)
@@ -160,6 +183,26 @@ namespace BecquerelMonitor.RoiWizard
                 }
             }
         }
+    }
+
+    // Семейство нуклидов: код, человеческое название и пояснение на обоих языках.
+    // Классификация NORM/MED/IND/SNM — по ANSI N42.34; FISS/NAA/WASTE вне стандарта.
+    public class CatalogFamily
+    {
+        [XmlAttribute]
+        public string Code { get; set; }
+
+        [XmlAttribute]
+        public string Title { get; set; }
+
+        [XmlAttribute]
+        public string TitleRu { get; set; }
+
+        [XmlAttribute]
+        public string Info { get; set; }
+
+        [XmlAttribute]
+        public string InfoRu { get; set; }
     }
 
     public class CatalogNuclide

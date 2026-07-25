@@ -43,6 +43,11 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonGroupFamily = new System.Windows.Forms.Button();
             this.buttonGroupChain = new System.Windows.Forms.Button();
             this.checkedGroup = new System.Windows.Forms.CheckedListBox();
+            this.buttonFamilyInfo = new System.Windows.Forms.Button();
+            this.labelFamilyInfo = new System.Windows.Forms.Label();
+            this.labelSearchHint = new System.Windows.Forms.Label();
+            this.panelPresets = new System.Windows.Forms.FlowLayoutPanel();
+            this.labelXrfHint = new System.Windows.Forms.Label();
             this.labelGroupHint = new System.Windows.Forms.Label();
             this.groupXrf = new System.Windows.Forms.GroupBox();
             this.checkedXrf = new System.Windows.Forms.CheckedListBox();
@@ -220,7 +225,7 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonAddChain.Size = new System.Drawing.Size(122, 25);
 
             this.tableCatalog.Location = new System.Drawing.Point(8, 80);
-            this.tableCatalog.Size = new System.Drawing.Size(360, 252);
+            this.tableCatalog.Size = new System.Drawing.Size(360, 190);
             this.tableCatalog.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -255,7 +260,21 @@ namespace BecquerelMonitor.RoiWizard
             this.groupSearch.Controls.Add(this.buttonAddSingle);
             this.groupSearch.Controls.Add(this.buttonAddFamily);
             this.groupSearch.Controls.Add(this.buttonAddChain);
+            this.labelSearchHint.Text = "Typing narrows the list: by name or by family code.";
+            this.labelSearchHint.Location = new System.Drawing.Point(8, 274);
+            this.labelSearchHint.Size = new System.Drawing.Size(360, 16);
+            this.labelSearchHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            // строка пресетов: готовые наборы одним щелчком, как .presets на странице
+            this.panelPresets.Location = new System.Drawing.Point(6, 292);
+            this.panelPresets.Size = new System.Drawing.Size(364, 44);
+            this.panelPresets.WrapContents = true;   // .presets переносится: flex-wrap:wrap
+            this.panelPresets.AutoScroll = false;
+            this.panelPresets.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.groupSearch.Controls.Add(this.tableCatalog);
+            this.groupSearch.Controls.Add(this.labelSearchHint);
+            this.groupSearch.Controls.Add(this.panelPresets);
 
             this.groupGroup.Text = "Group";
             this.groupGroup.Location = new System.Drawing.Point(392, 6);
@@ -263,8 +282,25 @@ namespace BecquerelMonitor.RoiWizard
             this.groupGroup.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
             this.comboGroup.Location = new System.Drawing.Point(8, 22);
-            this.comboGroup.Size = new System.Drawing.Size(360, 23);
+            this.comboGroup.Size = new System.Drawing.Size(330, 23);
             this.comboGroup.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboGroup.Anchor = System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            this.buttonFamilyInfo.Text = "i";
+            this.buttonFamilyInfo.Location = new System.Drawing.Point(342, 22);
+            this.buttonFamilyInfo.Size = new System.Drawing.Size(26, 23);
+            this.buttonFamilyInfo.Anchor = System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Right;
+            // словарик кодов — поверх списка, чтобы не двигать вёрстку (.infoPop)
+            this.labelFamilyInfo.Location = new System.Drawing.Point(8, 47);
+            this.labelFamilyInfo.Size = new System.Drawing.Size(360, 158);
+            this.labelFamilyInfo.BackColor = System.Drawing.Color.FromArgb(255, 255, 225);
+            this.labelFamilyInfo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.labelFamilyInfo.Padding = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            this.labelFamilyInfo.Visible = false;
+            this.labelFamilyInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelFamilyInfo.Anchor = System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.buttonGroupAll.Text = "add all";
             this.buttonGroupAll.Location = new System.Drawing.Point(8, 50);
             this.buttonGroupAll.Size = new System.Drawing.Size(104, 25);
@@ -296,12 +332,19 @@ namespace BecquerelMonitor.RoiWizard
             this.labelXrf.Location = new System.Drawing.Point(8, 20);
             this.labelXrf.AutoSize = true;
             this.checkedXrf.Location = new System.Drawing.Point(8, 44);
-            this.checkedXrf.Size = new System.Drawing.Size(380, 288);
+            this.checkedXrf.Size = new System.Drawing.Size(380, 268);
+            this.labelXrfHint.Text = "Ka/Kb (+L for heavy). Nominal intensities (Ka1 = 100) — markers only.";
+            this.labelXrfHint.Location = new System.Drawing.Point(8, 316);
+            this.labelXrfHint.Size = new System.Drawing.Size(380, 18);
+            this.labelXrfHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.checkedXrf.CheckOnClick = true;
             this.checkedXrf.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
+            this.groupGroup.Controls.Add(this.labelFamilyInfo);
             this.groupGroup.Controls.Add(this.comboGroup);
+            this.groupGroup.Controls.Add(this.buttonFamilyInfo);
             this.groupGroup.Controls.Add(this.buttonGroupAll);
             this.groupGroup.Controls.Add(this.buttonGroupFamily);
             this.groupGroup.Controls.Add(this.buttonGroupChain);
@@ -309,6 +352,7 @@ namespace BecquerelMonitor.RoiWizard
             this.groupGroup.Controls.Add(this.labelGroupHint);
             this.groupXrf.Controls.Add(this.labelXrf);
             this.groupXrf.Controls.Add(this.checkedXrf);
+            this.groupXrf.Controls.Add(this.labelXrfHint);
 
             this.groupSelected.Text = "Selected";
             this.groupSelected.Location = new System.Drawing.Point(8, 352);
@@ -846,6 +890,11 @@ namespace BecquerelMonitor.RoiWizard
         System.Windows.Forms.GroupBox groupGroup;
         System.Windows.Forms.GroupBox groupXrf;
         System.Windows.Forms.CheckedListBox checkedGroup;
+        System.Windows.Forms.Button buttonFamilyInfo;
+        System.Windows.Forms.Label labelFamilyInfo;
+        System.Windows.Forms.Label labelSearchHint;
+        System.Windows.Forms.FlowLayoutPanel panelPresets;
+        System.Windows.Forms.Label labelXrfHint;
         System.Windows.Forms.Label labelGroupHint;
         System.Windows.Forms.ComboBox comboGroup;
         System.Windows.Forms.Button buttonGroupAll;

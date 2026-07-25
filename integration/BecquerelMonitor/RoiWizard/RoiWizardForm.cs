@@ -63,6 +63,7 @@ namespace BecquerelMonitor.RoiWizard
             }
             // после ApplyRussian: списки и подсказки собираются из русских строк
             this.FillXrf();
+            this.FillPresets();
             this.LayoutSources();
             this.LayoutLineColumns();
             this.RefreshGroupList();
@@ -132,7 +133,10 @@ namespace BecquerelMonitor.RoiWizard
                     continue;
                 }
                 this.groupKeys.Add("f:" + family);
-                this.comboGroup.Items.Add(family + " (" + count + ")");
+                CatalogFamily entry = this.catalog.FindFamily(family);
+                string title = entry == null ? family
+                    : (this.russian && !string.IsNullOrEmpty(entry.TitleRu) ? entry.TitleRu : entry.Title);
+                this.comboGroup.Items.Add(title + " (" + count + ")");
             }
             foreach (CatalogChain chain in this.catalog.Chains)
             {
@@ -143,6 +147,160 @@ namespace BecquerelMonitor.RoiWizard
             {
                 this.comboGroup.SelectedIndex = 0;
             }
+        }
+
+        // Готовые наборы: пустой старт не объясняет инструмент, а один клик — объясняет.
+        // Те же пять, что на странице.
+        void FillPresets()
+        {
+            this.panelPresets.SuspendLayout();
+            this.panelPresets.Controls.Clear();
+            Label caption = new Label();
+            caption.Text = this.presetsCaption;
+            caption.AutoSize = true;
+            caption.ForeColor = WizardTheme.Muted;
+            caption.Margin = new Padding(2, 4, 2, 2);
+            this.panelPresets.Controls.Add(caption);
+
+            for (int i = 0; i < this.presets.Length; i++)
+            {
+                if (i > 0)
+                {
+                    Label separator = new Label();
+                    separator.Text = "·";
+                    separator.AutoSize = true;
+                    separator.ForeColor = WizardTheme.Muted;
+                    separator.Margin = new Padding(0, 4, 0, 2);
+                    this.panelPresets.Controls.Add(separator);
+                }
+                Preset preset = this.presets[i];
+                LinkLabel link = new LinkLabel();
+                link.Text = this.russian ? preset.TitleRu : preset.Title;
+                link.AutoSize = true;
+                link.LinkColor = WizardTheme.Accent;
+                link.ActiveLinkColor = WizardTheme.AccentInk;
+                link.LinkBehavior = LinkBehavior.HoverUnderline;
+                link.Margin = new Padding(0, 4, 0, 2);
+                this.tips.SetToolTip(link, this.russian ? preset.HintRu : preset.Hint);
+                Preset captured = preset;
+                link.LinkClicked += delegate { this.ApplyPreset(captured); };
+                this.panelPresets.Controls.Add(link);
+            }
+            this.panelPresets.ResumeLayout();
+        }
+
+        void ApplyPreset(Preset preset)
+        {
+            foreach (string chainRoot in preset.Chains)
+            {
+                this.selection.Add(this.catalog, chainRoot, AddMode.Chain);
+            }
+            foreach (string name in preset.Nuclides)
+            {
+                this.selection.Add(this.catalog, name, AddMode.Single);
+            }
+            foreach (string code in preset.Families)
+            {
+                foreach (CatalogNuclide nuclide in this.catalog.ByFamily(code))
+                {
+                    this.selection.AddGroupMember(this.catalog, nuclide.Name);
+                }
+            }
+            foreach (string symbol in preset.Xrf)
+            {
+                for (int i = 0; i < this.xrfSymbols.Count; i++)
+                {
+                    if (string.Equals(this.xrfSymbols[i], symbol, StringComparison.Ordinal))
+                    {
+                        this.checkedXrf.SetItemChecked(i, true);   // галка сама добавит элемент
+                    }
+                }
+            }
+            this.RefreshGroupList();
+            this.Rebuild();
+        }
+
+        sealed class Preset
+        {
+            public readonly string Title;
+            public readonly string TitleRu;
+            public readonly string Hint;
+            public readonly string HintRu;
+            public readonly string[] Chains;
+            public readonly string[] Nuclides;
+            public readonly string[] Families;
+            public readonly string[] Xrf;
+
+            public Preset(string title, string titleRu, string hint, string hintRu,
+                          string[] chains, string[] nuclides, string[] families, string[] xrf)
+            {
+                this.Title = title;
+                this.TitleRu = titleRu;
+                this.Hint = hint;
+                this.HintRu = hintRu;
+                this.Chains = chains;
+                this.Nuclides = nuclides;
+                this.Families = families;
+                this.Xrf = xrf;
+            }
+        }
+
+        static readonly string[] None = new string[0];
+
+        readonly Preset[] presets = {
+            new Preset("NORM background", "ЕРН-фон",
+                       "Th-232 + U-238 as chains + K-40", "Th-232 + U-238 цепочками + K-40",
+                       new string[] { "Th-232", "U-238" }, new string[] { "K-40" }, None, None),
+            new Preset("Cs-137 / Co-60 check", "Поверка Cs-137 / Co-60",
+                       "Reference check sources", "Контрольные источники",
+                       None, new string[] { "Cs-137", "Co-60" }, None, None),
+            new Preset("Calibration set", "ОСГИ / калибровка",
+                       "Am-241, Ba-133, Eu-152, Cs-137, Co-60", "Am-241, Ba-133, Eu-152, Cs-137, Co-60",
+                       None, new string[] { "Am-241", "Ba-133", "Eu-152", "Cs-137", "Co-60" }, None, None),
+            new Preset("Medical", "Медицинские", "MED family", "Семейство MED",
+                       None, None, new string[] { "MED" }, None),
+            new Preset("Detector and shield XRF", "ХРИ детектора и защиты",
+                       "Pb, W, La, Ba, I", "Pb, W, La, Ba, I",
+                       None, None, None, new string[] { "Pb", "W", "La", "Ba", "I" })
+        };
+
+        readonly ToolTip tips = new ToolTip();
+        string presetsCaption = "Presets:";
+
+        // Словарик кодов: пояснение выбранного семейства и чем задана классификация.
+        // Всплывает поверх списка и закрывается щелчком по себе или Esc — как .infoPop.
+        void ToggleFamilyInfo()
+        {
+            if (this.labelFamilyInfo.Visible)
+            {
+                this.labelFamilyInfo.Visible = false;
+                return;
+            }
+            this.UpdateFamilyInfo();
+            this.labelFamilyInfo.Visible = true;
+            this.labelFamilyInfo.BringToFront();
+        }
+
+        void UpdateFamilyInfo()
+        {
+            int index = this.comboGroup.SelectedIndex;
+            string text = "";
+            if (index >= 0 && index < this.groupKeys.Count &&
+                this.groupKeys[index].StartsWith("f:", StringComparison.Ordinal))
+            {
+                CatalogFamily family = this.catalog.FindFamily(this.groupKeys[index].Substring(2));
+                if (family != null)
+                {
+                    string title = this.russian && !string.IsNullOrEmpty(family.TitleRu)
+                        ? family.TitleRu : family.Title;
+                    string info = this.russian && !string.IsNullOrEmpty(family.InfoRu)
+                        ? family.InfoRu : family.Info;
+                    text = title + " — " + info + Environment.NewLine + Environment.NewLine;
+                }
+            }
+            string standard = this.russian && !string.IsNullOrEmpty(this.catalog.FamilyStandardRu)
+                ? this.catalog.FamilyStandardRu : this.catalog.FamilyStandard;
+            this.labelFamilyInfo.Text = text + (standard == null ? "" : standard);
         }
 
         void FillXrf()
@@ -273,7 +431,16 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonAddChain.Click += delegate { this.AddFromCatalog(AddMode.Chain); };
             this.tableCatalog.DoubleClick += delegate { this.AddFromCatalog(AddMode.Single); };
 
-            this.comboGroup.SelectedIndexChanged += delegate { this.RefreshGroupList(); };
+            this.comboGroup.SelectedIndexChanged += delegate
+            {
+                this.RefreshGroupList();
+                if (this.labelFamilyInfo.Visible)
+                {
+                    this.UpdateFamilyInfo();     // словарик открыт — сразу про новую группу
+                }
+            };
+            this.buttonFamilyInfo.Click += delegate { this.ToggleFamilyInfo(); };
+            this.labelFamilyInfo.Click += delegate { this.labelFamilyInfo.Visible = false; };
             this.checkedGroup.ItemCheck += this.OnGroupItemCheck;
             this.buttonGroupAll.Click += delegate { this.AddFromGroup(AddMode.Single); };
             this.buttonGroupFamily.Click += delegate { this.AddFromGroup(AddMode.FamilyLines); };
@@ -619,6 +786,16 @@ namespace BecquerelMonitor.RoiWizard
         }
 
         // Чип убирает свой источник по клику — крестик на странице делает то же самое.
+        protected override bool ProcessCmdKey(ref Message message, Keys key)
+        {
+            if (key == Keys.Escape && this.labelFamilyInfo.Visible)
+            {
+                this.labelFamilyInfo.Visible = false;   // Esc закрывает словарик, как на странице
+                return true;
+            }
+            return base.ProcessCmdKey(ref message, key);
+        }
+
         void RemoveNuclide(string name)
         {
             this.selection.Remove(name);
@@ -1505,6 +1682,9 @@ namespace BecquerelMonitor.RoiWizard
             this.statusFormat = "линий: {0} из {1} · нуклидов: {2}";
             this.hintNone = "Отметьте нуклид — кнопки применятся к нему.";
 
+            this.presetsCaption = "Пресеты:";
+            this.labelSearchHint.Text = "Ввод сужает список: по имени или по коду семейства.";
+            this.labelXrfHint.Text = "Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1 = 100) — только маркеры.";
             this.groupSelected.Text = "Выбрано";
             this.buttonClear.Text = "очистить всё";
             this.xrfChipPrefix = "ХРИ ";
