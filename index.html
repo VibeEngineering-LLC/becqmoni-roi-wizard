@@ -59,6 +59,12 @@
     font-variant-numeric:tabular-nums}
   .nuc .hl{color:var(--muted); font-size:12px; margin-left:auto; white-space:nowrap}
   .nuc.nolines{opacity:.5}
+  .nuclist{border:1px solid var(--line); border-radius:10px; padding:6px 10px; margin-top:8px;
+    max-height:250px; overflow-y:auto}
+  .nuclist .nuc.hit{cursor:pointer; border-radius:6px; padding-left:5px}
+  .nuclist .nuc.hit:hover{background:var(--sel)}
+  .nuclist .nuc .fam{color:var(--muted); font-size:11.5px; text-transform:uppercase; letter-spacing:.04em}
+  .nuclist .empty{color:var(--muted); font-size:13px; padding:4px 2px}
   .chipbar{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
   .chip{background:var(--chip); border:1px solid var(--line); border-radius:16px;
     padding:4px 11px; font-size:13px; cursor:pointer; user-select:none}
@@ -105,28 +111,33 @@
   <h2><span class="n">1</span>Изотопы, семейства, цепочки</h2>
   <div class="cols">
     <div>
-      <h3>Отдельный изотоп</h3>
+      <h3>Поиск изотопа</h3>
       <div class="row">
-        <input type="text" id="nucSearch" list="nucList" placeholder="напр. Eu-152" style="width:150px">
-        <datalist id="nucList"></datalist>
+        <input type="text" id="nucSearch" placeholder="напр. Eu-152" style="width:150px">
         <button id="nucAdd">Добавить</button>
         <button id="nucAddD" title="Добавить нуклид вместе с дочерними из базы (Mo-99→Tc-99m, Ce-144→Pr-144 и т.п.)">+ с дочерними</button>
       </div>
+      <div class="nuclist" id="searchBox"></div>
+      <p class="hint" id="searchHint">Ввод сужает список: совпадение по имени или по семейству. Клик по строке добавляет изотоп.</p>
+    </div>
+    <div>
+      <h3>Группа</h3>
+      <div class="row">
+        <select id="famSel" style="width:auto; max-width:100%"></select>
+        <button id="famInfoBtn" title="Что означают коды семейств">(i)</button>
+        <span id="famCtl"></span>
+      </div>
+      <p class="hint" id="famInfoBox" style="display:none"></p>
+      <div class="nuclist" id="famBox"></div>
+      <p class="hint" id="chainHint">Член цепочки без γ/X-линий выше порога базы показан серым.</p>
+    </div>
+    <div>
       <h3>ХРИ — элементы</h3>
       <div class="chipbar" id="xrfBar"></div>
       <p class="hint" id="xrfHint">Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1=100) — только маркеры.</p>
       <h3>Выбрано</h3>
       <div class="chipbar" id="selBar"></div>
       <div class="row" style="margin-top:8px"><button id="clearAll">Очистить всё</button></div>
-    </div>
-    <div>
-      <h3>Семейства</h3>
-      <div id="famBox"></div>
-    </div>
-    <div>
-      <h3>Цепочки распада (ЕРН)</h3>
-      <div id="chainBox"></div>
-      <p class="hint" id="chainHint">Член цепочки без γ/X-линий выше порога базы показан серым.</p>
     </div>
   </div>
 </section>
@@ -408,55 +419,75 @@ function hlText(n){ var e = DB.nuclides[n]; return e && e.hl_txt ? locHl(e.hl_tx
 
 // ── построение UI выбора ──
 function famNucs(f){ return Object.keys(DB.nuclides).filter(function(n){ return DB.nuclides[n].fam.indexOf(f)>=0; }); }
-function buildSelectors(){
-  var fb = $("famBox"); fb.innerHTML = "";
+// строка списка: галка (или клик), имя, семейства/T½
+function nucRow(n, clickable){
+  var e = DB.nuclides[n], no = (e.g.length+e.x.length)===0;
+  var d = document.createElement("div");
+  d.className = "nuc"+(no?" nolines":"")+(clickable?" hit":"");
+  if (clickable){
+    d.dataset.pick = n;
+    d.innerHTML = '<span>'+n+'</span><span class="fam">'+e.fam.join(" ")+'</span>'+
+      '<span class="hl">'+hlText(n)+' · γ'+e.g.length+(e.x.length?" X"+e.x.length:"")+'</span>';
+  } else {
+    d.innerHTML = '<input type="checkbox" data-nuc="'+n+'" '+(sel.nuc[n]?"checked":"")+'>'+
+      '<span>'+n+'</span><span class="hl">'+hlText(n)+'</span>';
+  }
+  return d;
+}
+// комбобокс групп: семейства + ряды распада одним списком
+function buildGroupSel(){
+  var s = $("famSel"), keep = s.value;
+  s.innerHTML = "";
+  var og1 = document.createElement("optgroup"); og1.label = T("Семейства","Families");
   Object.keys(DB.families).forEach(function(f){
-    var g = document.createElement("div"); g.className = "group";
-    var members = famNucs(f);
-    g.innerHTML = '<div class="ghead"><span>'+famTitle(f)+' ('+members.length+')</span>'+
-      '<span class="gctl"><button data-fam="'+f+'" class="famAll">'+T("все","all")+'</button>'+
-      '<button class="exp" title="'+T("Показать/скрыть члены","Show/hide members")+'">▾</button></span></div><div class="gbody"></div>';
-    var body = g.querySelector(".gbody");
-    members.forEach(function(n){
-      var e = DB.nuclides[n], no = (e.g.length+e.x.length)===0;
-      var d = document.createElement("div"); d.className = "nuc"+(no?" nolines":"");
-      d.innerHTML = '<input type="checkbox" data-nuc="'+n+'" '+(sel.nuc[n]?"checked":"")+'>'+
-        '<span>'+n+'</span><span class="hl">'+hlText(n)+'</span>';
-      body.appendChild(d);
-    });
-    g.querySelector(".ghead").addEventListener("click", function(ev){
-      var b = ev.target.closest("button");
-      if (b && !b.classList.contains("exp")) return;   // «одним»/«цепочкой»/«все» — не раскрывают
-      g.classList.toggle("open");
-    });
-    fb.appendChild(g);
+    var o = document.createElement("option"); o.value = "f:"+f;
+    o.textContent = famTitle(f)+" ("+famNucs(f).length+")"; og1.appendChild(o);
   });
-  var cb = $("chainBox"); cb.innerHTML = "";
+  var og2 = document.createElement("optgroup"); og2.label = T("Ряды распада","Decay series");
   Object.keys(DB.chains).forEach(function(c){
-    var g = document.createElement("div"); g.className = "group";
-    g.innerHTML = '<div class="ghead"><span>'+chainTitle(c)+'</span>'+
-      '<span class="gctl"><button data-chainone="'+c+'" class="chainOne" title="'+T("Все линии ряда под именем родителя — один изотоп","All series lines under the parent name — one nuclide")+'">'+T("одним","as one")+'</button>'+
-      '<button data-chain="'+c+'" class="chainAll" title="'+T("Каждый член отдельно: «дочерний (родитель)»","Each member separately: “daughter (parent)”")+'">'+T("цепочкой","as chain")+'</button>'+
-      '<button class="exp" title="'+T("Показать/скрыть члены ряда","Show/hide series members")+'">▾</button></span></div><div class="gbody"></div>';
-    var body = g.querySelector(".gbody");
-    DB.chains[c].order.forEach(function(n){
-      var e = DB.nuclides[n], no = (e.g.length+e.x.length)===0;
-      var d = document.createElement("div"); d.className = "nuc"+(no?" nolines":"");
-      d.innerHTML = '<input type="checkbox" data-nuc="'+n+'" '+(sel.nuc[n]?"checked":"")+'>'+
-        '<span>'+n+'</span><span class="hl">'+hlText(n)+'</span>';
-      body.appendChild(d);
-    });
-    g.querySelector(".ghead").addEventListener("click", function(ev){
-      var b = ev.target.closest("button");
-      if (b && !b.classList.contains("exp")) return;   // «одним»/«цепочкой»/«все» — не раскрывают
-      g.classList.toggle("open");
-    });
-    cb.appendChild(g);
+    var o = document.createElement("option"); o.value = "c:"+c;
+    o.textContent = chainTitle(c)+" ("+DB.chains[c].order.length+")"; og2.appendChild(o);
   });
-  var dl = $("nucList"); dl.innerHTML = "";
-  Object.keys(DB.nuclides).sort().forEach(function(n){
-    var o = document.createElement("option"); o.value = n; dl.appendChild(o);
-  });
+  s.appendChild(og1); s.appendChild(og2);
+  s.value = keep && s.querySelector('option[value="'+keep+'"]') ? keep : "f:"+Object.keys(DB.families)[0];
+}
+// члены выбранной группы + кнопки, зависящие от её типа
+function renderGroup(){
+  var v = $("famSel").value, kind = v.slice(0,1), id = v.slice(2);
+  var ctl = $("famCtl"), box = $("famBox");
+  ctl.innerHTML = kind==="c"
+    ? '<button data-chainone="'+id+'" class="chainOne" title="'+T("Все линии ряда под именем родителя — один изотоп","All series lines under the parent name — one nuclide")+'">'+T("одним","as one")+'</button> '+
+      '<button data-chain="'+id+'" class="chainAll" title="'+T("Каждый член отдельно: «дочерний (родитель)»","Each member separately: “daughter (parent)”")+'">'+T("цепочкой","as chain")+'</button>'
+    : '<button data-fam="'+id+'" class="famAll">'+T("добавить все","add all")+'</button>';
+  box.innerHTML = "";
+  var members = kind==="c" ? DB.chains[id].order : famNucs(id);
+  members.forEach(function(n){ box.appendChild(nucRow(n, false)); });
+  if ($("famInfoBox").style.display !== "none") showFamInfo(true);
+}
+function showFamInfo(keepOpen){
+  var b = $("famInfoBox"), v = $("famSel").value;
+  if (!keepOpen && b.style.display !== "none"){ b.style.display = "none"; return; }
+  var std = LANG==="en" ? DB.meta.fam_standard_en : DB.meta.fam_standard_ru;
+  var txt = v.slice(0,1)==="f" ? "<b>"+famTitle(v.slice(2))+"</b> — "+famInfo(v.slice(2)) : "";
+  b.innerHTML = (txt ? txt+"<br>" : "")+(std||"");
+  b.style.display = "";
+}
+// живой поиск: сужает список, клик по строке добавляет изотоп
+function renderSearch(){
+  var q = ($("nucSearch").value||"").trim().toLowerCase();
+  var box = $("searchBox"); box.innerHTML = "";
+  var names = Object.keys(DB.nuclides).sort();
+  var hits = q ? names.filter(function(n){
+    var e = DB.nuclides[n];
+    return n.toLowerCase().indexOf(q)>=0 || e.fam.some(function(f){ return f.indexOf(q)===0; });
+  }) : names;
+  if (!hits.length){
+    box.innerHTML = '<div class="empty">'+T("Ничего не найдено.","Nothing found.")+'</div>'; return;
+  }
+  hits.slice(0, 200).forEach(function(n){ box.appendChild(nucRow(n, true)); });
+}
+function buildSelectors(){
+  buildGroupSel(); renderGroup(); renderSearch();
   var xb = $("xrfBar"); xb.innerHTML = "";
   Object.keys(XRF).forEach(function(el){
     var c = document.createElement("span"); c.className = "chip"+(sel.xrf[el]?" on":"");
@@ -1061,6 +1092,8 @@ document.addEventListener("click", function(ev){
     if (v.indexOf("xrf:")===0) sel.xrf[v.slice(4)] = true; else addNuc(v);
     buildSelectors(); rebuildLines(); renderTable(); searchNear(); return;
   }
+  var pick = t.closest && t.closest("[data-pick]");
+  if (pick){ addNuc(pick.dataset.pick); buildSelectors(); rebuildLines(); renderTable(); return; }
   if (t.dataset && t.dataset.del){ delNuc(t.dataset.del); buildSelectors(); rebuildLines(); renderTable(); return; }
   if (t.dataset && t.dataset.delx){ delete sel.xrf[t.dataset.delx]; buildSelectors(); rebuildLines(); renderTable(); return; }
 });
@@ -1081,17 +1114,27 @@ function onFilterChange(){ applyFilterSelection(); renderTable(); }
 ["fIOn","fEOn","fTOn","fTminU","fTmaxU","iMode"].forEach(function(id){ $(id).addEventListener("change", onFilterChange); });
 $("hideUnsel").addEventListener("change", renderTable);
 document.querySelectorAll(".fT").forEach(function(c){ c.addEventListener("change", renderTable); });
+$("famSel").addEventListener("change", renderGroup);
+$("famInfoBtn").addEventListener("click", function(){ showFamInfo(false); });
+$("nucSearch").addEventListener("input", renderSearch);
 $("eqScale").addEventListener("change", function(){ rebuildLines(); renderTable(); });
 $("libFull").addEventListener("change", function(){ $("anchorSel").value = ""; renderExpStat(); });
 $("anchorSel").addEventListener("change", renderExpStat);
+// имя из поля поиска: точное совпадение либо единственный результат живого поиска
+function searchPick(){
+  var v = $("nucSearch").value.trim();
+  if (DB.nuclides[v]) return v;
+  var hits = $("searchBox").querySelectorAll("[data-pick]");
+  return (v && hits.length===1) ? hits[0].dataset.pick : v;
+}
 $("nucAdd").addEventListener("click", function(){
-  var n = $("nucSearch").value.trim();
+  var n = searchPick();
   if (DB.nuclides[n]){ addNuc(n); $("nucSearch").value=""; buildSelectors(); rebuildLines(); renderTable(); }
   else alert(T("Нуклид «"+n+"» не найден в базе. Добавьте его в каталог update_nuclides.py и перегенерируйте.",
                "Nuclide “"+n+"” is not in the database. Add it to the CAT catalog in update_nuclides.py and regenerate."));
 });
 $("nucAddD").addEventListener("click", function(){
-  var n = $("nucSearch").value.trim();
+  var n = searchPick();
   if (!DB.nuclides[n]){ alert(T("Нуклид «"+n+"» не найден в базе.","Nuclide “"+n+"” is not in the database.")); return; }
   addNuc(n);
   var added = [n];
@@ -1256,7 +1299,7 @@ $("themeBtn").addEventListener("click", function(){
 var RU2EN = {
   "ROI-мастер для BecqMoni":"ROI Wizard for BecqMoni",
   "Изотопы, семейства, цепочки":"Nuclides, families, chains",
-  "Отдельный изотоп":"Single nuclide","Добавить":"Add","+ с дочерними":"+ with daughters",
+  "Поиск изотопа":"Nuclide search","Группа":"Group","Добавить":"Add","+ с дочерними":"+ with daughters",
   "ХРИ — элементы":"XRF — elements","Выбрано":"Selected","Очистить всё":"Clear all",
   "Семейства":"Families","Цепочки распада (ЕРН)":"Decay chains (NORM)",
   "Линии":"Lines","Адаптация под разрешение детектора (IDWin):":"Detector-resolution adaptation (IDWin):",
@@ -1310,6 +1353,7 @@ var PARA_EN = {
   sub0:'ROI configurations and nuclide libraries from IAEA nuclear data',
   sub1:'Gamma and X-ray lines from an IAEA Live Chart (ENSDF) snapshot → pick nuclides/families/chains → styling → export <code>.xml</code> in BecqMoni format (FormatVersion 120920).',
   chainHint:'Chain members with no γ/X lines above the database threshold are greyed out.',
+  searchHint:'Typing narrows the list: match by name or by family code. Click a row to add the nuclide.',
   xrfHint:'Kα/Kβ (+L for heavy elements). Intensities are relative (Kα1=100) — markers only.',
   resHint:'<b>R</b> — detector resolution (FWHM at 662 keV): NaI(Tl) 6.5–8 %, CsI(Tl) 8–10 %, SrI₂(Eu) 3–3.5 %, LaBr₃ 2.7–3.3 %. Peaks broaden as √E: FWHM(E) = R·√(662·E)/100 — a <b>scintillator</b> model (LaBr₃/NaI/SrI₂/CsI); for HPGe (R ~0.15 %) it underestimates the width at low energies — a √(a+bE) law would be needed (not implemented here). <b>Criterion</b> — how close lines have to be to count as inseparable. <b>Sparrow limit</b> (ΔE &lt; 0.85·FWHM, i.e. 2σ) is the physical resolvability limit of two peaks: closer than that a doublet looks like a single peak, so ROI markers are merged. <b>Anchored set</b> (ΔE &lt; 0.25·FWHM) is for sets exported into the BecqMoni library: pairs between 0.25 and 0.85 FWHM are resolved there by the library fit around the anchor line (amplitudes tied by tabulated intensities), wider ones by deconvolution — merging them only impoverishes the set. <b>Manual</b> — the previous behaviour (2–3×FWHM is a coarse identification window). <span id="mergeHint"></span>',
   eqHint:'Unchecked: I is “per 100 decays of the emitting nuclide”, as in the IAEA database and BecqMoni “Intensities” files: the Tl-208 2614 keV line has I = 99.75 %. But in the equilibrium Th-232 series only 35.94 % of decays pass through Tl-208 (Bi-212 branching: β 64 % / α 36 %), so <b>per one Th-232 decay</b> this line yields 99.75 × 0.3594 ≈ 35.85 %. The checkbox applies this factor to members behind branch points (Tl-208 ×0.3594, Po-212 ×0.6406; in the U-235 series: Th-227 ×0.9862, Fr-223 ×0.0138, Tl-207 ×0.99724, Po-211 ×0.00276); all other members — ×1. Enable when the ROI set describes an equilibrium series as a whole; disable for handbook values.',
