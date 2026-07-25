@@ -1705,22 +1705,30 @@ $("mergeFile").addEventListener("change", function(){
       document.body.appendChild(a); a.click();
       setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
     }
+    // Изменённый файл скачивается ПЕРВЫМ. Браузер разрешает автоматически сохранить
+    // только один файл, а на второй спрашивает разрешение — и если оно не дано, теряется
+    // именно второй. Когда первой шла копия оригинала, у пользователя на руках
+    // оставался файл, идентичный исходному: «набор не дописался».
+    save(xml, f.name || "NuclideDefinition.xml");
     var base = (f.name||"NuclideDefinition.xml").replace(/\.xml$/i,"");
     var bak = "";
-    if ($("bakOrig").checked){                      // копия оригинала — до изменённого файла
+    if ($("bakOrig").checked){
       var d = new Date(), p = function(x){ return (x<10?"0":"")+x; };
       bak = base+".backup-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+
             "-"+p(d.getHours())+p(d.getMinutes())+".xml";
-      save(rd.result, bak);
+      setTimeout(function(){ save(rd.result, bak); }, 400);
     }
-    setTimeout(function(){ save(xml, f.name || "NuclideDefinition.xml"); }, 400);
-    var n = sel.lines.filter(function(L){ return L.sel; }).length;
-    alert(T("Набор «"+($("libName").value||"")+"» ("+n+" линий) дописан в файл.\nЗамените им "+
+    var n = libLines().length;
+    alert(T("Набор «"+($("libName").value||"")+"» ("+n+" линий) дописан.\nСкачан файл «"+
+            (f.name || "NuclideDefinition.xml")+"» — замените им "+
             "%APPDATA%\\BecqMoni\\config\\NuclideDefinition.xml (BecqMoni при этом должен быть закрыт)."+
-            (bak ? "\n\nКопия оригинала сохранена: "+bak : ""),
-            "Set “"+($("libName").value||"")+"” ("+n+" lines) appended.\nReplace "+
+            (bak ? "\n\nВторым файлом идёт копия оригинала ("+bak+
+                   "). Если браузер спросит разрешение сохранить несколько файлов — разрешите." : ""),
+            "Set “"+($("libName").value||"")+"” ("+n+" lines) appended.\nDownloaded “"+
+            (f.name || "NuclideDefinition.xml")+"” — replace "+
             "%APPDATA%\\BecqMoni\\config\\NuclideDefinition.xml with it (close BecqMoni first)."+
-            (bak ? "\n\nBackup of the original saved as: "+bak : "")));
+            (bak ? "\n\nA copy of the original follows as a second file ("+bak+
+                   "). Allow multiple downloads if the browser asks." : "")));
   };
   rd.readAsText(f);
 });
