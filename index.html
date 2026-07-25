@@ -160,11 +160,14 @@
       <div class="nuclist" id="xrfBar"></div>
       <div>
         <p class="hint" id="xrfHint">Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1=100) — только маркеры.</p>
-        <h3>Выбрано</h3>
-        <div class="chipbar" id="selBar"></div>
-        <div class="row" style="margin-top:8px"><button id="clearAll">Очистить всё</button></div>
       </div>
     </div>
+  </div>
+  <div style="display:flex; gap:14px; align-items:flex-start; margin-top:12px;
+              border-top:1px solid var(--line); padding-top:10px">
+    <h3 style="margin:2px 0 0; white-space:nowrap">Выбрано</h3>
+    <div class="chipbar" id="selBar" style="flex:1; margin-top:0"></div>
+    <button id="clearAll" style="flex-shrink:0">Очистить всё</button>
   </div>
 </section>
 
