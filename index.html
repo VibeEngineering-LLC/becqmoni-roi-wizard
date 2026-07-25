@@ -15,10 +15,6 @@
   <span class="spacer"></span>
   <button id="langBtn">EN</button>
 </header>
-<div class="menubar" id="menubar">
-  <span class="sub" id="presetBar"></span>
-  <span class="sub" id="dbinfo"></span>
-</div>
 <nav class="tabs" id="tabs">
   <button data-tab="1" class="on">1 · Изотопы</button>
   <button data-tab="2">2 · Линии</button>
@@ -37,6 +33,8 @@
       </div>
       <div class="nuclist" id="searchList"></div>
       <p class="hint" id="searchHint">Ввод сужает список: по имени или по семейству. Клик по строке добавляет изотоп.</p>
+      <!-- полосы меню над закладками нет: пресеты живут на своём шаге, сводка базы — в подвале -->
+      <p class="hint presets" id="presetBar"></p>
     </div>
     <div class="gbox"><span class="lg">Группа</span>
       <div class="row" style="position:relative">
@@ -284,6 +282,7 @@
   <pre id="xmlPrev" style="display:none"></pre>
   </div>
   <details class="doc" style="margin-top:10px"><summary>об источниках данных</summary>
+  <p class="hint" id="dbinfo"></p>
   <p class="hint" id="footerText">
   Данные: снимок IAEA Live Chart of Nuclides API (ENSDF) — файл <code>data/nuclides.js</code>, обновление —
   <code>update_nuclides.py</code> (API не отдаёт CORS, поэтому обновление скриптом, страница автономна).
@@ -1177,9 +1176,6 @@ function updSteps(){
   p.disabled = cur<=1;
   n.textContent = cur<NSTEP ? T(STEPNAME[cur][0],STEPNAME[cur][1])+" ▸" : T("Вперёд ▸","Next ▸");
   n.disabled = cur>=NSTEP;
-  // пресеты нужны на первом шаге, сводка базы — на остальных
-  $("presetBar").style.display = cur===1 ? "" : "none";
-  $("dbinfo").style.display = cur===1 ? "none" : "";
 }
 $("stepPrev").addEventListener("click", function(){
   goTab(+document.querySelector(".tabs button.on").dataset.tab - 1); });

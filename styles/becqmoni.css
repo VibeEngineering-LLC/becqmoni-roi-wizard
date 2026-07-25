@@ -25,8 +25,7 @@
 body{font:12px/1.4 "Segoe UI",Tahoma,Arial,sans-serif}
 .topbar{padding:3px 8px; gap:8px}
 .topbar h1{font-size:12px}
-.menubar{padding:2px 8px; gap:12px; border-bottom:1px solid #b9bec6}
-.menubar .sub{font-size:11px}
+.presets{font-size:11px; margin:3px 0 0}
 
 .tabs{padding:4px 8px 0; gap:1px; border-bottom:1px solid #9fb0c6}
 .tabs button{border:1px solid #c0c0c0; border-bottom:none; border-radius:0; background:var(--tabbg);
@@ -175,7 +174,6 @@ pre{border-radius:0; font-size:11.5px; padding:5px 7px; max-height:260px}
 @media (max-width:620px){
   .cols3,.cols2{grid-template-columns:1fr}
   .tabs button{padding:4px 9px}
-  .menubar{flex-wrap:wrap; row-gap:2px}
   #roiMode{max-width:100%; flex:1 1 140px; min-width:0}
   /* самые длинные подписи: в панели отдаём селекту всю строку, иначе режется */
   #mMode,#iMode{max-width:100% !important; flex:1 1 100%; min-width:0}
