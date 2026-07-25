@@ -565,7 +565,7 @@ namespace BecquerelMonitor.RoiWizard
             {
                 this.listIssues.Items.Add("ROI · " + issue.Text);
             }
-            foreach (SetIssue issue in SetChecker.Check(this.lines, true, this.exporter))
+            foreach (SetIssue issue in SetChecker.Check(this.lines, true, this.exporter, this.Resolution))
             {
                 if (issue.Level == IssueLevel.Error)
                 {
@@ -630,7 +630,7 @@ namespace BecquerelMonitor.RoiWizard
             // для набора совпавшие энергии и нулевая интенсивность — ошибки: две линии на
             // одной позиции вырождают подгонку амплитуд, а Intencity = 0 выбрасывает линию
             // из связки по цепочке
-            List<SetIssue> issues = SetChecker.Check(this.lines, true, this.exporter);
+            List<SetIssue> issues = SetChecker.Check(this.lines, true, this.exporter, this.Resolution);
             List<SetIssue> errors = issues.FindAll(delegate(SetIssue i) { return i.Level == IssueLevel.Error; });
             if (errors.Count > 0)
             {

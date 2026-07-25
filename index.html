@@ -1004,6 +1004,15 @@ function checkIssues(target){
   }
   lines.forEach(function(L){ if (!(L.I>0))
     (lib ? err : warn).push(T("нулевой выход: «","zero yield: “")+nm(L)+T("» ("," (")+L.E+T(" кэВ)"," keV)")); });
+  if (lib){
+    // без якоря LibraryPeakFitter не стартует вовсе, а якорь на ХРИ или вторичном маркере
+    // хуже отсутствия: фит «найдёт» опору там, где её физически нет
+    var aKey = anchorKeyOf(lines), aL = lines.filter(function(L){ return L.key===aKey; })[0];
+    if (!aL) err.push(T("нет якорной линии: в наборе нет ни одной линии распада (ХРИ и вторичные маркеры якорем быть не могут) — библиотечный фит без якоря не запускается",
+                        "no anchor line: the set has no decay line (XRF and secondary markers cannot be anchors) — the library fit does not start without one"));
+    else if (aL.type!=="g") warn.push(T("якорь — рентгеновская линия «","the anchor is an X-ray line “")+nm(aL)+
+      T("»: для опоры фита надёжнее γ-линия","”: a γ line is a more reliable support for the fit"));
+  }
   if (!lib && mode!=="marker"){
     for (var j=1;j<srt.length;j++){
       var a = limitsFor(srt[j-1]), b = limitsFor(srt[j]);
@@ -1197,7 +1206,9 @@ function libLines(){
 function anchorKeyOf(lines){
   var manual = $("anchorSel").value;
   if (manual && lines.some(function(L){ return L.key===manual; })) return manual;
-  var mx = 0; lines.forEach(function(L){ if (L.I>mx) mx = L.I; });
+  // Порог 0.2·max считается по ОДНИМ γ-линиям: интенсивности ХРИ условные (Kα1 = 100),
+  // и максимум по всем линиям утопил бы настоящие γ слабого нуклида ниже порога.
+  var mx = 0; lines.forEach(function(L){ if (L.type==="g" && L.I>mx) mx = L.I; });
   var r = parseFloat($("mR662").value)||7.5;
   // Хороший якорь — сильная и ОДИНОКАЯ линия: сосед внутри FWHM смещает центроид
   // найденного пика, и совпадение с табличной энергией перестаёт быть надёжным.
@@ -1213,7 +1224,10 @@ function anchorKeyOf(lines){
     if (lonely(L) && (!bestLonely || L.I>bestLonely.I)) bestLonely = L;
   });
   var pick = bestLonely || best;
-  if (!pick) lines.forEach(function(L){ if (!pick || L.I>pick.I) pick = L; });
+  // Фолбэк — только на настоящие линии распада. У ХРИ интенсивность условная, у вторичных
+  // положение — эмпирическая поправка: якорь на таком маркере означал бы, что библиотечный
+  // фит сажает весь набор по нефизической опоре.
+  if (!pick) lines.forEach(function(L){ if (L.type==="x" && (!pick || L.I>pick.I)) pick = L; });
   return pick ? pick.key : "";
 }
 function fillAnchorSel(){

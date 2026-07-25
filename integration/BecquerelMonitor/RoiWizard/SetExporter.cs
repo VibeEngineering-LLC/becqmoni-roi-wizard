@@ -36,10 +36,13 @@ namespace BecquerelMonitor.RoiWizard
             {
                 return null;
             }
+            // Порог 0.2·max считается по ОДНИМ γ-линиям. Интенсивности ХРИ условные
+            // (Kα1 = 100), и если брать максимум по всем линиям, то у слабо-γ нуклида
+            // рядом с ХРИ свинца все настоящие γ уходят ниже порога.
             double max = 0.0;
             foreach (SpectralLine line in lines)
             {
-                if (line.Intensity > max)
+                if (line.Type == LineType.Gamma && line.Intensity > max)
                 {
                     max = line.Intensity;
                 }
@@ -68,14 +71,31 @@ namespace BecquerelMonitor.RoiWizard
             {
                 return pick;
             }
+            // Фолбэк только на настоящие линии распада: у ХРИ интенсивность условная,
+            // у вторичных положение — эмпирическая поправка. Якорь на таком маркере
+            // означал бы, что LibraryPeakFitter сажает весь набор по нефизической опоре.
+            return Strongest(lines, LineType.Xray);
+        }
+
+        static SpectralLine Strongest(IList<SpectralLine> lines, LineType type)
+        {
+            SpectralLine pick = null;
             foreach (SpectralLine line in lines)
             {
-                if (pick == null || line.Intensity > pick.Intensity)
+                if (line.Type == type && (pick == null || line.Intensity > pick.Intensity))
                 {
                     pick = line;
                 }
             }
             return pick;
+        }
+
+        // Годится ли линия в якоря: набор без якоря библиотечный фит не запускает вовсе,
+        // а якорь на ХРИ или вторичном маркере хуже отсутствия — фит «найдёт» опору там,
+        // где её физически нет.
+        public static bool IsAcceptable(SpectralLine line)
+        {
+            return line != null && (line.Type == LineType.Gamma || line.Type == LineType.Xray);
         }
 
         static bool IsLonely(SpectralLine line, IList<SpectralLine> lines,
@@ -245,6 +265,14 @@ namespace BecquerelMonitor.RoiWizard
         public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
                                            SetExporter exporter)
         {
+            return Check(lines, forLibrary, exporter, null);
+        }
+
+        // resolution нужен, чтобы проверить якорь ровно так же, как его выберет
+        // BuildNuclideSet; без модели разрешения проверка якоря пропускается
+        public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
+                                           SetExporter exporter, ResolutionModel resolution)
+        {
             List<SetIssue> issues = new List<SetIssue>();
             List<SpectralLine> sorted = new List<SpectralLine>();
             foreach (SpectralLine line in lines)
@@ -280,6 +308,30 @@ namespace BecquerelMonitor.RoiWizard
                         Level = level,
                         Text = string.Format(CultureInfo.CurrentCulture, "нулевой выход: «{0}» ({1} кэВ)",
                             Name(line, forLibrary), line.Energy)
+                    });
+                }
+            }
+            if (forLibrary && resolution != null)
+            {
+                SpectralLine anchor = AnchorPicker.Pick(sorted, resolution);
+                if (anchor == null)
+                {
+                    issues.Add(new SetIssue
+                    {
+                        Level = IssueLevel.Error,
+                        Text = "нет якорной линии: в наборе нет ни одной линии распада " +
+                               "(ХРИ и вторичные маркеры якорем быть не могут) — " +
+                               "библиотечный фит без якоря не запускается"
+                    });
+                }
+                else if (anchor.Type != LineType.Gamma)
+                {
+                    issues.Add(new SetIssue
+                    {
+                        Level = IssueLevel.Warning,
+                        Text = string.Format(CultureInfo.CurrentCulture,
+                            "якорь — рентгеновская линия «{0}» ({1} кэВ): для опоры фита надёжнее γ-линия",
+                            anchor.LibraryName, anchor.Energy)
                     });
                 }
             }
