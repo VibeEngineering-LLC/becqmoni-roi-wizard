@@ -651,6 +651,13 @@ function hasLines(n){ var e = DB.nuclides[n]; return !!e && (e.g.length+e.x.leng
 // Подпись линий нуклида. attr — «одним изотопом» (всё под именем родителя);
 // par — «цепочкой» для пар вне ЕРН-рядов; у членов ряда родитель берётся из ряда.
 // Родитель в скобках — то, по чему BecqMoni опознаёт цепочку при связке амплитуд.
+// ChainOf в BecqMoni читает текст в ПОСЛЕДНИХ скобках имени как имя родительской
+// цепочки. У рентгеновской линии суффикс « X KA1» шёл после скобок и разрывал признак
+// цепочки, поэтому суффикс вставляется ПЕРЕД скобками родителя.
+function withSuffix(label, suffix){
+  var m = /^(.*?)\s*\(([^()]*)\)\s*$/.exec(label);
+  return m ? m[1]+" "+suffix+" ("+m[2]+")" : label+" "+suffix;
+}
 function nucLabel(n){
   if (sel.attr[n]) return sel.attr[n];
   if (sel.par[n]) return n+" ("+sel.par[n]+")";
@@ -676,7 +683,7 @@ function rebuildLines(){
     });
     e.x.forEach(function(li){
       var key = "x|"+n+"|"+li[0]+"|"+li[2];
-      out.push({key:key, nuc:n, label:label+" X "+li[2], E:li[0], I:+(li[1]*eq).toFixed(4), rawI:li[1],
+      out.push({key:key, nuc:n, label:withSuffix(label, "X "+li[2]), E:li[0], I:+(li[1]*eq).toFixed(4), rawI:li[1],
         type:"x", hlY:e.hl_y||1e9, hl:hlText(n), sel: key in old ? old[key] : false, _new: !(key in old)});
     });
   });
@@ -877,7 +884,7 @@ function genSecondaries(){
     // садится НИЖЕ ступеньки. Обратное рассеяние, наоборот, уходит ВВЕРХ — многократное
     // рассеяние добавляется к однократному 180°. Обе поправки — из измерений, см. SEC_SOURCE.
     if (types.indexOf("bs")>=0 && L.E>=200) push("BS", bs + SEC_FIX.bsShift, 0.08, "рассеяние назад");
-    if (types.indexOf("ce")>=0 && L.E>=200) push("CE", ce - SEC_FIX.ceFwhmFactor*fwhm(ce), 0.06, "комптон-край");
+    if (types.indexOf("ce")>=0 && L.E>=200) push("CE", ce - SEC_FIX.ceFwhmFactor*fwhmDet(ce), 0.06, "комптон-край");
     if (types.indexOf("se")>=0 && L.E>1122) push("SE", L.E-ME511, 0.06, "одиночный вылет");
     if (types.indexOf("de")>=0 && L.E>1222) push("DE", L.E-2*ME511, 0.10, "двойной вылет");
     if (types.indexOf("esc")>=0 && L.E<200) push("I-esc", L.E-28.6, 0.10, "вылет K-линии I (NaI)");
@@ -1098,15 +1105,22 @@ function renderColors(){
 }
 
 // ── FWHM / зоны ──
-function fwhm(E){ var r = parseFloat($("r662").value)/100; return r*Math.sqrt(662*E); }
+// Разрешение детектора (шаг 2). Именно оно задаёт порог слияния, выбор якоря и
+// поправку положения комптоновского края.
+function fwhmDet(E){ var r = parseFloat($("mR662").value); if (!(r>0)) r = 7.5; return r/100*Math.sqrt(662*E); }
+// Ширина ROI-зоны задаётся своим полем (шаг 3): пользователь может нарочно взять окно
+// шире или уже аппаратного разрешения. Пустое поле не должно давать NaN в границах.
+function fwhm(E){ var r = parseFloat($("r662").value); if (!(r>0)) r = parseFloat($("mR662").value)||7.5; return r/100*Math.sqrt(662*E); }
 function limitsFor(L){
   var mode = $("roiMode").value;
   if (mode==="marker") return [-10,-10];
   if ($("wMode").value==="pct"){
-    var p = parseFloat($("wPct").value)/100;
+    var pv = parseFloat($("wPct").value); if (!(pv>0)) pv = 5;
+    var p = pv/100;
     return [Math.floor(L.E - L.E*p/2), Math.ceil(L.E + L.E*p/2)];
   }
-  var w = parseFloat($("kF").value)*fwhm(L.E);
+  var kf = parseFloat($("kF").value); if (!(kf>0)) kf = 3;
+  var w = kf*fwhm(L.E);
   return [Math.floor(L.E - w/2), Math.ceil(L.E + w/2)];
 }
 
@@ -1168,7 +1182,7 @@ function libLines(){
     var label = nucLabel(n);
     e.g.forEach(function(li){ out.push({key:"g|"+n+"|"+li[0], nuc:n, label:label,
       E:li[0], I:+(li[1]*eq).toFixed(4), type:"g", hlY:e.hl_y||1e9}); });
-    e.x.forEach(function(li){ out.push({key:"x|"+n+"|"+li[0]+"|"+li[2], nuc:n, label:label+" X "+li[2],
+    e.x.forEach(function(li){ out.push({key:"x|"+n+"|"+li[0]+"|"+li[2], nuc:n, label:withSuffix(label, "X "+li[2]),
       E:li[0], I:+(li[1]*eq).toFixed(4), type:"x", hlY:e.hl_y||1e9}); });
   });
   Object.keys(sel.xrf).forEach(function(el){

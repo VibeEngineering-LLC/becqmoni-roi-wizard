@@ -202,7 +202,7 @@ namespace BecquerelMonitor.RoiWizard
                     {
                         Key = "x|" + nuclide.Name + "|" + Fmt(xray.Energy) + "|" + xray.Shell,
                         Nuclide = nuclide.Name,
-                        Label = label + " X " + xray.Shell,
+                        Label = WithSuffix(label, "X " + xray.Shell),
                         Energy = xray.Energy,
                         Intensity = Math.Round(xray.Intensity * equilibrium, 4),
                         RawIntensity = xray.Intensity,
@@ -289,6 +289,26 @@ namespace BecquerelMonitor.RoiWizard
                     list[i].Selected = i < count;
                 }
             }
+        }
+
+        // ChainOf в BecqMoni читает текст в ПОСЛЕДНИХ скобках имени как имя родительской
+        // цепочки. Суффикс рентгеновской линии («X KA1») шёл после скобок и разрывал признак
+        // цепочки — «Tl-208 (Th-232) X KA1» вместо «Tl-208 X KA1 (Th-232)», поэтому суффикс
+        // вставляется перед скобками родителя.
+        internal static string WithSuffix(string label, string suffix)
+        {
+            if (string.IsNullOrEmpty(label))
+            {
+                return suffix;
+            }
+            int close = label.LastIndexOf(')');
+            int open = close > 0 ? label.LastIndexOf('(', close - 1) : -1;
+            if (close == label.Length - 1 && open > 0)
+            {
+                return label.Substring(0, open).TrimEnd() + " " + suffix +
+                       " (" + label.Substring(open + 1, close - open - 1) + ")";
+            }
+            return label + " " + suffix;
         }
 
         static string Fmt(double value)

@@ -596,11 +596,21 @@ namespace BecquerelMonitor.RoiWizard
                 return;
             }
 
-            ROIConfigData config = this.exporter.BuildRoiConfig(this.lines, this.textConfigName.Text, ColorOf);
-            config.Filename = SafeFileName(config.Name) + ".xml";
+            ROIConfigData built = this.exporter.BuildRoiConfig(this.lines, this.textConfigName.Text, ColorOf);
 
+            // Регистрировать конфигурацию обязан сам менеджер: CreateConfig кладёт её и в
+            // ROIConfigList, и в ROIConfigMap, и поднимает ROIConfigListChanged. Простое
+            // добавление в список оставило бы карту пустой, а SaveConfig начинается с
+            // roiConfigMap[Guid] — то есть упал бы KeyNotFoundException.
             ROIConfigManager manager = ROIConfigManager.GetInstance();
-            manager.ROIConfigList.Add(config);
+            ROIConfigData config = manager.CreateConfig(SafeFileName(built.Name) + ".xml");
+            if (config == null)
+            {
+                return;                                  // менеджер уже показал сообщение об ошибке
+            }
+            config.Name = built.Name;
+            config.ROIDefinitions.Clear();
+            config.ROIDefinitions.AddRange(built.ROIDefinitions);
             manager.SaveConfig(config);
 
             this.statusLabel.Text = string.Format(CultureInfo.CurrentCulture,

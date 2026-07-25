@@ -84,9 +84,15 @@ var exporter = new SetExporter(resolution).Reset();
 foreach (var issue in SetChecker.Check(lines, false, exporter))       // false = проверка для ROI
     Console.WriteLine(issue.Level + ": " + issue.Text);
 
-ROIConfigData config = exporter.BuildRoiConfig(lines, "Th-232 chain", line => Color.OrangeRed);
-ROIConfigManager.GetInstance().ROIConfigList.Add(config);
-ROIConfigManager.GetInstance().SaveConfig(config);
+ROIConfigData built = exporter.BuildRoiConfig(lines, "Th-232 chain", line => Color.OrangeRed);
+
+// регистрирует менеджер: CreateConfig заполняет и список, и карту по guid, и шлёт событие.
+// Просто добавить в ROIConfigList нельзя — SaveConfig начинается с roiConfigMap[Guid].
+var roiManager = ROIConfigManager.GetInstance();
+ROIConfigData config = roiManager.CreateConfig("Th-232 chain.xml");
+config.Name = built.Name;
+config.ROIDefinitions.AddRange(built.ROIDefinitions);
+roiManager.SaveConfig(config);
 
 List<NuclideDefinition> definitions;
 NuclideSet set = exporter.BuildNuclideSet(lines, "Th-232 (IAEA)", line => Color.OrangeRed,
