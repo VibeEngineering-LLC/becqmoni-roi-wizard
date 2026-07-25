@@ -340,8 +340,8 @@
 </footer>
 </div>
 
-<script src="data/nuclides.js?v=20260725"></script>
-<script src="data/xrf.js?v=20260725"></script>
+<script src="data/nuclides.js?v=20260725b"></script>
+<script src="data/xrf.js?v=20260725b"></script>
 <script>
 "use strict";
 var DB = window.NUCLIDE_DB, XRF = window.XRF_DB;
@@ -368,13 +368,10 @@ var sortK = "E", sortDir = 1;
 // ── язык интерфейса ──
 var LANG = localStorage.getItem("roiLang") || "ru";
 function T(ru,en){ return LANG==="en" ? en : ru; }
-var CHAIN_EN = {u238:"U-238 series (uranium–radium)", th232:"Th-232 series (thorium)",
-                u235:"U-235 series (uranium–actinium)"};
-var FAM_EN = {erh:"NORM (natural)", med:"Medical", fission:"Fission products",
-              tech:"Industrial & calibration", naa:"Neutron activation (NAA)",
-              waste:"Nuclear waste / spent fuel"};
-function chainTitle(c){ return LANG==="en" ? CHAIN_EN[c] : DB.chains[c].title; }
-function famTitle(f){ return LANG==="en" ? FAM_EN[f] : DB.families[f]; }
+// названия семейств и рядов приходят из базы (RU: русская классификация, ANSI в скобках; EN: наоборот)
+function chainTitle(c){ var e = DB.chains[c]; return (LANG==="en" && e.title_en) ? e.title_en : e.title; }
+function famTitle(f){ var e = DB.families[f]; return e ? (LANG==="en" ? e.en : e.ru) : f; }
+function famInfo(f){ var e = DB.families[f]; return e ? (LANG==="en" ? e.info_en : e.info_ru) : ""; }
 function locHl(s){
   if (LANG!=="en" || !s) return s;
   return s.replace(" лет"," y").replace(" сут"," d").replace(" мин"," min")

@@ -22,7 +22,7 @@ X_MIN_I = 0.5                # % — порог ХРИ
 E_MIN   = 4.0                # кэВ — ниже не берём
 
 # ── Каталог: имя → (api-нуклид, энергия уровня материнского состояния [кэВ] или 0, семейства, цепочка) ──
-# families: erh (ЕРН), med, fission, tech; цепочки: u238, th232, u235
+# families: popular, norm (ЕРН), med, ind, snm, fiss, naa, waste; цепочки: u238, th232, u235
 CAT = {}
 def N(name, api, state=0.0, fam=(), chain=None, note="", gmin=None):
     # gmin — индивидуальный порог интенсивности γ (для слабоизлучающих актинидов)
@@ -34,19 +34,19 @@ for nm, api, st in [("U-238","238u",0),("Th-234","234th",0),("Pa-234m","234pa",7
                     ("Rn-222","222rn",0),("Po-218","218po",0),("Pb-214","214pb",0),
                     ("Bi-214","214bi",0),("Po-214","214po",0),("Pb-210","210pb",0),
                     ("Bi-210","210bi",0),("Po-210","210po",0)]:
-    N(nm, api, st, fam=("erh",), chain="u238")
+    N(nm, api, st, fam=("norm",), chain="u238")
 # — цепочка Th-232 —
 for nm, api in [("Th-232","232th"),("Ra-228","228ra"),("Ac-228","228ac"),("Th-228","228th"),
                 ("Ra-224","224ra"),("Rn-220","220rn"),("Po-216","216po"),("Pb-212","212pb"),
                 ("Bi-212","212bi"),("Tl-208","208tl"),("Po-212","212po")]:
-    N(nm, api, 0, fam=("erh",), chain="th232")
+    N(nm, api, 0, fam=("norm",), chain="th232")
 # — цепочка U-235 —
 for nm, api in [("U-235","235u"),("Th-231","231th"),("Pa-231","231pa"),("Ac-227","227ac"),
                 ("Th-227","227th"),("Fr-223","223fr"),("Ra-223","223ra"),("Rn-219","219rn"),
                 ("Po-215","215po"),("Pb-211","211pb"),("Bi-211","211bi"),("Tl-207","207tl")]:
-    N(nm, api, 0, fam=("erh",), chain="u235")
+    N(nm, api, 0, fam=("norm",), chain="u235")
 # — ЕРН вне цепочек —
-N("K-40","40k",fam=("erh",)); N("Be-7","7be",fam=("erh",))
+N("K-40","40k",fam=("norm",)); N("Be-7","7be",fam=("norm",))
 # — медицинские —
 for nm, api, st in [("Tc-99m","99tc",142.6836),("Mo-99","99mo",0),("I-131","131i",0),
                     ("I-125","125i",0),("I-123","123i",0),("F-18","18f",0),
@@ -54,7 +54,7 @@ for nm, api, st in [("Tc-99m","99tc",142.6836),("Mo-99","99mo",0),("I-131","131i
                     ("Tl-201","201tl",0),("Lu-177","177lu",0),("Sm-153","153sm",0),
                     ("Y-90","90y",0),("Xe-133","133xe",0)]:
     N(nm, api, st, fam=("med",))
-CAT["Ra-223"] = dict(api="223ra", state=0, fam=["erh","med"], chain="u235", note="")  # и ЕРН, и медицина
+CAT["Ra-223"] = dict(api="223ra", state=0, fam=["norm","med"], chain="u235", note="", gmin=None)  # и ЕРН, и медицина
 # — осколки деления —
 for nm, api, st in [("Cs-137","137cs",0),("Cs-134","134cs",0),("Cs-136","136cs",0),
                     ("I-132","132i",0),("I-133","133i",0),("Te-132","132te",0),
@@ -62,16 +62,16 @@ for nm, api, st in [("Cs-137","137cs",0),("Cs-134","134cs",0),("Cs-136","136cs",
                     ("Ce-144","144ce",0),("Pr-144","144pr",0),("Zr-95","95zr",0),
                     ("Nb-95","95nb",0),("Ba-140","140ba",0),("La-140","140la",0),
                     ("Sb-125","125sb",0),("Ag-110m","110ag",117.59)]:
-    N(nm, api, st, fam=("fission",))
-for nm in ("I-131","Mo-99"): CAT[nm]["fam"].append("fission")
+    N(nm, api, st, fam=("fiss",))
+for nm in ("I-131","Mo-99"): CAT[nm]["fam"].append("fiss")
 # — техногенные / калибровочные —
 for nm, api in [("Co-60","60co"),("Co-57","57co"),("Co-58","58co"),("Mn-54","54mn"),
                 ("Na-22","22na"),("Zn-65","65zn"),("Cd-109","109cd"),("Ba-133","133ba"),
                 ("Eu-152","152eu"),("Eu-154","154eu"),("Eu-155","155eu"),("Am-241","241am"),
                 ("Ir-192","192ir"),("Se-75","75se"),("Bi-207","207bi"),("Sn-113","113sn"),
                 ("Y-88","88y"),("Sr-85","85sr"),("Cr-51","51cr")]:
-    N(nm, api, 0, fam=("tech",))
-for nm in ("Cs-137","Cs-134"): CAT[nm]["fam"].append("tech")
+    N(nm, api, 0, fam=("ind",))
+for nm in ("Cs-137","Cs-134"): CAT[nm]["fam"].append("ind")
 # — нейтронная активация (НАА) —
 for nm, api, st in [("Na-24","24na",0),("K-42","42k",0),("Sc-46","46sc",0),("Mn-56","56mn",0),
                     ("Fe-59","59fe",0),("Cu-64","64cu",0),("Ga-72","72ga",0),("As-76","76as",0),
@@ -95,19 +95,48 @@ for nm, api in [("Pu-238","238pu"),("Pu-239","239pu"),("Pu-240","240pu"),
 for nm in ("Cs-137","Cs-134","Sb-125","Rh-106","Ce-144","Pr-144","Eu-154","Eu-155",
            "Co-60","Am-241"):
     CAT[nm]["fam"].append("waste")
+# — делящиеся материалы (SNM) —
+for nm in ("U-235","Pu-239","Pu-241"): CAT[nm]["fam"].append("snm")
+# — популярные (типовое поле; ряды ЕРН доступны отдельными пунктами-цепочками) —
+for nm in ("K-40","Cs-137","Cs-134","Co-60","Am-241","Ra-226","Th-232","U-238",
+           "I-131","Tc-99m","Ba-133","Eu-152"):
+    CAT[nm]["fam"].insert(0, "popular")
 
 CHAINS = {
-  "u238":  {"title":"Ряд U-238 (уран-радиевый)",  "order":[n for n,c in CAT.items() if c["chain"]=="u238"]},
-  "th232": {"title":"Ряд Th-232 (ториевый)",       "order":[n for n,c in CAT.items() if c["chain"]=="th232"]},
-  "u235":  {"title":"Ряд U-235 (уран-актиниевый)", "order":[n for n,c in CAT.items() if c["chain"]=="u235"]},
+  "u238":  {"title":"Ряд U-238 (уран-радиевый)",  "title_en":"U-238 series (uranium–radium)",
+            "order":[n for n,c in CAT.items() if c["chain"]=="u238"]},
+  "th232": {"title":"Ряд Th-232 (ториевый)",       "title_en":"Th-232 series (thorium)",
+            "order":[n for n,c in CAT.items() if c["chain"]=="th232"]},
+  "u235":  {"title":"Ряд U-235 (уран-актиниевый)", "title_en":"U-235 series (uranium–actinium)",
+            "order":[n for n,c in CAT.items() if c["chain"]=="u235"]},
 }
+# Семейства: в RU основное — российская классификация, код ANSI N42.34 в скобках;
+# в EN — наоборот. info_* идёт в словарик по кнопке (i).
 FAMILIES = {
-  "erh":     "ЕРН (естественные)",
-  "med":     "Медицинские",
-  "fission": "Осколки деления",
-  "tech":    "Техногенные и калибровочные",
-  "naa":     "Нейтронная активация (НАА)",
-  "waste":   "Ядерные отходы / ОЯТ",
+  "popular": {"ru":"Популярные", "en":"POPULAR (common)",
+              "info_ru":"Типовое поле: то, что встречается в измерениях чаще всего. Ряды ЕРН добавляются отдельными пунктами-цепочками.",
+              "info_en":"Everyday field work: the most frequently encountered nuclides. NORM series are separate chain entries."},
+  "norm":    {"ru":"ЕРН — естественные (NORM)", "en":"NORM (naturally occurring)",
+              "info_ru":"Естественные радионуклиды: ряды U-238, Th-232, U-235, а также K-40 и Be-7. NORM — Naturally Occurring Radioactive Material.",
+              "info_en":"Naturally Occurring Radioactive Material: U-238, Th-232, U-235 series, K-40, Be-7."},
+  "med":     {"ru":"Медицинские (MED)", "en":"MED (medical)",
+              "info_ru":"Диагностика и терапия: Tc-99m, I-131, F-18, Ga-68, Lu-177 и др. Короткоживущие, встречаются у пациентов и в отходах клиник.",
+              "info_en":"Diagnostics and therapy: Tc-99m, I-131, F-18, Ga-68, Lu-177 etc."},
+  "ind":     {"ru":"Техногенные и калибровочные (IND)", "en":"IND (industrial)",
+              "info_ru":"Промышленные источники, дефектоскопия, ОСГИ и калибровочные наборы: Co-60, Cs-137, Ir-192, Am-241, Eu-152, Ba-133.",
+              "info_en":"Industrial sources, radiography and calibration sets: Co-60, Cs-137, Ir-192, Am-241, Eu-152, Ba-133."},
+  "snm":     {"ru":"Делящиеся материалы (SNM)", "en":"SNM (special nuclear material)",
+              "info_ru":"Делящиеся нуклиды, ядерные материалы под учётом и контролем: U-235, Pu-239, Pu-241. SNM — Special Nuclear Material.",
+              "info_en":"Fissile nuclides under safeguards: U-235, Pu-239, Pu-241."},
+  "fiss":    {"ru":"Осколки деления (FISS)", "en":"FISS (fission products)",
+              "info_ru":"Продукты деления: Cs-137/134, I-131/132/133, Ce-144, Ru-103, Zr-95/Nb-95, Ba-140/La-140 — аварийные выбросы и ОЯТ.",
+              "info_en":"Fission products: Cs-137/134, I-131/132/133, Ce-144, Ru-103, Zr-95/Nb-95, Ba-140/La-140."},
+  "naa":     {"ru":"Активационные (NAA)", "en":"NAA (neutron activation)",
+              "info_ru":"Продукты нейтронной активации: Na-24, Mn-56, Fe-59, Cu-64, Au-198, W-187, Ar-41 — активационный анализ и наведённая активность.",
+              "info_en":"Neutron activation products: Na-24, Mn-56, Fe-59, Cu-64, Au-198, W-187, Ar-41."},
+  "waste":   {"ru":"ОЯТ и РАО (WASTE)", "en":"WASTE (spent fuel and waste)",
+              "info_ru":"Отработавшее ядерное топливо и радиоактивные отходы: минорные актиниды (Np-237, Am-243, Cm-244), долгоживущие Nb-94, I-129, Ag-108m.",
+              "info_en":"Spent nuclear fuel and radioactive waste: minor actinides (Np-237, Am-243, Cm-244), long-lived Nb-94, I-129, Ag-108m."},
 }
 
 def fetch(url, tries=3):
@@ -198,7 +227,19 @@ def main():
     meta = dict(
         generated=datetime.date.today().isoformat(),
         source="IAEA Live Chart of Nuclides API (nds.iaea.org/relnsd/v0, ENSDF)",
-        g_min_intensity=G_MIN_I, x_min_intensity=X_MIN_I, e_min_kev=E_MIN)
+        g_min_intensity=G_MIN_I, x_min_intensity=X_MIN_I, e_min_kev=E_MIN,
+        # Какой стандарт взят за основу кодов семейств (замечание рецензента:
+        # в источниках делящиеся материалы идут то как SNM, то как SPEC).
+        fam_standard_ru=("Коды семейств — по ANSI N42.34 (идентификаторы RIID): "
+                         "NORM / MED / IND / SNM. Делящиеся материалы в части источников "
+                         "обозначают SPEC — здесь принят код SNM (Special Nuclear Material) "
+                         "как в N42.34 и в номенклатуре МАГАТЭ. Группы FISS / NAA / WASTE — "
+                         "вне стандарта, добавлены под задачи спектрометрии."),
+        fam_standard_en=("Family codes follow ANSI N42.34 (RIID identifiers): "
+                         "NORM / MED / IND / SNM. Some sources label fissile materials SPEC; "
+                         "SNM (Special Nuclear Material) is used here, as in N42.34 and IAEA "
+                         "usage. FISS / NAA / WASTE are outside the standard, added for "
+                         "spectrometry work."))
     js = ("// Автосгенерировано update_nuclides.py — не редактировать руками.\n"
           "// Источник: " + meta["source"] + ", снимок " + meta["generated"] + "\n"
           "window.NUCLIDE_DB = " +
