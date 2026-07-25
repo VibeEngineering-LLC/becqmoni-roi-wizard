@@ -72,6 +72,17 @@ namespace BecquerelMonitor.RoiWizard
             this.checkEnergy = new System.Windows.Forms.CheckBox();
             this.numMinEnergy = new System.Windows.Forms.NumericUpDown();
             this.numMaxEnergy = new System.Windows.Forms.NumericUpDown();
+            this.checkHalfLife = new System.Windows.Forms.CheckBox();
+            this.numMinHalfLife = new System.Windows.Forms.NumericUpDown();
+            this.comboMinHalfLifeUnit = new System.Windows.Forms.ComboBox();
+            this.numMaxHalfLife = new System.Windows.Forms.NumericUpDown();
+            this.comboMaxHalfLifeUnit = new System.Windows.Forms.ComboBox();
+            this.checkHideUnselected = new System.Windows.Forms.CheckBox();
+            this.labelTypes = new System.Windows.Forms.Label();
+            this.checkTypeGamma = new System.Windows.Forms.CheckBox();
+            this.checkTypeXray = new System.Windows.Forms.CheckBox();
+            this.checkTypeXrf = new System.Windows.Forms.CheckBox();
+            this.checkTypeSecondary = new System.Windows.Forms.CheckBox();
             this.checkEquilibrium = new System.Windows.Forms.CheckBox();
             this.checkSecondary = new System.Windows.Forms.CheckBox();
             this.buttonSelectAll = new System.Windows.Forms.Button();
@@ -85,6 +96,8 @@ namespace BecquerelMonitor.RoiWizard
             this.columnLineName = new XPTable.Models.TextColumn();
             this.columnLineEnergy = new XPTable.Models.TextColumn();
             this.columnLineIntensity = new XPTable.Models.TextColumn();
+            this.columnLineRelative = new XPTable.Models.TextColumn();
+            this.columnLineHalfLife = new XPTable.Models.TextColumn();
             this.columnLineType = new XPTable.Models.TextColumn();
             this.tableModelLines = new XPTable.Models.TableModel();
 
@@ -121,6 +134,8 @@ namespace BecquerelMonitor.RoiWizard
             ((System.ComponentModel.ISupportInitialize)(this.numMinEnergy)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMaxEnergy)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTopN)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinHalfLife)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMaxHalfLife)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numZonePercent)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numZoneFactor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numAnchors)).BeginInit();
@@ -145,25 +160,25 @@ namespace BecquerelMonitor.RoiWizard
             // ─── шаг 1 ─────────────────────────────────────────────────────
             this.groupSearch.Text = "Nuclide search";
             this.groupSearch.Location = new System.Drawing.Point(8, 6);
-            this.groupSearch.Size = new System.Drawing.Size(330, 306);
+            this.groupSearch.Size = new System.Drawing.Size(376, 340);
             this.groupSearch.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
 
             this.textSearch.Location = new System.Drawing.Point(8, 20);
-            this.textSearch.Size = new System.Drawing.Size(314, 21);
+            this.textSearch.Size = new System.Drawing.Size(360, 23);
             this.buttonAddSingle.Text = "Add";
             this.textSearch.Size = new System.Drawing.Size(140, 21);
-            this.buttonAddSingle.Location = new System.Drawing.Point(8, 46);
-            this.buttonAddSingle.Size = new System.Drawing.Size(100, 23);
+            this.buttonAddSingle.Location = new System.Drawing.Point(8, 48);
+            this.buttonAddSingle.Size = new System.Drawing.Size(104, 25);
             this.buttonAddFamily.Text = "+ family";
-            this.buttonAddFamily.Location = new System.Drawing.Point(112, 46);
-            this.buttonAddFamily.Size = new System.Drawing.Size(104, 23);
+            this.buttonAddFamily.Location = new System.Drawing.Point(118, 48);
+            this.buttonAddFamily.Size = new System.Drawing.Size(122, 25);
             this.buttonAddChain.Text = "+ chain";
-            this.buttonAddChain.Location = new System.Drawing.Point(220, 46);
-            this.buttonAddChain.Size = new System.Drawing.Size(102, 23);
+            this.buttonAddChain.Location = new System.Drawing.Point(246, 48);
+            this.buttonAddChain.Size = new System.Drawing.Size(122, 25);
 
-            this.tableCatalog.Location = new System.Drawing.Point(8, 76);
-            this.tableCatalog.Size = new System.Drawing.Size(314, 222);
+            this.tableCatalog.Location = new System.Drawing.Point(8, 80);
+            this.tableCatalog.Size = new System.Drawing.Size(360, 252);
             this.tableCatalog.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -191,45 +206,45 @@ namespace BecquerelMonitor.RoiWizard
             this.groupSearch.Controls.Add(this.tableCatalog);
 
             this.groupGroup.Text = "Group";
-            this.groupGroup.Location = new System.Drawing.Point(346, 6);
-            this.groupGroup.Size = new System.Drawing.Size(330, 306);
+            this.groupGroup.Location = new System.Drawing.Point(392, 6);
+            this.groupGroup.Size = new System.Drawing.Size(376, 340);
             this.groupGroup.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
-            this.comboGroup.Location = new System.Drawing.Point(8, 20);
-            this.comboGroup.Size = new System.Drawing.Size(314, 21);
+            this.comboGroup.Location = new System.Drawing.Point(8, 22);
+            this.comboGroup.Size = new System.Drawing.Size(360, 23);
             this.comboGroup.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.buttonGroupAll.Text = "add all";
-            this.buttonGroupAll.Location = new System.Drawing.Point(8, 46);
-            this.buttonGroupAll.Size = new System.Drawing.Size(92, 23);
+            this.buttonGroupAll.Location = new System.Drawing.Point(8, 50);
+            this.buttonGroupAll.Size = new System.Drawing.Size(104, 25);
             this.buttonGroupFamily.Text = "+ family lines";
-            this.buttonGroupFamily.Location = new System.Drawing.Point(104, 46);
-            this.buttonGroupFamily.Size = new System.Drawing.Size(104, 23);
+            this.buttonGroupFamily.Location = new System.Drawing.Point(118, 50);
+            this.buttonGroupFamily.Size = new System.Drawing.Size(140, 25);
             this.buttonGroupChain.Text = "+ chain";
-            this.buttonGroupChain.Location = new System.Drawing.Point(212, 46);
-            this.buttonGroupChain.Size = new System.Drawing.Size(110, 23);
-            this.checkedGroup.Location = new System.Drawing.Point(8, 76);
-            this.checkedGroup.Size = new System.Drawing.Size(314, 204);
+            this.buttonGroupChain.Location = new System.Drawing.Point(264, 50);
+            this.buttonGroupChain.Size = new System.Drawing.Size(104, 25);
+            this.checkedGroup.Location = new System.Drawing.Point(8, 82);
+            this.checkedGroup.Size = new System.Drawing.Size(360, 230);
             this.checkedGroup.CheckOnClick = true;
             this.checkedGroup.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
             this.labelGroupHint.Text = "Tick a nuclide - the buttons apply to it.";
-            this.labelGroupHint.Location = new System.Drawing.Point(8, 284);
-            this.labelGroupHint.Size = new System.Drawing.Size(314, 16);
+            this.labelGroupHint.Location = new System.Drawing.Point(8, 316);
+            this.labelGroupHint.Size = new System.Drawing.Size(360, 18);
             this.labelGroupHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
 
             this.groupXrf.Text = "XRF elements";
-            this.groupXrf.Location = new System.Drawing.Point(684, 6);
-            this.groupXrf.Size = new System.Drawing.Size(290, 306);
+            this.groupXrf.Location = new System.Drawing.Point(776, 6);
+            this.groupXrf.Size = new System.Drawing.Size(396, 340);
             this.groupXrf.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
             this.labelXrf.Text = "Shielding and detector materials:";
             this.labelXrf.Location = new System.Drawing.Point(8, 20);
             this.labelXrf.AutoSize = true;
-            this.checkedXrf.Location = new System.Drawing.Point(8, 40);
-            this.checkedXrf.Size = new System.Drawing.Size(274, 256);
+            this.checkedXrf.Location = new System.Drawing.Point(8, 44);
+            this.checkedXrf.Size = new System.Drawing.Size(380, 288);
             this.checkedXrf.CheckOnClick = true;
             this.checkedXrf.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
@@ -244,13 +259,13 @@ namespace BecquerelMonitor.RoiWizard
             this.groupXrf.Controls.Add(this.checkedXrf);
 
             this.groupSelected.Text = "Selected";
-            this.groupSelected.Location = new System.Drawing.Point(8, 318);
-            this.groupSelected.Size = new System.Drawing.Size(966, 88);
+            this.groupSelected.Location = new System.Drawing.Point(8, 352);
+            this.groupSelected.Size = new System.Drawing.Size(1164, 96);
             this.groupSelected.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
             this.listSelected.Location = new System.Drawing.Point(8, 20);
-            this.listSelected.Size = new System.Drawing.Size(768, 60);
+            this.listSelected.Size = new System.Drawing.Size(950, 66);
             this.listSelected.MultiColumn = true;
             this.listSelected.ColumnWidth = 128;
             this.listSelected.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
@@ -258,12 +273,12 @@ namespace BecquerelMonitor.RoiWizard
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
             this.buttonRemove.Text = "remove";
-            this.buttonRemove.Location = new System.Drawing.Point(784, 20);
+            this.buttonRemove.Location = new System.Drawing.Point(966, 22);
             this.buttonRemove.Size = new System.Drawing.Size(90, 23);
             this.buttonRemove.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
                 System.Windows.Forms.AnchorStyles.Left;
             this.buttonClear.Text = "clear all";
-            this.buttonClear.Location = new System.Drawing.Point(784, 50);
+            this.buttonClear.Location = new System.Drawing.Point(966, 54);
             this.buttonClear.Size = new System.Drawing.Size(90, 23);
             this.buttonClear.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
                 System.Windows.Forms.AnchorStyles.Left;
@@ -334,7 +349,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupFilters.Text = "Filters and selection";
             this.groupFilters.Location = new System.Drawing.Point(8, 82);
-            this.groupFilters.Size = new System.Drawing.Size(966, 76);
+            this.groupFilters.Size = new System.Drawing.Size(1164, 106);
             this.groupFilters.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.checkIntensity.Text = "intensity ≥, %";
@@ -359,14 +374,58 @@ namespace BecquerelMonitor.RoiWizard
             this.numMaxEnergy.Size = new System.Drawing.Size(60, 21);
             this.numMaxEnergy.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
             this.numMaxEnergy.Value = new decimal(new int[] { 3000, 0, 0, 0 });
+            // фильтр по периоду полураспада — как в вебе: два поля со своими единицами
+            this.checkHalfLife.Text = "T½";
+            this.checkHalfLife.Location = new System.Drawing.Point(650, 21);
+            this.checkHalfLife.Size = new System.Drawing.Size(40, 20);
+            this.numMinHalfLife.Location = new System.Drawing.Point(692, 20);
+            this.numMinHalfLife.Size = new System.Drawing.Size(52, 21);
+            this.numMinHalfLife.DecimalPlaces = 2;
+            this.numMinHalfLife.Maximum = new decimal(new int[] { 1000000, 0, 0, 0 });
+            this.numMinHalfLife.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            this.comboMinHalfLifeUnit.Location = new System.Drawing.Point(748, 20);
+            this.comboMinHalfLifeUnit.Size = new System.Drawing.Size(56, 21);
+            this.comboMinHalfLifeUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.numMaxHalfLife.Location = new System.Drawing.Point(812, 20);
+            this.numMaxHalfLife.Size = new System.Drawing.Size(52, 21);
+            this.numMaxHalfLife.DecimalPlaces = 2;
+            this.numMaxHalfLife.Maximum = new decimal(new int[] { 1000000, 0, 0, 0 });
+            this.comboMaxHalfLifeUnit.Location = new System.Drawing.Point(868, 20);
+            this.comboMaxHalfLifeUnit.Size = new System.Drawing.Size(56, 21);
+            this.comboMaxHalfLifeUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+
+            this.checkHideUnselected.Text = "hide unselected";
+            this.checkHideUnselected.Location = new System.Drawing.Point(402, 47);
+            this.checkHideUnselected.Size = new System.Drawing.Size(130, 20);
+
             this.checkEquilibrium.Text = "series equilibrium (intensities per one decay of the parent)";
-            this.checkEquilibrium.Location = new System.Drawing.Point(650, 21);
-            this.checkEquilibrium.Size = new System.Drawing.Size(310, 20);
+            this.labelTypes.Text = "line types";
+            this.labelTypes.Location = new System.Drawing.Point(8, 75);
+            this.labelTypes.Size = new System.Drawing.Size(66, 16);
+            this.checkTypeGamma.Text = "γ";
+            this.checkTypeGamma.Location = new System.Drawing.Point(78, 73);
+            this.checkTypeGamma.Size = new System.Drawing.Size(40, 20);
+            this.checkTypeGamma.Checked = true;
+            this.checkTypeXray.Text = "X (decay)";
+            this.checkTypeXray.Location = new System.Drawing.Point(120, 73);
+            this.checkTypeXray.Size = new System.Drawing.Size(90, 20);
+            this.checkTypeXray.Checked = true;
+            this.checkTypeXrf.Text = "XRF";
+            this.checkTypeXrf.Location = new System.Drawing.Point(212, 73);
+            this.checkTypeXrf.Size = new System.Drawing.Size(60, 20);
+            this.checkTypeXrf.Checked = true;
+            this.checkTypeSecondary.Text = "secondary";
+            this.checkTypeSecondary.Location = new System.Drawing.Point(274, 73);
+            this.checkTypeSecondary.Size = new System.Drawing.Size(96, 20);
+            this.checkTypeSecondary.Checked = true;
+
+            this.checkEquilibrium.Location = new System.Drawing.Point(402, 73);
+            this.checkEquilibrium.Size = new System.Drawing.Size(560, 20);
             this.checkEquilibrium.Checked = true;
-            this.buttonSelectAll.Text = "✓ select all";
+            this.buttonSelectAll.Text = "✓ select all visible";
             this.buttonSelectAll.Location = new System.Drawing.Point(8, 46);
             this.buttonSelectAll.Size = new System.Drawing.Size(96, 23);
-            this.buttonSelectNone.Text = "✗ deselect all";
+            this.buttonSelectNone.Text = "✗ deselect all visible";
             this.buttonSelectNone.Location = new System.Drawing.Point(108, 46);
             this.buttonSelectNone.Size = new System.Drawing.Size(102, 23);
             this.numTopN.Location = new System.Drawing.Point(216, 47);
@@ -377,14 +436,25 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonSelectTop.Location = new System.Drawing.Point(270, 46);
             this.buttonSelectTop.Size = new System.Drawing.Size(126, 23);
             this.checkSecondary.Text = "add secondary peaks (backscatter, Compton edge, escapes)";
-            this.checkSecondary.Location = new System.Drawing.Point(422, 47);
-            this.checkSecondary.Size = new System.Drawing.Size(360, 20);
+            this.checkSecondary.Location = new System.Drawing.Point(540, 47);
+            this.checkSecondary.Size = new System.Drawing.Size(420, 20);
             this.groupFilters.Controls.Add(this.checkIntensity);
             this.groupFilters.Controls.Add(this.numMinIntensity);
             this.groupFilters.Controls.Add(this.comboIntensityMode);
             this.groupFilters.Controls.Add(this.checkEnergy);
             this.groupFilters.Controls.Add(this.numMinEnergy);
             this.groupFilters.Controls.Add(this.numMaxEnergy);
+            this.groupFilters.Controls.Add(this.checkHalfLife);
+            this.groupFilters.Controls.Add(this.numMinHalfLife);
+            this.groupFilters.Controls.Add(this.comboMinHalfLifeUnit);
+            this.groupFilters.Controls.Add(this.numMaxHalfLife);
+            this.groupFilters.Controls.Add(this.comboMaxHalfLifeUnit);
+            this.groupFilters.Controls.Add(this.checkHideUnselected);
+            this.groupFilters.Controls.Add(this.labelTypes);
+            this.groupFilters.Controls.Add(this.checkTypeGamma);
+            this.groupFilters.Controls.Add(this.checkTypeXray);
+            this.groupFilters.Controls.Add(this.checkTypeXrf);
+            this.groupFilters.Controls.Add(this.checkTypeSecondary);
             this.groupFilters.Controls.Add(this.checkEquilibrium);
             this.groupFilters.Controls.Add(this.buttonSelectAll);
             this.groupFilters.Controls.Add(this.buttonSelectNone);
@@ -392,8 +462,8 @@ namespace BecquerelMonitor.RoiWizard
             this.groupFilters.Controls.Add(this.buttonSelectTop);
             this.groupFilters.Controls.Add(this.checkSecondary);
 
-            this.tableLines.Location = new System.Drawing.Point(8, 164);
-            this.tableLines.Size = new System.Drawing.Size(966, 242);
+            this.tableLines.Location = new System.Drawing.Point(8, 190);
+            this.tableLines.Size = new System.Drawing.Size(1164, 254);
             this.tableLines.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -417,12 +487,21 @@ namespace BecquerelMonitor.RoiWizard
             this.columnLineIntensity.Text = "I, %";
             this.columnLineIntensity.Width = 90;
             this.columnLineIntensity.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnLineRelative.Editable = false;
+            this.columnLineRelative.Text = "I rel., %";
+            this.columnLineRelative.Width = 80;
+            this.columnLineRelative.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnLineHalfLife.Editable = false;
+            this.columnLineHalfLife.Text = "T½";
+            this.columnLineHalfLife.Width = 90;
+            this.columnLineHalfLife.Alignment = XPTable.Models.ColumnAlignment.Right;
             this.columnLineType.Editable = false;
             this.columnLineType.Text = "Type";
             this.columnLineType.Width = 80;
             this.columnModelLines.Columns.AddRange(new XPTable.Models.Column[] {
                 this.columnLineSelected, this.columnLineName, this.columnLineEnergy,
-                this.columnLineIntensity, this.columnLineType });
+                this.columnLineIntensity, this.columnLineRelative,
+                this.columnLineHalfLife, this.columnLineType });
 
             this.tabLines.Controls.Add(this.groupResolution);
             this.tabLines.Controls.Add(this.labelMergeInfo);
@@ -432,7 +511,7 @@ namespace BecquerelMonitor.RoiWizard
             // ─── шаг 3 ─────────────────────────────────────────────────────
             this.groupStyle.Text = "ROI styling";
             this.groupStyle.Location = new System.Drawing.Point(8, 6);
-            this.groupStyle.Size = new System.Drawing.Size(966, 54);
+            this.groupStyle.Size = new System.Drawing.Size(1164, 58);
             this.groupStyle.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelStyle.Text = "mode";
@@ -468,7 +547,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupExport.Text = "Export";
             this.groupExport.Location = new System.Drawing.Point(8, 66);
-            this.groupExport.Size = new System.Drawing.Size(966, 116);
+            this.groupExport.Size = new System.Drawing.Size(1164, 120);
             this.groupExport.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelConfigName.Text = "ROI configuration name";
@@ -522,7 +601,7 @@ namespace BecquerelMonitor.RoiWizard
             this.labelIssues.Location = new System.Drawing.Point(12, 188);
             this.labelIssues.AutoSize = true;
             this.listIssues.Location = new System.Drawing.Point(8, 206);
-            this.listIssues.Size = new System.Drawing.Size(966, 200);
+            this.listIssues.Size = new System.Drawing.Size(1164, 210);
             this.listIssues.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -540,8 +619,8 @@ namespace BecquerelMonitor.RoiWizard
             // ─── форма ─────────────────────────────────────────────────────
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(996, 470);
-            this.MinimumSize = new System.Drawing.Size(880, 440);
+            this.ClientSize = new System.Drawing.Size(1180, 560);
+            this.MinimumSize = new System.Drawing.Size(1000, 500);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.statusStrip);
             this.Name = "RoiWizardForm";
@@ -554,6 +633,8 @@ namespace BecquerelMonitor.RoiWizard
             ((System.ComponentModel.ISupportInitialize)(this.numMinEnergy)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMaxEnergy)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTopN)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinHalfLife)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMaxHalfLife)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numZonePercent)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numZoneFactor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numAnchors)).EndInit();
@@ -626,7 +707,20 @@ namespace BecquerelMonitor.RoiWizard
         XPTable.Models.TextColumn columnLineName;
         XPTable.Models.TextColumn columnLineEnergy;
         XPTable.Models.TextColumn columnLineIntensity;
+        XPTable.Models.TextColumn columnLineRelative;
+        XPTable.Models.TextColumn columnLineHalfLife;
         XPTable.Models.TextColumn columnLineType;
+        System.Windows.Forms.CheckBox checkHalfLife;
+        System.Windows.Forms.NumericUpDown numMinHalfLife;
+        System.Windows.Forms.ComboBox comboMinHalfLifeUnit;
+        System.Windows.Forms.NumericUpDown numMaxHalfLife;
+        System.Windows.Forms.ComboBox comboMaxHalfLifeUnit;
+        System.Windows.Forms.CheckBox checkHideUnselected;
+        System.Windows.Forms.Label labelTypes;
+        System.Windows.Forms.CheckBox checkTypeGamma;
+        System.Windows.Forms.CheckBox checkTypeXray;
+        System.Windows.Forms.CheckBox checkTypeXrf;
+        System.Windows.Forms.CheckBox checkTypeSecondary;
         XPTable.Models.TableModel tableModelLines;
 
         System.Windows.Forms.GroupBox groupStyle;

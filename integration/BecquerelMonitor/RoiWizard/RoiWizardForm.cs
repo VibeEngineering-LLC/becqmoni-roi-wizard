@@ -40,6 +40,8 @@ namespace BecquerelMonitor.RoiWizard
         public RoiWizardForm(Func<double> resolutionProvider)
         {
             this.InitializeComponent();
+            // цвета и шрифт — из темы веб-версии, чтобы окно выглядело так же
+            WizardTheme.Apply(this);
             this.resolutionProvider = resolutionProvider;
 
             this.catalog = NuclideCatalog.GetInstance();
@@ -100,6 +102,12 @@ namespace BecquerelMonitor.RoiWizard
                 "k × FWHM (scintillator)"
             });
             this.comboWidthMode.SelectedIndex = 0;
+
+            object[] units = { "s", "h", "d", "y" };
+            this.comboMinHalfLifeUnit.Items.AddRange(units);
+            this.comboMinHalfLifeUnit.SelectedIndex = 2;      // сутки, как в вебе
+            this.comboMaxHalfLifeUnit.Items.AddRange((object[])units.Clone());
+            this.comboMaxHalfLifeUnit.SelectedIndex = 3;      // годы
             this.SyncZoneControls();
         }
 
@@ -212,11 +220,22 @@ namespace BecquerelMonitor.RoiWizard
             this.checkEnergy.CheckedChanged += rebuild;
             this.numMinEnergy.ValueChanged += rebuild;
             this.numMaxEnergy.ValueChanged += rebuild;
+            this.checkHalfLife.CheckedChanged += rebuild;
+            this.numMinHalfLife.ValueChanged += rebuild;
+            this.comboMinHalfLifeUnit.SelectedIndexChanged += rebuild;
+            this.numMaxHalfLife.ValueChanged += rebuild;
+            this.comboMaxHalfLifeUnit.SelectedIndexChanged += rebuild;
+            EventHandler refreshLines = delegate { this.RefreshLines(); };
+            this.checkHideUnselected.CheckedChanged += refreshLines;
+            this.checkTypeGamma.CheckedChanged += refreshLines;
+            this.checkTypeXray.CheckedChanged += refreshLines;
+            this.checkTypeXrf.CheckedChanged += refreshLines;
+            this.checkTypeSecondary.CheckedChanged += refreshLines;
             this.checkEquilibrium.CheckedChanged += rebuild;
             this.checkSecondary.CheckedChanged += rebuild;
 
-            this.buttonSelectAll.Click += delegate { this.SetAllSelected(true); };
-            this.buttonSelectNone.Click += delegate { this.SetAllSelected(false); };
+            this.buttonSelectAll.Click += delegate { this.SetVisibleSelected(true); };
+            this.buttonSelectNone.Click += delegate { this.SetVisibleSelected(false); };
             this.buttonSelectTop.Click += delegate
             {
                 LineSetBuilder.SelectTopPerNuclide(this.lines, (int)this.numTopN.Value);
@@ -533,8 +552,23 @@ namespace BecquerelMonitor.RoiWizard
                 RelativeIntensity = this.comboIntensityMode.SelectedIndex == 0,
                 EnergyOn = this.checkEnergy.Checked,
                 MinEnergy = (double)this.numMinEnergy.Value,
-                MaxEnergy = (double)this.numMaxEnergy.Value
+                MaxEnergy = (double)this.numMaxEnergy.Value,
+                HalfLifeOn = this.checkHalfLife.Checked,
+                MinHalfLifeYears = HalfLifeYears(this.numMinHalfLife, this.comboMinHalfLifeUnit),
+                // пустое верхнее поле = «∞», как placeholder в вебе
+                MaxHalfLifeYears = this.numMaxHalfLife.Value > 0
+                    ? HalfLifeYears(this.numMaxHalfLife, this.comboMaxHalfLifeUnit)
+                    : double.PositiveInfinity
             };
+        }
+
+        // единицы периода — те же, что в вебе: секунды, часы, сутки, годы
+        static readonly double[] HalfLifeUnits = { 1.0 / 31557600.0, 1.0 / 8766.0, 1.0 / 365.25, 1.0 };
+
+        static double HalfLifeYears(NumericUpDown value, ComboBox unit)
+        {
+            int index = unit.SelectedIndex >= 0 ? unit.SelectedIndex : HalfLifeUnits.Length - 1;
+            return (double)value.Value * HalfLifeUnits[index];
         }
 
         void Rebuild()
@@ -575,13 +609,36 @@ namespace BecquerelMonitor.RoiWizard
             this.suspendEvents = true;
             this.tableLines.SuspendLayout();
             this.tableModelLines.Rows.Clear();
+            // «I отн.» — процент от сильнейшей линии того же нуклида, как в вебе
+            Dictionary<string, double> strongest = new Dictionary<string, double>();
             foreach (SpectralLine line in this.lines)
             {
+                double current;
+                if (!strongest.TryGetValue(line.Nuclide, out current) || line.Intensity > current)
+                {
+                    strongest[line.Nuclide] = line.Intensity;
+                }
+            }
+            bool hideUnselected = this.checkHideUnselected.Checked;
+            foreach (SpectralLine line in this.lines)
+            {
+                // галки типов управляют видимостью, а не выбором: снятая «ХРИ» убирает
+                // строки из таблицы, но линии остаются в наборе
+                if (!this.IsTypeVisible(line.Type) || (hideUnselected && !line.Selected))
+                {
+                    continue;
+                }
+                double max;
+                strongest.TryGetValue(line.Nuclide, out max);
+                double relative = max > 0 ? 100.0 * line.Intensity / max : 0;
+
                 Row row = new Row();
                 row.Cells.Add(new Cell { Checked = line.Selected });
                 row.Cells.Add(new Cell(line.Label));
                 row.Cells.Add(new Cell(line.Energy.ToString("0.00", CultureInfo.CurrentCulture), line.Energy));
                 row.Cells.Add(new Cell(line.Intensity.ToString("0.###", CultureInfo.CurrentCulture), line.Intensity));
+                row.Cells.Add(new Cell(relative.ToString("0.#", CultureInfo.CurrentCulture), relative));
+                row.Cells.Add(new Cell(line.HalfLifeText ?? "", line.HalfLifeYears));
                 row.Cells.Add(new Cell(TypeName(line.Type)));
                 row.Tag = line;
                 this.tableModelLines.Rows.Add(row);
@@ -589,6 +646,17 @@ namespace BecquerelMonitor.RoiWizard
             this.tableLines.ResumeLayout();
             this.suspendEvents = false;
             this.UpdateStatus();
+        }
+
+        bool IsTypeVisible(LineType type)
+        {
+            switch (type)
+            {
+                case LineType.Gamma: return this.checkTypeGamma.Checked;
+                case LineType.Xray: return this.checkTypeXray.Checked;
+                case LineType.Xrf: return this.checkTypeXrf.Checked;
+                default: return this.checkTypeSecondary.Checked;
+            }
         }
 
         static string TypeName(LineType type)
@@ -602,11 +670,18 @@ namespace BecquerelMonitor.RoiWizard
             }
         }
 
-        void SetAllSelected(bool value)
+        // Кнопки работают по ВИДИМЫМ строкам — как в вебе: при включённом «скрыть
+        // невыбранные» или фильтре типов «снять все» не должно трогать то, чего
+        // пользователь сейчас не видит.
+        void SetVisibleSelected(bool value)
         {
-            foreach (SpectralLine line in this.lines)
+            foreach (Row row in this.tableModelLines.Rows)
             {
-                line.Selected = value;
+                SpectralLine line = row.Tag as SpectralLine;
+                if (line != null)
+                {
+                    line.Selected = value;
+                }
             }
             this.RefreshLines();
         }
@@ -1066,9 +1141,23 @@ namespace BecquerelMonitor.RoiWizard
             this.checkIntensity.Text = "интенсивность ≥, %";
             this.checkEnergy.Text = "энергия, кэВ";
             this.checkEquilibrium.Text = "равновесие ряда (интенсивности на распад родителя)";
+            this.checkHalfLife.Text = "T½";
+            this.checkHideUnselected.Text = "скрыть невыбранные";
+            this.labelTypes.Text = "Тип линий";
+            this.checkTypeXray.Text = "X (распад)";
+            this.checkTypeXrf.Text = "ХРИ";
+            this.checkTypeSecondary.Text = "вторичные";
+            this.buttonSelectAll.Text = "✓ выбрать все видимые";
+            this.buttonSelectNone.Text = "✗ снять все видимые";
+            this.columnLineRelative.Text = "I отн., %";
+            this.columnLineHalfLife.Text = "T½";
+            this.comboMinHalfLifeUnit.Items.Clear();
+            this.comboMinHalfLifeUnit.Items.AddRange(new object[] { "сек", "ч", "сут", "лет" });
+            this.comboMinHalfLifeUnit.SelectedIndex = 2;
+            this.comboMaxHalfLifeUnit.Items.Clear();
+            this.comboMaxHalfLifeUnit.Items.AddRange(new object[] { "сек", "ч", "сут", "лет" });
+            this.comboMaxHalfLifeUnit.SelectedIndex = 3;
             this.checkSecondary.Text = "добавлять вторичные пики (рассеяние назад, край, вылеты)";
-            this.buttonSelectAll.Text = "✓ выбрать все";
-            this.buttonSelectNone.Text = "✗ снять все";
             this.buttonSelectTop.Text = "топ-N на нуклид";
             this.comboIntensityMode.Items.Clear();
             this.comboIntensityMode.Items.AddRange(new object[] {

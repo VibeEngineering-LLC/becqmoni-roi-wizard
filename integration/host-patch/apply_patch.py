@@ -31,6 +31,7 @@ CSPROJ_ENTRIES = """    <Compile Include="RoiWizard\\NuclideCatalog.cs" />
     <Compile Include="RoiWizard\\ZoneCalculator.cs" />
     <Compile Include="RoiWizard\\SetChecker.cs" />
     <Compile Include="RoiWizard\\SetExporter.cs" />
+    <Compile Include="RoiWizard\\WizardTheme.cs" />
     <Compile Include="RoiWizard\\RoiWizardForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -181,7 +182,12 @@ def patch_csproj(root):
     path = os.path.join(root, "BecquerelMonitor", "BecquerelMonitor.csproj")
     text = read(path)
     steps = []
-    if "RoiWizard\\NuclideCatalog.cs" in text:
+    # Записи проверяются по одной: в дереве, куда патч уже применяли, часть файлов
+    # прописана, а новый файл модуля иначе молча не попал бы в сборку.
+    missing = [block for block in CSPROJ_ENTRIES.strip("\n").split("\n")
+               if block.lstrip().startswith("<Compile Include=") and
+               block.split('"')[1] not in text]
+    if not missing:
         steps.append("уже есть: записи Compile")
     else:
         anchor = "  <ItemGroup>\n"
@@ -189,8 +195,10 @@ def patch_csproj(root):
         if index < 0:
             raise SystemExit("не найден ItemGroup в .csproj")
         end = index + len(anchor)
-        text = text[:end] + CSPROJ_ENTRIES + text[end:]
-        steps.append("вставлено: записи Compile")
+        # файлы формы идут парой с их разметкой — вставляем блок целиком, если он новый
+        addition = CSPROJ_ENTRIES if len(missing) > 3 else "\n".join(missing) + "\n"
+        text = text[:end] + addition + text[end:]
+        steps.append("вставлено записей Compile: %d" % len(missing))
 
     if "RoiWizard\\nuclides.xml" in text:
         steps.append("уже есть: EmbeddedResource")
