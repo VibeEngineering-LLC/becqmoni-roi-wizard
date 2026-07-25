@@ -68,6 +68,7 @@ namespace BecquerelMonitor.RoiWizard
             this.LayoutLineColumns();
             this.RefreshGroupList();
             this.UpdateMergeInfo();
+            this.UpdateStepButtons();
             this.UpdateStatus();
         }
 
@@ -365,12 +366,49 @@ namespace BecquerelMonitor.RoiWizard
             const int Top = 6;
             this.groupSelected.SetBounds(Pad, height - Pad - this.groupSelected.Height,
                                          width - Pad * 2, this.groupSelected.Height);
-            int column = (width - Pad * 2 - Gap * 2) / 3;
+            // доли из .cols3: 1fr 1.15fr 1fr — средняя колонка шире, в ней комбобокс
+            // группы и три кнопки раскрытия
+            int free = width - Pad * 2 - Gap * 2;
+            int column = free * 100 / 315;
+            int middle = free - column * 2;
             int boxHeight = this.groupSelected.Top - Gap - Top;
             this.groupSearch.SetBounds(Pad, Top, column, boxHeight);
-            this.groupGroup.SetBounds(Pad + column + Gap, Top, column, boxHeight);
-            this.groupXrf.SetBounds(Pad + (column + Gap) * 2, Top,
-                                    width - Pad - (Pad + (column + Gap) * 2), boxHeight);
+            this.groupGroup.SetBounds(Pad + column + Gap, Top, middle, boxHeight);
+            this.groupXrf.SetBounds(Pad + column + Gap + middle + Gap, Top, column, boxHeight);
+
+            // ряды кнопок делят ширину своей панели: жёсткие ширины не влезают,
+            // когда колонка уже суммы масштабированных кнопок (.line — flex-строка)
+            LayoutButtonRow(this.groupSearch, new Control[] {
+                this.buttonAddSingle, this.buttonAddFamily, this.buttonAddChain },
+                new int[] { 104, 122, 122 });
+            LayoutButtonRow(this.groupGroup, new Control[] {
+                this.buttonGroupAll, this.buttonGroupFamily, this.buttonGroupChain },
+                new int[] { 104, 140, 104 });
+        }
+
+        static void LayoutButtonRow(Control box, Control[] buttons, int[] shares)
+        {
+            const int Pad = 8;
+            const int Gap = 6;
+            int free = box.ClientSize.Width - Pad * 2 - Gap * (buttons.Length - 1);
+            if (free < 120)
+            {
+                return;
+            }
+            int total = 0;
+            foreach (int share in shares)
+            {
+                total += share;
+            }
+            int x = Pad;
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                int width = i == buttons.Length - 1
+                    ? box.ClientSize.Width - Pad - x
+                    : free * shares[i] / total;
+                buttons[i].SetBounds(x, buttons[i].Top, width, buttons[i].Height);
+                x += width + Gap;
+            }
         }
 
         // Свободное место таблицы линий уходит в имя нуклида: с пометкой цепочки
@@ -422,6 +460,9 @@ namespace BecquerelMonitor.RoiWizard
 
         void WireEvents()
         {
+            this.tabs.SelectedIndexChanged += delegate { this.UpdateStepButtons(); };
+            this.buttonStepPrev.Click += delegate { this.GoStep(-1); };
+            this.buttonStepNext.Click += delegate { this.GoStep(1); };
             this.tabSources.Resize += delegate { this.LayoutSources(); };
             this.tableCatalog.Resize += delegate { this.LayoutCatalogColumns(); };
             this.tableLines.Resize += delegate { this.LayoutLineColumns(); };
@@ -1635,6 +1676,34 @@ namespace BecquerelMonitor.RoiWizard
             return text.Length > 0 ? text : "ROI set";
         }
 
+        // Кнопки внизу подписываются именами соседних шагов, а на краях — обобщённо
+        // и выключены. То же поведение, что у пары кнопок в строке состояния страницы.
+        void GoStep(int delta)
+        {
+            int target = this.tabs.SelectedIndex + delta;
+            if (target >= 0 && target < this.tabs.TabCount)
+            {
+                this.tabs.SelectedIndex = target;
+            }
+        }
+
+        void UpdateStepButtons()
+        {
+            int current = this.tabs.SelectedIndex;
+            this.buttonStepPrev.Enabled = current > 0;
+            this.buttonStepNext.Enabled = current < this.tabs.TabCount - 1;
+            this.buttonStepPrev.Text = current > 0
+                ? "◂ " + this.stepNames[current - 1]
+                : this.stepBack;
+            this.buttonStepNext.Text = current < this.tabs.TabCount - 1
+                ? this.stepNames[current + 1] + " ▸"
+                : this.stepForward;
+        }
+
+        string[] stepNames = { "Nuclides", "Lines", "Styling and export" };
+        string stepBack = "◂ Back";
+        string stepForward = "Next ▸";
+
         void UpdateStatus()
         {
             int selected = 0;
@@ -1682,6 +1751,9 @@ namespace BecquerelMonitor.RoiWizard
             this.statusFormat = "линий: {0} из {1} · нуклидов: {2}";
             this.hintNone = "Отметьте нуклид — кнопки применятся к нему.";
 
+            this.stepNames = new string[] { "Изотопы", "Линии", "Оформление и экспорт" };
+            this.stepBack = "◂ Назад";
+            this.stepForward = "Вперёд ▸";
             this.presetsCaption = "Пресеты:";
             this.labelSearchHint.Text = "Ввод сужает список: по имени или по коду семейства.";
             this.labelXrfHint.Text = "Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1 = 100) — только маркеры.";
@@ -1750,7 +1822,8 @@ namespace BecquerelMonitor.RoiWizard
             this.comboMaxHalfLifeUnit.Items.Clear();
             this.comboMaxHalfLifeUnit.Items.AddRange(new object[] { "сек", "ч", "сут", "лет" });
             this.comboMaxHalfLifeUnit.SelectedIndex = 3;
-            this.buttonSelectTop.Text = "топ-N на нуклид";
+            this.labelTopN.Text = "топ-N по I на нуклид";
+            this.buttonSelectTop.Text = "Выбрать топ-N";
             this.comboIntensityMode.Items.Clear();
             this.comboIntensityMode.Items.AddRange(new object[] {
                 "относительная (внутри изотопа, макс = 100)",

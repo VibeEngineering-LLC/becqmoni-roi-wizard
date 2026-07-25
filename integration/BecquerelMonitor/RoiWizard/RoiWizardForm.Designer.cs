@@ -117,6 +117,7 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonSelectAll = new System.Windows.Forms.Button();
             this.buttonSelectNone = new System.Windows.Forms.Button();
             this.numTopN = new System.Windows.Forms.NumericUpDown();
+            this.labelTopN = new System.Windows.Forms.Label();
             this.buttonSelectTop = new System.Windows.Forms.Button();
 
             this.tableLines = new XPTable.Models.Table();
@@ -160,6 +161,8 @@ namespace BecquerelMonitor.RoiWizard
 
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.buttonStepPrev = new System.Windows.Forms.ToolStripButton();
+            this.buttonStepNext = new System.Windows.Forms.ToolStripButton();
 
             ((System.ComponentModel.ISupportInitialize)(this.numResolution)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numFactor)).BeginInit();
@@ -182,7 +185,7 @@ namespace BecquerelMonitor.RoiWizard
             // ─── вкладки ───────────────────────────────────────────────────
             // размер задаётся до наполнения страниц: иначе дети запомнят расстояния
             // до краёв страницы размером 200x100 по умолчанию и на реальном разъедутся
-            this.tabs.Size = new System.Drawing.Size(1180, 586);
+            this.tabs.Size = new System.Drawing.Size(1180, 598);
             this.tabs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabs.Controls.Add(this.tabSources);
             this.tabs.Controls.Add(this.tabLines);
@@ -190,9 +193,9 @@ namespace BecquerelMonitor.RoiWizard
 
             // размер каждой странице явно: TabControl размечает только выбранную,
             // остальные остаются 200x100 и портят привязки своих детей
-            this.tabSources.Size = new System.Drawing.Size(1172, 560);
-            this.tabLines.Size = new System.Drawing.Size(1172, 560);
-            this.tabExport.Size = new System.Drawing.Size(1172, 560);
+            this.tabSources.Size = new System.Drawing.Size(1172, 572);
+            this.tabLines.Size = new System.Drawing.Size(1172, 572);
+            this.tabExport.Size = new System.Drawing.Size(1172, 572);
             this.tabSources.Text = "1 · Nuclides";
             this.tabSources.Padding = new System.Windows.Forms.Padding(6);
             this.tabSources.UseVisualStyleBackColor = true;
@@ -400,10 +403,10 @@ namespace BecquerelMonitor.RoiWizard
             this.labelCriterion.Text = "criterion";
             this.labelCriterion.Location = new System.Drawing.Point(276, 23);
             this.labelCriterion.AutoSize = true;
-            this.comboCriterion.Location = new System.Drawing.Point(330, 20);
+            this.comboCriterion.Location = new System.Drawing.Point(358, 20);
             this.comboCriterion.Size = new System.Drawing.Size(300, 23);
             this.comboCriterion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.numFactor.Location = new System.Drawing.Point(576, 20);
+            this.numFactor.Location = new System.Drawing.Point(666, 20);
             this.numFactor.Size = new System.Drawing.Size(56, 21);
             this.numFactor.DecimalPlaces = 2;
             this.numFactor.Increment = new decimal(new int[] { 5, 0, 0, 131072 });
@@ -411,7 +414,7 @@ namespace BecquerelMonitor.RoiWizard
             this.numFactor.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
             this.numFactor.Value = new decimal(new int[] { 85, 0, 0, 131072 });
             this.labelFactor.Text = "× FWHM";
-            this.labelFactor.Location = new System.Drawing.Point(638, 23);
+            this.labelFactor.Location = new System.Drawing.Point(728, 23);
             this.labelFactor.AutoSize = true;
             this.buttonMerge.Text = "Merge close lines";
             this.buttonMerge.Location = new System.Drawing.Point(838, 19);
@@ -428,14 +431,15 @@ namespace BecquerelMonitor.RoiWizard
             this.groupResolution.Controls.Add(this.labelFactor);
             this.groupResolution.Controls.Add(this.buttonMerge);
             this.groupResolution.Controls.Add(this.buttonUnmerge);
+            this.groupResolution.Controls.Add(this.labelMergeInfo);
 
-            this.labelMergeInfo.Location = new System.Drawing.Point(12, 62);
-            this.labelMergeInfo.Size = new System.Drawing.Size(958, 16);
+            this.labelMergeInfo.Location = new System.Drawing.Point(10, 52);
+            this.labelMergeInfo.Size = new System.Drawing.Size(1136, 18);
             this.labelMergeInfo.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
 
             this.groupFilters.Text = "Filters and selection";
-            this.groupFilters.Location = new System.Drawing.Point(8, 82);
+            this.groupFilters.Location = new System.Drawing.Point(8, 92);
             this.groupFilters.Size = new System.Drawing.Size(1156, 106);
             this.groupFilters.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
@@ -482,7 +486,7 @@ namespace BecquerelMonitor.RoiWizard
             this.comboMaxHalfLifeUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 
             this.checkHideUnselected.Text = "hide unselected";
-            this.checkHideUnselected.Location = new System.Drawing.Point(430, 47);
+            this.checkHideUnselected.Location = new System.Drawing.Point(626, 48);
             this.checkHideUnselected.Size = new System.Drawing.Size(180, 20);
 
             this.checkEquilibrium.Text = "series equilibrium (intensities per one decay of the parent)";
@@ -515,18 +519,21 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonSelectNone.Text = "✗ deselect all visible";
             this.buttonSelectNone.Location = new System.Drawing.Point(152, 46);
             this.buttonSelectNone.Size = new System.Drawing.Size(130, 25);
-            this.numTopN.Location = new System.Drawing.Point(288, 47);
+            this.labelTopN.Text = "top-N by I per nuclide";
+            this.labelTopN.Location = new System.Drawing.Point(292, 50);
+            this.labelTopN.Size = new System.Drawing.Size(136, 18);
+            this.numTopN.Location = new System.Drawing.Point(432, 47);
             this.numTopN.Size = new System.Drawing.Size(48, 21);
             this.numTopN.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             this.numTopN.Value = new decimal(new int[] { 5, 0, 0, 0 });
-            this.buttonSelectTop.Text = "top-N per nuclide";
-            this.buttonSelectTop.Location = new System.Drawing.Point(280, 46);
-            this.buttonSelectTop.Size = new System.Drawing.Size(140, 25);
+            this.buttonSelectTop.Text = "Select top-N";
+            this.buttonSelectTop.Location = new System.Drawing.Point(488, 46);
+            this.buttonSelectTop.Size = new System.Drawing.Size(126, 25);
             // Панель вторичных пиков повторяет блок веб-версии: порог по родительской
             // линии, восемь видов особенностей и кнопка расчёта. Расчёт по кнопке, а не
             // автоматически: маркеры добавляются к текущему набору линий.
             this.groupSecondary.Text = "Secondary peaks (computed from selected γ lines)";
-            this.groupSecondary.Location = new System.Drawing.Point(8, 192);
+            this.groupSecondary.Location = new System.Drawing.Point(8, 204);
             this.groupSecondary.Size = new System.Drawing.Size(1156, 78);
             this.groupSecondary.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
@@ -600,11 +607,12 @@ namespace BecquerelMonitor.RoiWizard
             this.groupFilters.Controls.Add(this.buttonSelectAll);
             this.groupFilters.Controls.Add(this.buttonSelectNone);
             this.groupFilters.Controls.Add(this.numTopN);
+            this.groupFilters.Controls.Add(this.labelTopN);
             this.groupFilters.Controls.Add(this.buttonSelectTop);
             this.tabLines.Controls.Add(this.groupSecondary);
 
             this.groupNear.Text = "Nearby-line search (whole database — who else emits here)";
-            this.groupNear.Location = new System.Drawing.Point(8, 276);
+            this.groupNear.Location = new System.Drawing.Point(8, 288);
             this.groupNear.Size = new System.Drawing.Size(1156, 122);
             this.groupNear.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
@@ -666,7 +674,7 @@ namespace BecquerelMonitor.RoiWizard
             this.groupNear.Controls.Add(this.listNear);
             this.tabLines.Controls.Add(this.groupNear);
 
-            this.tableLines.Location = new System.Drawing.Point(8, 404);
+            this.tableLines.Location = new System.Drawing.Point(8, 416);
             this.tableLines.Size = new System.Drawing.Size(1156, 150);
             this.tableLines.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
@@ -708,7 +716,6 @@ namespace BecquerelMonitor.RoiWizard
                 this.columnLineHalfLife, this.columnLineType });
 
             this.tabLines.Controls.Add(this.groupResolution);
-            this.tabLines.Controls.Add(this.labelMergeInfo);
             this.tabLines.Controls.Add(this.groupFilters);
             this.tabLines.Controls.Add(this.tableLines);
 
@@ -727,16 +734,16 @@ namespace BecquerelMonitor.RoiWizard
             this.labelWidth.Text = "zone width";
             this.labelWidth.Location = new System.Drawing.Point(330, 23);
             this.labelWidth.AutoSize = true;
-            this.comboWidthMode.Location = new System.Drawing.Point(402, 20);
+            this.comboWidthMode.Location = new System.Drawing.Point(420, 20);
             this.comboWidthMode.Size = new System.Drawing.Size(220, 21);
             this.comboWidthMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.numZonePercent.Location = new System.Drawing.Point(628, 20);
+            this.numZonePercent.Location = new System.Drawing.Point(648, 20);
             this.numZonePercent.Size = new System.Drawing.Size(56, 21);
             this.numZonePercent.DecimalPlaces = 1;
             this.numZonePercent.Minimum = new decimal(new int[] { 5, 0, 0, 65536 });
             this.numZonePercent.Maximum = new decimal(new int[] { 50, 0, 0, 0 });
             this.numZonePercent.Value = new decimal(new int[] { 5, 0, 0, 0 });
-            this.numZoneFactor.Location = new System.Drawing.Point(690, 20);
+            this.numZoneFactor.Location = new System.Drawing.Point(710, 20);
             this.numZoneFactor.Size = new System.Drawing.Size(56, 21);
             this.numZoneFactor.DecimalPlaces = 1;
             this.numZoneFactor.Minimum = new decimal(new int[] { 5, 0, 0, 65536 });
@@ -835,13 +842,23 @@ namespace BecquerelMonitor.RoiWizard
             this.tabExport.Controls.Add(this.listIssues);
 
             // ─── строка состояния ──────────────────────────────────────────
-            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.statusLabel });
+            // счётчик занимает всё свободное место, кнопки прижаты вправо — как на странице
+            this.statusLabel.Spring = true;
+            this.statusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.statusLabel.Text = "";
+            this.buttonStepPrev.Text = "◂ Back";
+            this.buttonStepPrev.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.buttonStepPrev.AutoToolTip = false;
+            this.buttonStepNext.Text = "Next ▸";
+            this.buttonStepNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.buttonStepNext.AutoToolTip = false;
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                this.statusLabel, this.buttonStepPrev, this.buttonStepNext });
 
             // ─── форма ─────────────────────────────────────────────────────
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1180, 608);
+            this.ClientSize = new System.Drawing.Size(1180, 620);
             this.MinimumSize = new System.Drawing.Size(1000, 500);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.statusStrip);
@@ -955,6 +972,7 @@ namespace BecquerelMonitor.RoiWizard
         System.Windows.Forms.Button buttonSelectAll;
         System.Windows.Forms.Button buttonSelectNone;
         System.Windows.Forms.NumericUpDown numTopN;
+        System.Windows.Forms.Label labelTopN;
         System.Windows.Forms.Button buttonSelectTop;
 
         XPTable.Models.Table tableLines;
@@ -1008,5 +1026,7 @@ namespace BecquerelMonitor.RoiWizard
 
         System.Windows.Forms.StatusStrip statusStrip;
         System.Windows.Forms.ToolStripStatusLabel statusLabel;
+        System.Windows.Forms.ToolStripButton buttonStepPrev;
+        System.Windows.Forms.ToolStripButton buttonStepNext;
     }
 }
