@@ -1,10 +1,18 @@
-# BecqMoni ROI Wizard — мастер создания ROI-конфигураций
+# Конструктор ROI и наборов нуклидов для BecqMoni
 
 **Live:** https://vibeengineering-llc.github.io/becqmoni-roi-wizard/
 
-Веб-мастер для сборки ROI-конфигураций [BecqMoni](https://github.com/Am6er/BecqMoni)
-(формат `120920`) из ядерных данных IAEA: выбор изотопов, семейств и цепочек распада →
-отбор γ/X/ХРИ-линий и вторичных пиков → адаптация под разрешение детектора → экспорт `.xml`.
+Сборка ROI-конфигураций [BecqMoni](https://github.com/Am6er/BecqMoni) (формат `120920`)
+и наборов нуклидов (NuclideSet) из ядерных данных IAEA: выбор изотопов, семейств и цепочек
+распада → отбор γ/X/ХРИ-линий и вторичных пиков → адаптация под разрешение детектора →
+экспорт `.xml`.
+
+Инструмент существует в двух видах:
+
+- **веб-страница** (этот репозиторий, ссылка выше) — автономная, работает и с `file://`;
+- **модуль для самого BecqMoni** — [`integration/`](integration/README.md): тот же расчёт
+  на C# (.NET Framework 4.8, WinForms), только результат пишется не в файл, а прямо в
+  `ROIConfigManager` и `NuclideDefinitionManager` приложения.
 
 *Web wizard that builds BecqMoni ROI configuration files from IAEA nuclear data:
 pick nuclides, families or decay chains, select γ/X-ray/XRF lines and secondary peaks,
@@ -113,11 +121,18 @@ python -m http.server 8642
 
 ### Якорная линия и полный набор
 
-`IsAnchor=true` получает ровно одна линия набора — **якорная**. Найдя её в спектре, BecqMoni
+`IsAnchor=true` получает одна линия набора — **якорная**. Найдя её в спектре, BecqMoni
 сажает остальные линии набора на табличные энергии и фитует их амплитуды (`LibraryPeakFitter`);
 без якоря этот механизм не запускается вовсе. Автовыбор берёт сильную и при этом одинокую
 линию — ту, у которой в пределах FWHM нет значимых соседей: для ряда Th-232 это 2614.5 (Tl-208),
-для U-238/Ra-226 — 609.3 (Bi-214). Любую линию можно назначить якорем вручную.
+для U-238/Ra-226 — 609.3 (Bi-214). Якорем можно вручную назначить любую **линию распада**:
+ХРИ материалов и вторичные маркеры для этого не годятся — у первых интенсивность условная
+(Kα1 = 100), у вторых положение задано эмпирической поправкой.
+
+Сам `LibraryPeakFitter` допускает **несколько** якорных линий: он перебирает все записи с
+`IsAnchor`, берёт сдвиг калибровки с сильнейшей по SNR и требует, чтобы с найденным пиком
+совпала хотя бы одна (допуск 0,5·FWHM). Инструмент пока помечает ровно одну — если она
+в спектре не нашлась, фит не стартует.
 
 Галка **«полный набор (все линии, для фита)»** выгружает все γ- и X-линии выбранных нуклидов,
 минуя галки, фильтры и объединение. Так и надо для библиотечного фита: по прогонам разработчика
@@ -182,8 +197,20 @@ N("Ra-223", "223ra", 0, fam=("erh","med"), chain="u235")  # несколько �
 |---|---|
 | γ- и X-линии распада, T½, ветвления | [IAEA Live Chart of Nuclides API](https://nds.iaea.org/relnsd/vcharthtml/VChartHTML.html) (ENSDF) |
 | ХРИ элементов (Kα/Kβ/L) | NIST X-Ray Transition Energies (Deslattes 2003), Bearden 1967 |
-| Формулы вторичных пиков | Knoll, *Radiation Detection and Measurement*, 4th ed., гл. 10–12, 17; Gilmore & Joss |
+| Формулы вторичных пиков | Knoll, *Radiation Detection and Measurement*, **3-е изд., 1999, гл. 10** (комптон-край — разд. II.B, обратное рассеяние и пики вылета — разд. III, суммирование — III.E); Gilmore, *Practical Gamma-ray Spectrometry*, 2-е изд., гл. 2 и 10. Сверено по оригиналам, с главами и страницами — [`docs/REFERENCES-secondary-peaks.md`](docs/REFERENCES-secondary-peaks.md) |
+| Поправки к положениям вторичных пиков | измерения комплекса Gamma-1C (NaI(Tl) 63×63 #0086-16, поверка 2024, защита Pb 50 мм): комптон-край −0,8·FWHM, обратное рассеяние +10 кэВ |
 | Формат ROI-конфигурации | исходники [BecqMoni](https://github.com/Am6er/BecqMoni) (`ROIConfigData.cs`, FormatVersion 120920) |
+| Пороги слияния и требование якоря | `BecquerelMonitor/LibraryPeakFitter.cs`: `SparrowFwhm = 0.85`, `ClaimToleranceFwhm = 0.25`, гейт значимости Fisher z ≥ 4 |
+
+## Документы репозитория
+
+| Файл | О чём |
+|---|---|
+| [`integration/README.md`](integration/README.md) | модуль для BecqMoni: состав, подключение, контракты, тесты, «что важно не сломать» |
+| [`docs/UPSTREAM-PR.md`](docs/UPSTREAM-PR.md) | как вносить модуль в `Am6er/BecqMoni` через pull request: что доделать, куда встраивать, вопросы владельцу |
+| [`docs/REFERENCES-secondary-peaks.md`](docs/REFERENCES-secondary-peaks.md) | вторичные пики по первоисточникам: главы и страницы Knoll и Gilmore, разбор ложных ссылок |
+| [`PLAN.md`](PLAN.md) | план доработки по рецензии, статус фаз, открытые вопросы |
+| [`FIELDS.md`](FIELDS.md), [`styles/README.md`](styles/README.md) | контракт темы оформления: поля страницы и что можно менять в CSS |
 
 ## Дисклеймер
 
