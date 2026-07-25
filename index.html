@@ -13,27 +13,75 @@
   @media (prefers-color-scheme:dark){
     :root{--bg:#1a1917; --card:#232220; --ink:#ece9e3; --muted:#a7a299;
       --line:#38352f; --accent:#89aecb; --accent-ink:#a9c6df; --ok:#7fce9a;
-      --input-bg:#1c1b19; --sel:#26303a; --chip:#2c2a26;}
+      --input-bg:#1c1b19; --sel:#2f4257; --chip:#2c2a26;}
   }
   :root[data-theme="dark"]{--bg:#1a1917; --card:#232220; --ink:#ece9e3; --muted:#a7a299;
     --line:#38352f; --accent:#89aecb; --accent-ink:#a9c6df; --ok:#7fce9a;
-    --input-bg:#1c1b19; --sel:#26303a; --chip:#2c2a26;}
+    --input-bg:#1c1b19; --sel:#2f4257; --chip:#2c2a26;}
   :root[data-theme="light"]{--bg:#f7f6f3; --card:#ffffff; --ink:#1c1b19; --muted:#605c54;
     --line:#e3e0d8; --accent:#4a6b8a; --accent-ink:#2c4a63; --ok:#1f6b3a;
     --input-bg:#fdfcfa; --sel:#eef4fb; --chip:#f0eee9;}
   *{box-sizing:border-box}
-  body{margin:0; background:var(--bg); color:var(--ink);
+  body{margin:0; background:var(--bg); color:var(--ink); height:100dvh; overflow:hidden;
     font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-  .wrap{max-width:none; margin:0; padding:28px 24px 80px}
+  /* ── каркас панели: шапка, слева шаги, справа результат ───────────────── */
+  .app{height:100dvh; display:flex; flex-direction:column}
+  .topbar{display:flex; align-items:baseline; gap:12px; padding:7px 14px;
+    border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0}
+  .topbar h1{font-size:15px; margin:0; white-space:nowrap}
+  .topbar .sub{margin:0; font-size:12.5px; min-width:0; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap}
+  .topbar .spacer{flex:1}
+  .main{flex:1; display:flex; min-height:0}
+  .side{width:430px; flex-shrink:0; border-right:1px solid var(--line); background:var(--card);
+    display:flex; flex-direction:column; min-height:0}
+  .tabs{display:flex; border-bottom:1px solid var(--line); flex-shrink:0}
+  .tabs button{flex:1; border:none; border-right:1px solid var(--line); border-radius:0;
+    background:transparent; padding:8px 4px; font-size:12.5px; color:var(--muted);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .tabs button:last-child{border-right:none}
+  .tabs button.on{background:var(--sel); color:var(--accent-ink); font-weight:700;
+    box-shadow:inset 0 -2px 0 var(--accent)}
+  .tabbody{display:none; padding:12px 14px 20px; overflow-y:auto; flex:1; min-height:0}
+  .tabbody.on{display:block}
+  .content{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0}
+  .footbar{display:flex; align-items:center; gap:12px; padding:8px 14px; flex-shrink:0;
+    border-top:1px solid var(--line); background:var(--card)}
+  .footbar .sum{font-size:13px; font-variant-numeric:tabular-nums}
+  .footbar .sum b{color:var(--accent-ink)}
+  /* ── полоса спектра: линии набора на энергетической оси ───────────────── */
+  .specwrap{flex-shrink:0; border-bottom:1px solid var(--line); background:var(--card);
+    padding:6px 14px 2px}
+  #specBar{width:100%; height:118px; display:block; cursor:crosshair}
+  .speclegend{display:flex; gap:12px; font-size:11.5px; color:var(--muted); padding:0 0 4px}
   h1{font-size:24px; margin:0 0 4px}
   .sub{color:var(--muted); font-size:14px; margin:0 0 6px}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:12px;
-    padding:18px 20px; margin:18px 0}
-  h2{font-size:17px; margin:0 0 12px}
+  .card{margin:0 0 14px}
+  h2{font-size:14px; margin:0 0 8px; color:var(--accent-ink)}
   h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:6px}
-  h3{font-size:14px; margin:14px 0 6px; color:var(--accent-ink)}
-  label{font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase;
-    letter-spacing:.03em; display:block; margin-bottom:4px}
+  h3{font-size:13px; margin:12px 0 5px; color:var(--accent-ink)}
+  label{font-size:13px; color:var(--ink); font-weight:500; display:block; margin-bottom:3px}
+  /* пояснения — под «подробнее», а не между полем и кнопкой */
+  details.doc{margin:4px 0 0}
+  details.doc > summary{font-size:12.5px; color:var(--accent-ink); cursor:pointer;
+    list-style:none; display:inline-block; border-bottom:1px dotted var(--accent)}
+  details.doc > summary::-webkit-details-marker{display:none}
+  details.doc .hint{max-width:72ch}
+  /* сегментный переключатель — там, где вариантов 2–3 */
+  .seg{display:flex}
+  .seg button{border-radius:0; border-right-width:0; flex:1; padding:6px 8px; font-size:13px}
+  .seg button:first-child{border-radius:8px 0 0 8px}
+  .seg button:last-child{border-radius:0 8px 8px 0; border-right-width:1px}
+  .seg button.on{background:var(--sel); border-color:var(--accent); color:var(--accent-ink);
+    font-weight:600; position:relative; z-index:1}
+  .srcPane{display:none}
+  .srcPane.on{display:block}
+  .toast{position:absolute; right:16px; bottom:56px; z-index:40; max-width:min(560px,60vw);
+    background:var(--card); border:1px solid var(--accent); border-radius:10px;
+    padding:9px 12px; font-size:13px; box-shadow:0 10px 28px rgba(0,0,0,.2)}
+  .toast code{font-size:12px}
+  .content{position:relative}
+  tr.hovered{outline:2px solid var(--accent); outline-offset:-2px}
   input[type=number],input[type=text],select{
     padding:7px 10px; font-size:14px; color:var(--ink); background:var(--input-bg);
     border:1px solid var(--line); border-radius:8px; font-variant-numeric:tabular-nums}
@@ -43,7 +91,7 @@
   button:hover{border-color:var(--accent)}
   button.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
   .row{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end}
-  .cols{display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:18px}
+  .cols{display:grid; grid-template-columns:1fr; gap:10px}
   /* блок 1: заголовок / панель управления / список / хвост — строки колонок выровнены,
      поэтому все три списка начинаются на одной линии */
   .cols.aligned{grid-template-rows:auto auto auto auto}
@@ -112,86 +160,91 @@
 </style>
 </head>
 <body>
-<button class="theme-btn" id="langBtn" style="right:96px">EN</button>
-<button class="theme-btn" id="themeBtn">◑ тема</button>
-<div class="wrap">
-
-<h1>ROI-мастер для BecqMoni</h1>
-<p class="sub" id="sub0" style="font-weight:700; color:var(--accent-ink)">ROI-конфигурации и библиотеки нуклидов из ядерных данных IAEA</p>
-<p class="sub" id="sub1">Гамма-линии и ХРИ из снимка IAEA Live Chart (ENSDF) → выбор изотопов/семейств/цепочек →
-оформление → экспорт <code>.xml</code> в формате BecqMoni (FormatVersion 120920).</p>
-<p class="sub" id="dbinfo"></p>
+<div class="app">
+<header class="topbar">
+  <h1>ROI-мастер для BecqMoni</h1>
+  <p class="sub" id="dbinfo"></p>
+  <span class="spacer"></span>
+  <button id="langBtn">EN</button>
+  <button id="themeBtn">◑ тема</button>
+</header>
+<div class="main">
+<aside class="side">
+<nav class="tabs" id="tabs">
+  <button data-tab="1" class="on">1 · Источники</button>
+  <button data-tab="2">2 · Линии</button>
+  <button data-tab="3">3 · Оформление</button>
+  <button data-tab="4">4 · Экспорт</button>
+</nav>
 
 <!-- ═══════════ 1. ВЫБОР ИСТОЧНИКОВ ═══════════ -->
+<div class="tabbody on" data-body="1">
 <section class="card">
-  <h2><span class="n">1</span>Изотопы, семейства, цепочки</h2>
-  <div class="cols aligned">
-    <div>
-      <h3>Поиск изотопа</h3>
-      <div class="ctl">
-        <div class="row">
-          <input type="text" id="nucSearch" placeholder="напр. Eu-152" style="width:150px">
-          <button id="nucAdd" title="Только выбранный нуклид, его собственные линии">Добавить</button>
-        </div>
-        <div class="row" style="margin-top:6px">
-          <button id="nucAddF" title="Все линии дочерних под именем выбранного нуклида — один изотоп в списке (Mo-99→Tc-99m, Ce-144→Pr-144, члены ЕРН-ряда)">+ линии семейства</button>
-          <button id="nucAddC" title="Дочерние отдельными нуклидами с пометкой родителя: «Tc-99m (Mo-99)»">+ цепочкой</button>
-        </div>
-      </div>
-      <div class="nuclist" id="searchBox"></div>
-      <div><p class="hint" id="searchHint">Ввод сужает список: совпадение по имени или по семейству. Клик по строке добавляет изотоп.</p></div>
+  <h2>Готовые наборы</h2>
+  <div class="chipbar" id="presetBar"></div>
+  <div class="seg" id="srcSeg" style="margin-top:12px">
+    <button data-src="search" class="on">Поиск</button>
+    <button data-src="group">Группы и ряды</button>
+    <button data-src="xrf">ХРИ</button>
+  </div>
+  <div class="srcPane on" data-pane="search">
+    <div class="row" style="margin-top:8px">
+      <input type="text" id="nucSearch" placeholder="напр. Eu-152" style="flex:1; min-width:110px">
+      <button id="nucAdd" title="Только выбранный нуклид, его собственные линии">Добавить</button>
     </div>
-    <div>
-      <h3>Группа</h3>
-      <div class="ctl">
-        <div class="row">
-          <select id="famSel" style="width:auto; max-width:100%"></select>
-          <button id="famInfoBtn" title="Что означают коды семейств">(i)</button>
-        </div>
-        <div class="row" style="margin-top:6px" id="famCtl"></div>
-        <p class="hint infoPop" id="famInfoBox" style="display:none"></p>
-      </div>
-      <div class="nuclist" id="famBox"></div>
-      <div><p class="hint" id="chainHint">Член цепочки без γ/X-линий выше порога базы показан серым.</p></div>
-    </div>
-    <div>
-      <h3>ХРИ — элементы</h3>
-      <div class="ctl"></div>
-      <div class="nuclist" id="xrfBar"></div>
-      <div>
-        <p class="hint" id="xrfHint">Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1=100) — только маркеры.</p>
-      </div>
+    <div class="row" style="margin-top:6px">
+      <button id="nucAddF" title="Все линии дочерних под именем выбранного нуклида — один изотоп в списке">+ семейство</button>
+      <button id="nucAddC" title="Дочерние отдельными нуклидами с пометкой родителя: «Tc-99m (Mo-99)»">+ цепочка</button>
     </div>
   </div>
-  <div style="display:flex; gap:14px; align-items:flex-start; margin-top:12px;
-              border-top:1px solid var(--line); padding-top:10px">
+  <div class="srcPane" data-pane="group">
+    <div class="row" style="margin-top:8px">
+      <select id="famSel" style="flex:1; min-width:0"></select>
+      <button id="famInfoBtn" title="Что означают коды семейств">(i)</button>
+    </div>
+    <div class="row" style="margin-top:6px; position:relative" id="famCtl"></div>
+    <p class="hint infoPop" id="famInfoBox" style="display:none"></p>
+  </div>
+  <div class="srcPane" data-pane="xrf"></div>
+  <div class="nuclist" id="srcList"></div>
+  <p class="hint" id="srcHint"></p>
+  <div style="display:flex; gap:10px; align-items:flex-start; margin-top:10px;
+              border-top:1px solid var(--line); padding-top:8px">
     <h3 style="margin:2px 0 0; white-space:nowrap">Выбрано</h3>
     <div class="chipbar" id="selBar" style="flex:1; margin-top:0"></div>
-    <button id="clearAll" style="flex-shrink:0">Очистить всё</button>
+    <button id="clearAll" style="flex-shrink:0">Очистить</button>
   </div>
 </section>
+</div>
 
 <!-- ═══════════ 2. ЛИНИИ ═══════════ -->
+<div class="tabbody" data-body="2">
 <section class="card">
-  <h2><span class="n">2</span>Линии <span class="stat" id="lineStat"></span></h2>
-  <div class="row" style="padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--input-bg); align-items:center">
-    <b style="font-size:13.5px">Адаптация под разрешение детектора (IDWin):</b>
-    <span style="font-size:13px">R =</span>
-    <input type="number" id="mR662" value="7.5" min="0.1" step="0.1" style="width:72px"
-      title="Разрешение детектора (FWHM) на 662 кэВ, %. NaI ~7–8, LaBr3 ~3, HPGe ~0.2">
-    <span style="font-size:13px">% на 662 кэВ, критерий</span>
-    <select id="mMode" style="width:auto" title="Порог, ближе которого линии считаются нераздельными">
-      <option value="sparrow" selected>предел Sparrow — маркеры ROI</option>
-      <option value="anchor">якорный набор — библиотечный фит</option>
-      <option value="manual">вручную</option>
-    </select>
-    <input type="number" id="mK" value="0.85" min="0.05" step="0.05" style="width:66px"
-      title="Порог ΔE в единицах FWHM(E)">
-    <span style="font-size:13px">× FWHM</span>
-    <button id="mergeBtn" title="Слить линии каждого нуклида (γ, X, ХРИ — независимо от выбора), попадающие в окно k×FWHM: E — центроид по I, I — сумма. Повторное нажатие пересчитывает заново">Объединить близкие</button>
-    <button id="unmergeBtn">Вернуть исходные</button>
-    <span class="stat" id="mergeStat"></span>
-    <p class="hint" id="resHint" style="flex-basis:100%; margin:2px 0 0">
+  <h2>Линии <span class="stat" id="lineStat"></span></h2>
+  <div style="padding:9px 11px; border:1px solid var(--line); border-radius:10px; background:var(--input-bg)">
+    <div class="row" style="align-items:flex-end">
+      <div><label>Разрешение R, % @662</label>
+        <input type="number" id="mR662" value="7.5" min="0.1" step="0.1" style="width:80px"
+          title="Разрешение детектора (FWHM) на 662 кэВ, %. NaI ~7–8, LaBr3 ~3, HPGe ~0.2"></div>
+      <div style="flex:1; min-width:190px"><label>Критерий неразделимости</label>
+        <select id="mMode" style="width:100%" title="Порог, ближе которого линии считаются нераздельными">
+          <option value="sparrow" selected>Sparrow — маркеры ROI</option>
+          <option value="anchor">якорный набор — библиотечный фит</option>
+          <option value="manual">вручную</option>
+        </select></div>
+      <div><label>× FWHM</label>
+        <input type="number" id="mK" value="0.85" min="0.05" step="0.05" style="width:74px"
+          title="Порог ΔE в единицах FWHM(E)"></div>
+    </div>
+    <div class="row" style="margin-top:7px; align-items:center">
+      <button id="mergeBtn" title="Слить линии каждого нуклида (γ, X, ХРИ — независимо от выбора), которые ближе порога: E — центроид по I, I — сумма">Объединить близкие</button>
+      <button id="unmergeBtn">Вернуть исходные</button>
+      <span class="stat" id="mergeStat"></span>
+    </div>
+    <p class="hint" style="margin-top:6px">Sparrow: ближе 0,85·FWHM дублет неразрешим — для маркеров сливаем.
+      <span id="mergeHint"></span></p>
+    <details class="doc"><summary>подробнее о разрешении и критериях</summary>
+      <p class="hint" id="resHint">
       <b>R</b> — паспортное разрешение детектора (FWHM на 662 кэВ): NaI(Tl) 6.5–8 %, CsI(Tl) 8–10 %,
       SrI₂(Eu) 3–3.5 %, LaBr₃ 2.7–3.3 %. С энергией пик уширяется как √E: FWHM(E) = R·√(662·E)/100 —
       модель для <b>сцинтилляторов</b> (наш парк: LaBr₃/NaI/SrI₂/CsI); для HPGe (R ~0.15 %) она
@@ -202,8 +255,8 @@
       (ΔE &lt; 0.25·FWHM) — для наборов, выгружаемых в библиотеку BecqMoni: там пары от 0.25 до
       0.85 FWHM разбирает библиотечный фит по якорной линии (связка амплитуд по табличным
       интенсивностям), а более далёкие — деконволюция, поэтому сливать их нельзя — набор
-      обедняется. <b>Вручную</b> — прежнее поведение (2–3×FWHM — грубое окно идентификации).
-      <span id="mergeHint"></span></p>
+      обедняется. <b>Вручную</b> — прежнее поведение (2–3×FWHM — грубое окно идентификации).</p>
+    </details>
   </div>
   <div class="row" style="padding:10px 12px; border:1px solid var(--line); border-radius:10px; align-items:flex-end">
     <b style="font-size:13.5px; align-self:center">Фильтры:</b>
@@ -256,9 +309,9 @@
       <input type="checkbox" id="hideUnsel"> скрыть невыбранные</label>
   </div>
   <div style="margin-top:10px">
-    <label>Равновесие ряда</label>
     <div style="font-size:13px"><input type="checkbox" id="eqScale" checked>
-      пересчитать интенсивности на один распад <b>родителя ряда</b> (вековое равновесие)</div>
+      равновесие ряда: интенсивности на распад <b>родителя</b></div>
+    <details class="doc"><summary>что делает пересчёт</summary>
     <p class="hint" id="eqHint">Без галки I — «на 100 распадов самого излучающего нуклида», как в базе IAEA и в файлах
       «Intensities» BecqMoni: у Tl-208 линия 2614 кэВ имеет I = 99.75 %. Но в равновесном ряду Th-232 через
       Tl-208 идёт лишь 35.94 % распадов (ветвление Bi-212: β 64 % / α 36 %), поэтому <b>на один распад Th-232</b>
@@ -267,6 +320,7 @@
       Po-211 ×0.00276); остальные члены ряда — ×1.
       Включайте, когда ROI-набор описывает равновесный ряд как целое (сравнение относительных высот линий
       разных членов между собой); выключайте, если хотите табличные значения «как в справочнике».</p>
+    </details>
   </div>
   <div class="group" id="secGroup" style="margin-top:12px">
     <div class="ghead" onclick="this.parentNode.classList.toggle('open')">
@@ -309,70 +363,64 @@
       <div id="nearOut" style="margin-top:8px; font-size:13px"></div>
     </div>
   </div>
-  <div class="tblscroll"><table id="lineTbl">
-    <thead><tr>
-      <th data-k="sel">✓</th><th data-k="nuc">Нуклид ⇅</th><th data-k="E">E, кэВ ⇅</th>
-      <th data-k="I" title="На 100 распадов нуклида; для ХРИ — условная (Kα1=100)">I, % ⇅</th>
-      <th data-k="rel" title="Относительно самой сильной линии этого нуклида/элемента — по ней работает относительный фильтр">I отн., % ⇅</th>
-      <th data-k="hl">T½ ⇅</th><th data-k="type">Тип</th>
-    </tr></thead><tbody></tbody>
-  </table></div>
 </section>
+</div>
 
 <!-- ═══════════ 3. ОФОРМЛЕНИЕ ═══════════ -->
+<div class="tabbody" data-body="3">
 <section class="card">
-  <h2><span class="n">3</span>Оформление ROI</h2>
-  <div class="row" style="align-items:flex-start">
-    <div><label>Режим</label>
-      <select id="roiMode">
-        <option value="marker" selected>линии-маркеры (высота ∝ I, без зон)</option>
-        <option value="zone">зоны (границы вокруг пика)</option>
-        <option value="zone+marker">зоны + маркеры интенсивности</option>
-      </select></div>
-    <div id="wModeBox" style="display:none"><label>Ширина зоны</label>
-      <select id="wMode">
+  <h2>Оформление ROI</h2>
+  <div><label>Режим</label>
+    <select id="roiMode" style="width:100%">
+      <option value="marker" selected>линии-маркеры (высота ∝ I, без зон)</option>
+      <option value="zone">зоны (границы вокруг пика)</option>
+      <option value="zone+marker">зоны + маркеры интенсивности</option>
+    </select></div>
+  <div class="row" style="align-items:flex-end; margin-top:8px">
+    <div id="wModeBox" style="display:none; flex:1; min-width:150px"><label>Ширина зоны</label>
+      <select id="wMode" style="width:100%">
         <option value="pct">% от энергии (как в BecqMoni)</option>
         <option value="fwhm">k × FWHM (сцинтиллятор)</option>
       </select></div>
     <div id="pctBox" style="display:none"><label>Ширина, % от E</label>
       <input type="number" id="wPct" value="5" min="0.5" step="0.5" style="width:80px"></div>
     <div id="fwhmBox" style="display:none">
-      <label>R на 662 кэВ, % / множитель k</label>
+      <label>R, % @662 / k</label>
       <div class="row" style="gap:6px">
         <input type="number" id="r662" value="7.5" min="1" step="0.1" style="width:74px">
         <input type="number" id="kF" value="3" min="1" step="0.5" style="width:64px">
       </div></div>
-    <div style="flex:1; min-width:320px">
-      <label>Цвета</label>
-      <div class="row" style="gap:8px; align-items:center">
-        <button id="colByChain">По цепочке/семейству</button>
-        <button id="colByNuc">Каждому нуклиду свой</button>
-        <span class="colorchips" id="colorBox" style="margin-top:0"></span>
-      </div>
-    </div>
   </div>
   <p class="hint" id="wHint" style="display:none">FWHM(E) = R₆₆₂·√(662·E)/100; зона = E ± k·FWHM/2. Границы округляются наружу до целых кэВ.</p>
+  <h3>Цвета</h3>
+  <div class="seg">
+    <button id="colByChain">по цепочке</button>
+    <button id="colByNuc">по нуклиду</button>
+  </div>
+  <span class="colorchips" id="colorBox"></span>
 </section>
+</div>
 
 <!-- ═══════════ 4. ЭКСПОРТ ═══════════ -->
+<div class="tabbody" data-body="4">
 <section class="card">
-  <h2><span class="n">4</span>Экспорт</h2>
-  <div class="row">
-    <div><label>Имя конфигурации</label><input type="text" id="cfgName" value="IAEA lines" style="width:220px"></div>
-    <div><button class="primary" id="btnXml">Скачать ROI .xml</button></div>
-    <div><label>Имя набора (NuclideSet)</label><input type="text" id="libName" value="Новый набор" style="width:200px"></div>
-    <div><label>Якорная линия</label><select id="anchorSel" style="width:230px"
-      title="Линия с IsAnchor=true: найдя её, BecqMoni сажает остальные линии набора на табличные позиции и фитует их амплитуды"></select></div>
-    <div><button class="primary" id="btnNucXml" title="Выберите свой NuclideDefinition.xml — набор будет дописан в него, существующие нуклиды и наборы сохранятся">Дописать набор в NuclideDefinition.xml…</button>
-      <input type="file" id="mergeFile" accept=".xml" style="display:none"></div>
-    <div style="padding-bottom:4px; display:flex; flex-direction:column; gap:2px">
-      <label style="text-transform:none; letter-spacing:0; font-size:13px; color:var(--ink); font-weight:400; cursor:pointer; margin:0">
-        <input type="checkbox" id="libFull"> полный набор (все линии, для фита)</label>
-      <label style="text-transform:none; letter-spacing:0; font-size:13px; color:var(--ink); font-weight:400; cursor:pointer; margin:0">
-        <input type="checkbox" id="bakOrig" checked> сохранить копию оригинала</label></div>
-    <div><button id="btnPreview">Предпросмотр</button></div>
-    <div class="stat" id="expStat"></div>
-  </div>
+  <h2>Экспорт</h2>
+  <div><label>Имя ROI-конфигурации</label><input type="text" id="cfgName" value="IAEA lines" style="width:100%"></div>
+  <div style="margin-top:8px"><button class="primary" id="btnXml">Скачать ROI .xml</button>
+    <button id="btnPreview">Предпросмотр</button></div>
+  <h3>Набор нуклидов для библиотеки</h3>
+  <div><label>Имя набора (NuclideSet)</label><input type="text" id="libName" value="Новый набор" style="width:100%"></div>
+  <div style="margin-top:8px"><label>Якорная линия</label><select id="anchorSel" style="width:100%"
+    title="Линия с IsAnchor=true: найдя её, BecqMoni сажает остальные линии набора на табличные позиции и фитует их амплитуды"></select></div>
+  <div style="margin-top:8px; display:flex; flex-direction:column; gap:3px">
+    <label style="font-weight:400; cursor:pointer; margin:0">
+      <input type="checkbox" id="libFull"> полный набор (все линии, для фита)</label>
+    <label style="font-weight:400; cursor:pointer; margin:0">
+      <input type="checkbox" id="bakOrig" checked> сохранить копию оригинала</label></div>
+  <div style="margin-top:8px"><button class="primary" id="btnNucXml" title="Выберите свой NuclideDefinition.xml — набор будет дописан в него, существующие нуклиды и наборы сохранятся">Дописать в библиотеку…</button>
+    <input type="file" id="mergeFile" accept=".xml" style="display:none"></div>
+  <div class="stat" id="expStat" style="margin-top:8px"></div>
+  <details class="doc" style="margin-top:10px"><summary>куда класть файлы и как работает якорь</summary>
   <p class="hint" id="expHint"><b>ROI-конфигурация</b> кладётся в <code>%APPDATA%\BecqMoni\config\ROI\</code> (обычно
     <code>C:\Users\&lt;имя&gt;\AppData\Roaming\BecqMoni\config\ROI\</code>) и появляется в списке ROI-конфигураций BecqMoni.
     <b>Библиотека нуклидов</b> — тот же набор линий дописывается в ваш
@@ -389,18 +437,48 @@
     Веса связанных линий берутся из <code>Intencity</code>, поэтому для рядов держите включённым
     «Равновесие ряда», а сами нуклиды добавляйте цепочкой или одним родительским изотопом —
     родитель в скобках имени и есть признак цепочки для BecqMoni.</p>
+  </details>
   <pre id="xmlPrev" style="display:none"></pre>
-</section>
-
-<footer id="footerText">
+  <details class="doc" style="margin-top:10px"><summary>об источниках данных</summary>
+  <p class="hint" id="footerText">
   Данные: снимок IAEA Live Chart of Nuclides API (ENSDF) — файл <code>data/nuclides.js</code>, обновление —
   <code>update_nuclides.py</code> (API не отдаёт CORS, поэтому обновление скриптом, страница автономна).
   ХРИ: NIST/Bearden. Вторичные пики: расчётные (Knoll, Gilmore &amp; Joss). Коэффициенты Бк/cps не заполняются —
   задаются в BecqMoni по кривой эффективности.
   <a href="https://github.com/VibeEngineering-LLC/becqmoni-roi-wizard" target="_blank" rel="noopener">Исходники на GitHub</a> ·
   VibeEngineering · 2026 · неофициальный инструмент, не является частью
-  <a href="https://github.com/Am6er/BecqMoni" target="_blank" rel="noopener">BecqMoni</a>.
-</footer>
+  <a href="https://github.com/Am6er/BecqMoni" target="_blank" rel="noopener">BecqMoni</a>.</p>
+  </details>
+</section>
+</div>
+</aside>
+
+<!-- ═══════════ РЕЗУЛЬТАТ: спектр + таблица + итог ═══════════ -->
+<main class="content">
+  <div class="specwrap">
+    <div class="speclegend"><span id="specTitle">Набор на энергетической оси</span>
+      <span class="spacer" style="flex:1"></span><span id="specHover"></span></div>
+    <canvas id="specBar"></canvas>
+  </div>
+  <div class="tblscroll" style="flex:1; min-height:0; margin:0; border:none; border-radius:0">
+    <table id="lineTbl">
+    <thead><tr>
+      <th data-k="sel">✓</th><th data-k="nuc">Изотоп ⇅</th><th data-k="E">Энергия, кэВ ⇅</th>
+      <th data-k="I" title="На 100 распадов нуклида; для ХРИ — условная (Kα1=100)">I, % ⇅</th>
+      <th data-k="rel" title="Относительно самой сильной линии этого нуклида/элемента — по ней работает относительный фильтр">I отн., % ⇅</th>
+      <th data-k="hl">T½ ⇅</th><th data-k="type">Тип</th>
+    </tr></thead><tbody></tbody>
+    </table>
+  </div>
+  <div class="toast" id="toast" style="display:none"></div>
+  <div class="footbar">
+    <span class="sum" id="sumBar"></span>
+    <span style="flex:1"></span>
+    <button class="primary" id="btnXml2">Скачать ROI .xml</button>
+    <button class="primary" id="btnNucXml2">Дописать в библиотеку…</button>
+  </div>
+</main>
+</div>
 </div>
 
 <script src="data/nuclides.js?v=20260725d"></script>
@@ -436,9 +514,19 @@ function chainTitle(c){ var e = DB.chains[c]; return (LANG==="en" && e.title_en)
 function famTitle(f){ var e = DB.families[f]; return e ? (LANG==="en" ? e.en : e.ru) : f; }
 function famInfo(f){ var e = DB.families[f]; return e ? (LANG==="en" ? e.info_en : e.info_ru) : ""; }
 function locHl(s){
+  s = fmtSci(s);
   if (LANG!=="en" || !s) return s;
   return s.replace(" лет"," y").replace(" сут"," d").replace(" мин"," min")
           .replace(/ ч$/," h").replace(/ с$/," s").replace("стабилен/неизв.","stable/unk.");
+}
+// «4.47e+09 лет» — машинная запись; физику привычнее 4,47·10⁹ (в EN — точка)
+var SUP = {"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","-":"⁻"};
+function fmtSci(s){
+  if (!s) return s;
+  s = String(s).replace(/(\d+(?:\.\d+)?)e([+-]?)0*(\d+)/gi, function(_, m, sign, ex){
+    return m+"·10"+(sign==="-"?SUP["-"]:"")+String(ex).split("").map(function(c){ return SUP[c]||c; }).join("");
+  });
+  return LANG==="en" ? s : s.replace(/(\d),(\d)/g,"$1 $2").replace(/(\d)\.(\d)/g,"$1,$2");
 }
 function dispNuc(n){ return (LANG==="en" && n.indexOf("ХРИ ")===0) ? "XRF "+n.slice(4) : n; }
 
@@ -483,17 +571,15 @@ function buildGroupSel(){
 // члены выбранной группы + кнопки, зависящие от её типа
 function renderGroup(){
   var v = $("famSel").value, kind = v.slice(0,1), id = v.slice(2);
-  var ctl = $("famCtl"), box = $("famBox");
+  var ctl = $("famCtl");
   // те же три варианта, что и в поиске: по одному / линиями под именем родителя / цепочкой
   ctl.innerHTML =
     '<button class="grpAdd" data-mode="all" title="'+T("Каждый член группы — отдельным нуклидом","Every member as a separate nuclide")+'">'+T("добавить все","add all")+'</button> '+
     '<button class="grpAdd" data-mode="one" title="'+(kind==="c"
         ? T("Все линии ряда под именем родителя — один изотоп","All series lines under the parent name — one nuclide")
         : T("Дочерние — линиями под именем своего родителя","Daughters as lines under their parent’s name"))+'">'+T("+ линии семейства","+ family lines")+'</button> '+
-    '<button class="grpAdd" data-mode="chain" title="'+T("Дочерние отдельными нуклидами с пометкой родителя в скобках","Daughters as separate nuclides, parent in brackets")+'">'+T("+ цепочкой","+ as chain")+'</button>';
-  box.innerHTML = "";
-  var members = kind==="c" ? DB.chains[id].order : famNucs(id);
-  members.forEach(function(n){ box.appendChild(nucRow(n, false)); });
+    '<button class="grpAdd" data-mode="chain" title="'+T("Дочерние отдельными нуклидами с пометкой родителя в скобках","Daughters as separate nuclides, parent in brackets")+'">'+T("+ цепочка","+ chain")+'</button>';
+  if (SRC==="group") renderSource();
   if ($("famInfoBox").style.display !== "none") showFamInfo(true);
 }
 function showFamInfo(keepOpen){
@@ -504,30 +590,63 @@ function showFamInfo(keepOpen){
   b.innerHTML = (txt ? txt+"<br>" : "")+(std||"");
   b.style.display = "";
 }
-// живой поиск: сужает список, клик по строке добавляет изотоп
-function renderSearch(){
-  var q = ($("nucSearch").value||"").trim().toLowerCase();
-  var box = $("searchBox"); box.innerHTML = "";
-  var names = Object.keys(DB.nuclides).sort();
-  var hits = q ? names.filter(function(n){
-    var e = DB.nuclides[n];
-    return n.toLowerCase().indexOf(q)>=0 || e.fam.some(function(f){ return f.indexOf(q)===0; });
-  }) : names;
-  if (!hits.length){
-    box.innerHTML = '<div class="empty">'+T("Ничего не найдено.","Nothing found.")+'</div>'; return;
+// Один список на три источника: колесо мыши работает предсказуемо, высота блока
+// не тратится на три полосы прокрутки рядом.
+var SRC = "search";                                   // search | group | xrf
+function renderSource(){
+  var box = $("srcList"); box.innerHTML = "";
+  if (SRC==="search"){
+    var q = ($("nucSearch").value||"").trim().toLowerCase();
+    var names = Object.keys(DB.nuclides).sort();
+    var hits = q ? names.filter(function(n){
+      var e = DB.nuclides[n];
+      return n.toLowerCase().indexOf(q)>=0 || e.fam.some(function(f){ return f.indexOf(q)===0; });
+    }) : names;
+    if (!hits.length) box.innerHTML = '<div class="empty">'+T("Ничего не найдено.","Nothing found.")+'</div>';
+    else hits.slice(0, 200).forEach(function(n){ box.appendChild(nucRow(n, true)); });
+    $("srcHint").textContent = T("Ввод сужает список — по имени или коду семейства. Клик по строке добавляет изотоп.",
+                                 "Typing narrows the list — by name or family code. Click a row to add the nuclide.");
+  } else if (SRC==="group"){
+    var v = $("famSel").value, kind = v.slice(0,1), id = v.slice(2);
+    (kind==="c" ? DB.chains[id].order : famNucs(id)).forEach(function(n){ box.appendChild(nucRow(n, false)); });
+    $("srcHint").textContent = T("Член цепочки без γ/X-линий выше порога базы показан серым.",
+                                 "Chain members with no γ/X lines above the database threshold are greyed out.");
+  } else {
+    Object.keys(XRF).forEach(function(el){
+      var ctx = (LANG==="en" && XRF[el].ctx_en) ? XRF[el].ctx_en : XRF[el].ctx;
+      var d = document.createElement("div"); d.className = "nuc"; d.title = ctx;
+      d.innerHTML = '<input type="checkbox" data-xrf="'+el+'" '+(sel.xrf[el]?"checked":"")+'>'+
+        '<span>'+el+'</span><span class="note">'+esc(ctx)+'</span>';
+      box.appendChild(d);
+    });
+    $("srcHint").textContent = T("Только материалы защит и детекторов. Kα/Kβ (+L для тяжёлых), интенсивности относительные.",
+                                 "Shielding and detector materials only. Kα/Kβ (+L for heavy), relative intensities.");
   }
-  hits.slice(0, 200).forEach(function(n){ box.appendChild(nucRow(n, true)); });
+}
+// Готовые наборы: пустой старт не объясняет инструмент, а один клик — объясняет.
+var PRESETS = [
+  {ru:"ЕРН-фон", en:"NORM background", tip:"Th-232 + U-238 цепочками + K-40",
+   run:function(){ ["th232","u238"].forEach(function(c){ pickGroup("c:"+c,"chain"); }); addNuc("K-40"); }},
+  {ru:"Поверка Cs-137 / Co-60", en:"Cs-137 / Co-60 check", tip:"Контрольные источники",
+   run:function(){ ["Cs-137","Co-60"].forEach(addNuc); }},
+  {ru:"ОСГИ / калибровка", en:"Calibration set", tip:"Am-241, Ba-133, Eu-152, Cs-137, Co-60",
+   run:function(){ ["Am-241","Ba-133","Eu-152","Cs-137","Co-60"].forEach(addNuc); }},
+  {ru:"Медицинские", en:"Medical", tip:"Семейство MED",
+   run:function(){ pickGroup("f:med","all"); }},
+  {ru:"ХРИ детектора и защиты", en:"Detector and shield XRF", tip:"Pb, W, La, Ba, I",
+   run:function(){ ["Pb","W","La","Ba","I"].forEach(function(el){ sel.xrf[el] = true; }); }}
+];
+function pickGroup(v, mode){ $("famSel").value = v; addGroup(mode); }
+function buildPresets(){
+  var bar = $("presetBar"); bar.innerHTML = "";
+  PRESETS.forEach(function(p, i){
+    var c = document.createElement("span"); c.className = "chip"; c.dataset.preset = i;
+    c.textContent = LANG==="en" ? p.en : p.ru; c.title = p.tip;
+    bar.appendChild(c);
+  });
 }
 function buildSelectors(){
-  buildGroupSel(); renderGroup(); renderSearch();
-  var xb = $("xrfBar"); xb.innerHTML = "";
-  Object.keys(XRF).forEach(function(el){
-    var ctx = (LANG==="en" && XRF[el].ctx_en) ? XRF[el].ctx_en : XRF[el].ctx;
-    var d = document.createElement("div"); d.className = "nuc"; d.title = ctx;
-    d.innerHTML = '<input type="checkbox" data-xrf="'+el+'" '+(sel.xrf[el]?"checked":"")+'>'+
-      '<span>'+el+'</span><span class="note">'+esc(ctx)+'</span>';
-    xb.appendChild(d);
-  });
+  buildGroupSel(); renderGroup(); renderSource();
 }
 
 function ownerOf(n){
@@ -670,16 +789,21 @@ function renderTable(){
     xrf:'<span class="badge b-xrf">ХРИ</span>', sec:'<span class="badge b-sec">втор</span>'};
   vis.forEach(function(L){
     var tr = document.createElement("tr"); if (L.sel) tr.className = "selrow";
+    var rel = relOf(L);
+    // микро-бар по относительной интенсивности: «где сильные линии» видно без чтения чисел
+    var bar = 'background:linear-gradient(90deg,var(--sel) '+rel.toFixed(1)+'%,transparent '+rel.toFixed(1)+'%)';
+    tr.dataset.key = L.key;
     tr.innerHTML = '<td><input type="checkbox" data-key="'+L.key+'" '+(L.sel?"checked":"")+'></td>'+
-      '<td>'+esc(L.label)+'</td><td>'+L.E.toFixed(L.E<100?2:1)+'</td><td>'+L.I+'</td>'+
-      '<td>'+relOf(L).toFixed(1)+'</td>'+
+      '<td>'+esc(dispNuc(L.label))+'</td><td>'+fmtSci(L.E.toFixed(L.E<100?2:1))+'</td>'+
+      '<td>'+fmtSci(String(L.I))+'</td>'+
+      '<td style="'+bar+'">'+fmtSci(rel.toFixed(1))+'</td>'+
       '<td>'+esc(L.hl)+'</td><td>'+BADGE[L.type]+'</td>';
     tb.appendChild(tr);
   });
   var nSel = sel.lines.filter(function(L){return L.sel;}).length;
   $("lineStat").textContent = T("— показано ","— shown ")+vis.length+T(" из "," of ")+sel.lines.length+
     T(", выбрано ",", selected ")+nSel;
-  renderColors(); renderSelBar(); renderExpStat();
+  renderColors(); renderSelBar(); renderExpStat(); drawSpec(); renderSum();
 }
 
 function renderSelBar(){
@@ -690,8 +814,86 @@ function renderSelBar(){
   });
   Object.keys(sel.xrf).forEach(function(el){
     var c = document.createElement("span"); c.className = "chip on"; c.dataset.delx = el;
-    c.textContent = "ХРИ "+el+" ×"; bar.appendChild(c);
+    c.textContent = T("ХРИ ","XRF ")+el+" ×"; bar.appendChild(c);
   });
+  if (!bar.children.length) bar.innerHTML = '<span class="hint" style="margin:0">'+
+    T("пусто — начните с готового набора выше","empty — start with a preset above")+'</span>';
+}
+
+// ── полоса спектра: набор так, как он ляжет на энергетическую ось ──
+// Экспортируется список маркеров на оси E, поэтому его и показываем: видны
+// перекрытия зон, дырки в диапазоне и результат объединения близких линий.
+var specHit = null;                                   // линия под курсором
+function drawSpec(){
+  var cv = $("specBar"), box = cv.parentNode.getBoundingClientRect();
+  var dpr = window.devicePixelRatio || 1;
+  var W = Math.max(320, Math.round(box.width - 28)), H = 118;
+  cv.width = W*dpr; cv.height = H*dpr; cv.style.width = W+"px"; cv.style.height = H+"px";
+  var g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  var css = getComputedStyle(document.body);
+  var inkMuted = css.getPropertyValue("--muted").trim() || "#888";
+  var lineCol = css.getPropertyValue("--line").trim() || "#ddd";
+  var lines = visibleLines().filter(function(L){ return L.sel; });
+  var pad = {l:6, r:6, t:6, b:16}, plotH = H-pad.t-pad.b;
+  var eMax = 0; lines.forEach(function(L){ if (L.E>eMax) eMax = L.E; });
+  eMax = Math.max(500, Math.ceil((eMax*1.05)/500)*500);
+  function x(E){ return pad.l + (W-pad.l-pad.r)*E/eMax; }
+  // ось и подписи энергии
+  g.strokeStyle = lineCol; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(pad.l, H-pad.b+.5); g.lineTo(W-pad.r, H-pad.b+.5); g.stroke();
+  g.fillStyle = inkMuted; g.font = "10px system-ui,sans-serif"; g.textAlign = "center";
+  var step = eMax<=600 ? 100 : eMax<=1600 ? 200 : eMax<=3200 ? 500 : 1000;
+  for (var E=0; E<=eMax; E+=step){
+    g.beginPath(); g.moveTo(x(E), H-pad.b); g.lineTo(x(E), H-pad.b+3); g.stroke();
+    g.fillText(String(E), x(E), H-pad.b+13);
+  }
+  if (!lines.length){
+    g.textAlign = "left";
+    g.fillText(T("нет выбранных линий","no selected lines"), pad.l+4, pad.t+plotH/2);
+    return;
+  }
+  var mx = 0; lines.forEach(function(L){ if (L.I>mx) mx = L.I; });
+  var mode = $("roiMode").value;
+  // зоны — полупрозрачными окнами под штрихами, видно перекрытия
+  if (mode!=="marker") lines.forEach(function(L){
+    var lim = limitsFor(L); g.globalAlpha = .16; g.fillStyle = lineColor(L);
+    g.fillRect(x(lim[0]), pad.t, Math.max(1, x(lim[1])-x(lim[0])), plotH); g.globalAlpha = 1;
+  });
+  lines.forEach(function(L){
+    var h = plotH * Math.sqrt(Math.max(L.I,0)/(mx||1));      // √I — слабые линии видны
+    g.strokeStyle = lineColor(L); g.lineWidth = (specHit && specHit.key===L.key) ? 3 : 1.4;
+    g.beginPath(); g.moveTo(x(L.E), H-pad.b); g.lineTo(x(L.E), H-pad.b-Math.max(2,h)); g.stroke();
+  });
+}
+function specLineAt(px){
+  var cv = $("specBar"), W = cv.clientWidth, pad = {l:6, r:6};
+  var lines = visibleLines().filter(function(L){ return L.sel; });
+  if (!lines.length) return null;
+  var eMax = 0; lines.forEach(function(L){ if (L.E>eMax) eMax = L.E; });
+  eMax = Math.max(500, Math.ceil((eMax*1.05)/500)*500);
+  var E = (px-pad.l)/(W-pad.l-pad.r)*eMax, best = null, bd = 1e9;
+  lines.forEach(function(L){ var d = Math.abs(L.E-E); if (d<bd){ bd = d; best = L; } });
+  return (bd < eMax*0.012) ? best : null;
+}
+// короткое подтверждение действия: скачивание само по себе ничего не сообщает
+var toastT = null;
+function toast(html, copyText){
+  var el = $("toast");
+  el.innerHTML = html + (copyText ? ' <button id="toastCopy">'+T("скопировать путь","copy path")+'</button>' : "");
+  el.style.display = "block";
+  if (copyText) $("toastCopy").addEventListener("click", function(){
+    navigator.clipboard && navigator.clipboard.writeText(copyText);
+    this.textContent = T("скопировано","copied");
+  });
+  clearTimeout(toastT); toastT = setTimeout(function(){ el.style.display = "none"; }, 8000);
+}
+function renderSum(){
+  var lines = sel.lines.filter(function(L){ return L.sel; });
+  var nucs = {}; lines.forEach(function(L){ nucs[L.nuc] = 1; });
+  var a = anchorKeyOf(libLines()), aL = libLines().filter(function(L){ return L.key===a; })[0];
+  $("sumBar").innerHTML = "<b>"+Object.keys(nucs).length+"</b> "+T("нуклидов · ","nuclides · ")+
+    "<b>"+lines.length+"</b> "+T("линий","lines")+
+    (aL ? " · "+T("якорь ","anchor ")+esc(dispNuc(aL.label))+" "+aL.E.toFixed(1) : "");
 }
 
 // ── вторичные пики ──
@@ -1124,6 +1326,12 @@ document.addEventListener("click", function(ev){
     if (v.indexOf("xrf:")===0) sel.xrf[v.slice(4)] = true; else addNuc(v);
     buildSelectors(); rebuildLines(); renderTable(); searchNear(); return;
   }
+  if (t.dataset && t.dataset.preset !== undefined){
+    PRESETS[+t.dataset.preset].run();
+    // готовый набор сразу с рабочим порогом, иначе в таблице сотни линий шума
+    $("fIOn").checked = true; $("fMinI").value = 3; $("iMode").value = "rel";
+    buildSelectors(); rebuildLines(); applyFilterSelection(); renderTable(); return;
+  }
   var pick = t.closest && t.closest("[data-pick]");
   if (pick){ addNuc(pick.dataset.pick); buildSelectors(); rebuildLines(); renderTable(); return; }
   if (t.dataset && t.dataset.del){ delNuc(t.dataset.del); buildSelectors(); rebuildLines(); renderTable(); return; }
@@ -1152,7 +1360,21 @@ $("hideUnsel").addEventListener("change", renderTable);
 document.querySelectorAll(".fT").forEach(function(c){ c.addEventListener("change", renderTable); });
 $("famSel").addEventListener("change", renderGroup);
 $("famInfoBtn").addEventListener("click", function(){ showFamInfo(false); });
-$("nucSearch").addEventListener("input", renderSearch);
+$("nucSearch").addEventListener("input", renderSource);
+// вкладки шагов и переключатель источника
+$("tabs").addEventListener("click", function(ev){
+  var b = ev.target.closest("button[data-tab]"); if (!b) return;
+  document.querySelectorAll(".tabs button").forEach(function(x){ x.classList.toggle("on", x===b); });
+  document.querySelectorAll(".tabbody").forEach(function(x){
+    x.classList.toggle("on", x.dataset.body===b.dataset.tab); });
+});
+$("srcSeg").addEventListener("click", function(ev){
+  var b = ev.target.closest("button[data-src]"); if (!b) return;
+  SRC = b.dataset.src;
+  document.querySelectorAll("#srcSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+  document.querySelectorAll(".srcPane").forEach(function(p){ p.classList.toggle("on", p.dataset.pane===SRC); });
+  renderSource();
+});
 $("eqScale").addEventListener("change", function(){ rebuildLines(); renderTable(); });
 $("libFull").addEventListener("change", function(){ $("anchorSel").value = ""; renderExpStat(); });
 $("anchorSel").addEventListener("change", renderExpStat);
@@ -1160,7 +1382,7 @@ $("anchorSel").addEventListener("change", renderExpStat);
 function searchPick(){
   var v = $("nucSearch").value.trim();
   if (DB.nuclides[v]) return v;
-  var hits = $("searchBox").querySelectorAll("[data-pick]");
+  var hits = $("srcList").querySelectorAll("[data-pick]");
   return (v && hits.length===1) ? hits[0].dataset.pick : v;
 }
 $("nucAdd").addEventListener("click", function(){
@@ -1316,6 +1538,8 @@ $("btnXml").addEventListener("click", function(){
   a.download = ($("cfgName").value||"IAEA lines")+".xml";
   document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast(T("ROI-конфигурация сохранена — положите её в ","ROI configuration saved — put it into ")+
+        "<code>%APPDATA%\\BecqMoni\\config\\ROI\\</code>", "%APPDATA%\\BecqMoni\\config\\ROI\\");
 });
 $("btnNucXml").addEventListener("click", function(){
   var iss = checkIssues();
@@ -1370,8 +1594,27 @@ $("themeBtn").addEventListener("click", function(){
 var RU2EN = {
   "ROI-мастер для BecqMoni":"ROI Wizard for BecqMoni",
   "Изотопы, семейства, цепочки":"Nuclides, families, chains",
+  "1 · Источники":"1 · Sources","2 · Линии":"2 · Lines","3 · Оформление":"3 · Styling",
+  "4 · Экспорт":"4 · Export","Готовые наборы":"Presets","Поиск":"Search",
+  "Группы и ряды":"Groups and series","Очистить":"Clear",
+  "Разрешение R, % @662":"Resolution R, % @662","Критерий неразделимости":"Inseparability criterion",
+  "Sparrow — маркеры ROI":"Sparrow — ROI markers","якорный набор — библиотечный фит":"anchored set — library fit",
+  "Sparrow: ближе 0,85·FWHM дублет неразрешим — для маркеров сливаем.":
+    "Sparrow: closer than 0.85·FWHM a doublet is unresolvable — merged for markers.",
+  "подробнее о разрешении и критериях":"more on resolution and criteria",
+  "что делает пересчёт":"what the rescaling does",
+  "куда класть файлы и как работает якорь":"where the files go and how the anchor works",
+  "об источниках данных":"about the data sources",
+  "равновесие ряда: интенсивности на распад":"series equilibrium: intensities per decay of the",
+  "родителя":"parent","Имя ROI-конфигурации":"ROI configuration name",
+  "Набор нуклидов для библиотеки":"Nuclide set for the library",
+  "Дописать в библиотеку…":"Append to the library…","Цвета":"Colors",
+  "по цепочке":"by chain","по нуклиду":"by nuclide",
+  "Набор на энергетической оси":"The set on the energy axis",
+  "Изотоп ⇅":"Nuclide ⇅","Энергия, кэВ ⇅":"Energy, keV ⇅",
   "Поиск изотопа":"Nuclide search","Группа":"Group","Добавить":"Add",
   "+ линии семейства":"+ family lines","+ цепочкой":"+ as chain",
+  "+ семейство":"+ family","+ цепочка":"+ chain",
   "ХРИ — элементы":"XRF — elements","Выбрано":"Selected","Очистить всё":"Clear all",
   "Семейства":"Families","Цепочки распада (ЕРН)":"Decay chains (NORM)",
   "Линии":"Lines","Адаптация под разрешение детектора (IDWin):":"Detector-resolution adaptation (IDWin):",
@@ -1462,11 +1705,44 @@ function setLang(l){
   Object.keys(PARA_EN).forEach(function(id){
     var el = $(id); if (el) el.innerHTML = l==="en" ? PARA_EN[id] : PARA_RU[id];
   });
-  updDbInfo(); updMergeHint();
+  updDbInfo(); updMergeHint(); buildPresets();
   buildSelectors(); rebuildLines(); renderTable();
   if ($("nearOut").innerHTML) searchNear();
 }
 $("langBtn").addEventListener("click", function(){ setLang(LANG==="en" ? "ru" : "en"); });
+
+// ── полоса спектра: наведение подсвечивает линию, клик снимает её выбор ──
+$("specBar").addEventListener("mousemove", function(ev){
+  var r = this.getBoundingClientRect(), L = specLineAt(ev.clientX-r.left);
+  if ((L && L.key) !== (specHit && specHit.key)){
+    specHit = L; drawSpec();
+    $("specHover").textContent = L ? dispNuc(L.label)+" · "+L.E.toFixed(2)+T(" кэВ · I "," keV · I ")+L.I+" %" : "";
+  }
+});
+$("specBar").addEventListener("mouseleave", function(){ specHit = null; $("specHover").textContent = ""; drawSpec(); });
+$("specBar").addEventListener("click", function(ev){
+  var r = this.getBoundingClientRect(), L = specLineAt(ev.clientX-r.left);
+  if (!L) return;
+  sel.lines.forEach(function(x){ if (x.key===L.key) x.sel = false; });
+  renderTable();
+});
+window.addEventListener("resize", drawSpec);
+// двусторонняя подсветка: строка таблицы ↔ штрих на полосе (в BecqMoni это будет
+// подсветка маркера на реальном спектре — механика та же)
+$("lineTbl").addEventListener("mouseover", function(ev){
+  var tr = ev.target.closest("tr[data-key]"); if (!tr) return;
+  var L = sel.lines.filter(function(x){ return x.key===tr.dataset.key; })[0];
+  if ((L && L.key) !== (specHit && specHit.key)){
+    specHit = L; drawSpec();
+    $("specHover").textContent = L ? dispNuc(L.label)+" · "+L.E.toFixed(2)+T(" кэВ"," keV") : "";
+  }
+});
+$("lineTbl").addEventListener("mouseleave", function(){
+  specHit = null; $("specHover").textContent = ""; drawSpec();
+});
+// дубли кнопок экспорта в строке итога — результат всегда под рукой
+$("btnXml2").addEventListener("click", function(){ $("btnXml").click(); });
+$("btnNucXml2").addEventListener("click", function(){ $("btnNucXml").click(); });
 
 // ── init ──
 setLang(LANG);
