@@ -247,6 +247,8 @@ namespace BecquerelMonitor.RoiWizard
             this.comboWidthMode.SelectedIndexChanged += delegate { this.SyncZoneControls(); this.RunChecks(); };
             this.numZonePercent.ValueChanged += delegate { this.RunChecks(); };
             this.numZoneFactor.ValueChanged += delegate { this.RunChecks(); };
+            this.buttonColorByChain.Click += delegate { this.SetColorMode(true); };
+            this.buttonColorByNuclide.Click += delegate { this.SetColorMode(false); };
             this.buttonCreateRoi.Click += delegate { this.CreateRoiConfig(); };
             this.buttonCreateSet.Click += delegate { this.CreateNuclideSet(); };
             // при «полном наборе» таблица и ручной якорь не участвуют — набор собирается
@@ -579,6 +581,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.RefreshSelectedList();
             this.RefreshLines();
+            this.RefreshColorChips();
         }
 
         void RefreshSelectedList()
@@ -697,6 +700,14 @@ namespace BecquerelMonitor.RoiWizard
             this.RefreshLines();
             this.statusLabel.Text = string.Format(CultureInfo.CurrentCulture,
                 this.secondaryFormat, generated.Count);
+        }
+
+        void SetColorMode(bool byChain)
+        {
+            this.colorByChain = byChain;
+            this.buttonColorByChain.Enabled = !byChain;
+            this.buttonColorByNuclide.Enabled = byChain;
+            this.RefreshColorChips();
         }
 
         void SetVisibleSelected(bool value)
@@ -908,7 +919,8 @@ namespace BecquerelMonitor.RoiWizard
                 return;
             }
 
-            ROIConfigData built = this.exporter.BuildRoiConfig(this.lines, this.textConfigName.Text, ColorOf);
+            ROIConfigData built = this.exporter.BuildRoiConfig(this.lines, this.textConfigName.Text,
+                                                              this.ColorOfLine);
             // SaveConfig пишет файл по Filename, поэтому вторая конфигурация с тем же именем
             // молча затрёт файл первой
             if (!this.ConfirmOverwriteRoi(built.Name))
@@ -984,7 +996,7 @@ namespace BecquerelMonitor.RoiWizard
             }
 
             List<NuclideDefinition> definitions;
-            NuclideSet set = this.exporter.BuildNuclideSet(library, this.textSetName.Text, ColorOf,
+            NuclideSet set = this.exporter.BuildNuclideSet(library, this.textSetName.Text, this.ColorOfLine,
                                                            anchors, anchorCount, out definitions);
 
             NuclideDefinitionManager manager = NuclideDefinitionManager.GetInstance();
@@ -1072,11 +1084,97 @@ namespace BecquerelMonitor.RoiWizard
         }
 
         // цвет по нуклиду: одинаковые для линий одного источника, чтобы набор читался
+        // цвет назначается «владельцу»: цепочке или нуклиду — как в вебе
+        readonly Dictionary<string, Color> colors = new Dictionary<string, Color>();
+        bool colorByChain = true;
+
+        string OwnerOf(SpectralLine line)
+        {
+            if (line.Type == LineType.Xrf)
+            {
+                return line.Nuclide;                       // ХРИ всегда красятся по элементу
+            }
+            if (!this.colorByChain)
+            {
+                return line.Nuclide;
+            }
+            CatalogNuclide nuclide = this.catalog.Find(line.Nuclide);
+            string root = nuclide != null ? this.catalog.ChainRoot(nuclide) : null;
+            return string.IsNullOrEmpty(root) ? line.Nuclide : root;
+        }
+
+        Color ColorForOwner(string owner)
+        {
+            Color color;
+            if (!this.colors.TryGetValue(owner, out color))
+            {
+                color = Palette[this.colors.Count % Palette.Length];
+                this.colors[owner] = color;
+            }
+            return color;
+        }
+
+        // Чипы владельцев: квадрат цвета и подпись; клик по квадрату — выбор цвета,
+        // как «input type=color» на странице.
+        void RefreshColorChips()
+        {
+            List<string> owners = new List<string>();
+            foreach (SpectralLine line in this.lines)
+            {
+                string owner = this.OwnerOf(line);
+                if (!owners.Contains(owner))
+                {
+                    owners.Add(owner);
+                }
+            }
+            this.panelColors.SuspendLayout();
+            this.panelColors.Controls.Clear();
+            foreach (string owner in owners)
+            {
+                Panel swatch = new Panel();
+                swatch.Size = new Size(20, 20);
+                swatch.Margin = new Padding(2, 4, 2, 2);
+                swatch.BackColor = this.ColorForOwner(owner);
+                swatch.BorderStyle = BorderStyle.FixedSingle;
+                swatch.Cursor = Cursors.Hand;
+                string captured = owner;
+                swatch.Click += delegate { this.PickColor(captured, swatch); };
+
+                Label caption = new Label();
+                caption.Text = owner;
+                caption.AutoSize = true;
+                caption.Margin = new Padding(0, 7, 12, 2);
+
+                this.panelColors.Controls.Add(swatch);
+                this.panelColors.Controls.Add(caption);
+            }
+            this.panelColors.ResumeLayout();
+        }
+
+        void PickColor(string owner, Panel swatch)
+        {
+            using (ColorDialog dialog = new ColorDialog())
+            {
+                dialog.Color = this.ColorForOwner(owner);
+                dialog.FullOpen = true;
+                if (dialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    this.colors[owner] = dialog.Color;
+                    swatch.BackColor = dialog.Color;
+                }
+            }
+        }
+
         static readonly Color[] Palette = {
             Color.FromArgb(230, 130, 30), Color.FromArgb(192, 53, 53), Color.FromArgb(46, 125, 50),
             Color.FromArgb(21, 101, 192), Color.FromArgb(123, 31, 162), Color.FromArgb(0, 131, 143),
             Color.FromArgb(158, 122, 16), Color.FromArgb(216, 27, 96), Color.FromArgb(93, 64, 55)
         };
+
+        Color ColorOfLine(SpectralLine line)
+        {
+            return this.ColorForOwner(this.OwnerOf(line));
+        }
 
         static Color ColorOf(SpectralLine line)
         {
@@ -1171,6 +1269,9 @@ namespace BecquerelMonitor.RoiWizard
             this.checkHalfLife.Text = "T½";
             this.checkHideUnselected.Text = "скрыть невыбранные";
             this.groupSecondary.Text = "Вторичные пики (расчёт по выбранным γ-линиям)";
+            this.labelColors.Text = "Цвета";
+            this.buttonColorByChain.Text = "по цепочке";
+            this.buttonColorByNuclide.Text = "по нуклиду";
             this.labelSecondaryMin.Text = "для γ-линий с I ≥, %";
             this.checkSecBackscatter.Text = "рассеяние назад (BS)";
             this.checkSecComptonEdge.Text = "комптон-край (CE)";

@@ -120,6 +120,10 @@ namespace BecquerelMonitor.RoiWizard
             this.comboWidthMode = new System.Windows.Forms.ComboBox();
             this.numZonePercent = new System.Windows.Forms.NumericUpDown();
             this.numZoneFactor = new System.Windows.Forms.NumericUpDown();
+            this.labelColors = new System.Windows.Forms.Label();
+            this.buttonColorByChain = new System.Windows.Forms.Button();
+            this.buttonColorByNuclide = new System.Windows.Forms.Button();
+            this.panelColors = new System.Windows.Forms.FlowLayoutPanel();
 
             this.groupExport = new System.Windows.Forms.GroupBox();
             this.labelConfigName = new System.Windows.Forms.Label();
@@ -577,7 +581,7 @@ namespace BecquerelMonitor.RoiWizard
             // ─── шаг 3 ─────────────────────────────────────────────────────
             this.groupStyle.Text = "ROI styling";
             this.groupStyle.Location = new System.Drawing.Point(8, 6);
-            this.groupStyle.Size = new System.Drawing.Size(1164, 58);
+            this.groupStyle.Size = new System.Drawing.Size(1164, 104);
             this.groupStyle.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelStyle.Text = "mode";
@@ -609,10 +613,28 @@ namespace BecquerelMonitor.RoiWizard
             this.groupStyle.Controls.Add(this.labelWidth);
             this.groupStyle.Controls.Add(this.comboWidthMode);
             this.groupStyle.Controls.Add(this.numZonePercent);
+            this.labelColors.Text = "Colours";
+            this.labelColors.Location = new System.Drawing.Point(8, 60);
+            this.labelColors.Size = new System.Drawing.Size(70, 18);
+            this.buttonColorByChain.Text = "by chain";
+            this.buttonColorByChain.Location = new System.Drawing.Point(80, 56);
+            this.buttonColorByChain.Size = new System.Drawing.Size(110, 25);
+            this.buttonColorByNuclide.Text = "by nuclide";
+            this.buttonColorByNuclide.Location = new System.Drawing.Point(196, 56);
+            this.buttonColorByNuclide.Size = new System.Drawing.Size(110, 25);
+            // чипы владельцев: цветной квадрат + подпись, клик по квадрату открывает выбор
+            this.panelColors.Location = new System.Drawing.Point(316, 54);
+            this.panelColors.Size = new System.Drawing.Size(836, 42);
+            this.panelColors.AutoScroll = true;
+            this.panelColors.WrapContents = false;
             this.groupStyle.Controls.Add(this.numZoneFactor);
+            this.groupStyle.Controls.Add(this.labelColors);
+            this.groupStyle.Controls.Add(this.buttonColorByChain);
+            this.groupStyle.Controls.Add(this.buttonColorByNuclide);
+            this.groupStyle.Controls.Add(this.panelColors);
 
             this.groupExport.Text = "Export";
-            this.groupExport.Location = new System.Drawing.Point(8, 66);
+            this.groupExport.Location = new System.Drawing.Point(8, 114);
             this.groupExport.Size = new System.Drawing.Size(1164, 120);
             this.groupExport.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
@@ -664,10 +686,10 @@ namespace BecquerelMonitor.RoiWizard
             this.groupExport.Controls.Add(this.numAnchors);
 
             this.labelIssues.Text = "Data check:";
-            this.labelIssues.Location = new System.Drawing.Point(12, 188);
+            this.labelIssues.Location = new System.Drawing.Point(12, 240);
             this.labelIssues.AutoSize = true;
-            this.listIssues.Location = new System.Drawing.Point(8, 206);
-            this.listIssues.Size = new System.Drawing.Size(1164, 210);
+            this.listIssues.Location = new System.Drawing.Point(8, 258);
+            this.listIssues.Size = new System.Drawing.Size(1164, 158);
             this.listIssues.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -808,6 +830,10 @@ namespace BecquerelMonitor.RoiWizard
         System.Windows.Forms.ComboBox comboWidthMode;
         System.Windows.Forms.NumericUpDown numZonePercent;
         System.Windows.Forms.NumericUpDown numZoneFactor;
+        System.Windows.Forms.Label labelColors;
+        System.Windows.Forms.Button buttonColorByChain;
+        System.Windows.Forms.Button buttonColorByNuclide;
+        System.Windows.Forms.FlowLayoutPanel panelColors;
 
         System.Windows.Forms.GroupBox groupExport;
         System.Windows.Forms.Label labelConfigName;
