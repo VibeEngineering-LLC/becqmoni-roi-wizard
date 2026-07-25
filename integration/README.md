@@ -38,6 +38,12 @@ tools/
 <Compile Include="RoiWizard\LineMerger.cs" />
 <Compile Include="RoiWizard\SecondaryPeaks.cs" />
 <Compile Include="RoiWizard\SetExporter.cs" />
+<Compile Include="RoiWizard\RoiWizardForm.cs">
+  <SubType>Form</SubType>
+</Compile>
+<Compile Include="RoiWizard\RoiWizardForm.Designer.cs">
+  <DependentUpon>RoiWizardForm.cs</DependentUpon>
+</Compile>
 <EmbeddedResource Include="RoiWizard\nuclides.xml" />
 ```
 
