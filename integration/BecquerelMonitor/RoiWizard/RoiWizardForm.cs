@@ -55,11 +55,12 @@ namespace BecquerelMonitor.RoiWizard
 
             this.buttonFromSpectrum.Enabled = resolutionProvider != null;
             this.SyncSetControls();
-            if (Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName == "ru")
+            if (this.russian)
             {
                 this.ApplyRussian();
             }
-            // после ApplyRussian: подсказка под списком собирается из русских строк
+            // после ApplyRussian: списки и подсказки собираются из русских строк
+            this.FillXrf();
             this.RefreshGroupList();
             this.UpdateMergeInfo();
             this.UpdateStatus();
@@ -139,7 +140,10 @@ namespace BecquerelMonitor.RoiWizard
             foreach (XrfElement element in this.catalog.XrfElements)
             {
                 this.xrfSymbols.Add(element.Symbol);
-                this.checkedXrf.Items.Add(element.Symbol + " — " + element.Context);
+                string context = this.russian && !string.IsNullOrEmpty(element.ContextRu)
+                    ? element.ContextRu
+                    : element.Context;
+                this.checkedXrf.Items.Add(element.Symbol + " — " + context);
             }
         }
 
@@ -644,8 +648,7 @@ namespace BecquerelMonitor.RoiWizard
                 return;
             }
             LineMerger merger = new LineMerger(this.Resolution, (double)this.numFactor.Value);
-            this.labelMergeInfo.Text = string.Format(CultureInfo.CurrentCulture,
-                "threshold {0:0.##}·FWHM: lines merge closer than {1:0.#} keV at 100, {2:0.#} at 662, {3:0.#} at 1500",
+            this.labelMergeInfo.Text = string.Format(CultureInfo.CurrentCulture, this.mergeInfoFormat,
                 this.numFactor.Value, merger.ThresholdAt(100), merger.ThresholdAt(662), merger.ThresholdAt(1500));
         }
 
@@ -715,6 +718,11 @@ namespace BecquerelMonitor.RoiWizard
 
         readonly List<SpectralLine> anchorCandidates = new List<SpectralLine>();
         readonly List<string> groupMembers = new List<string>();
+        readonly bool russian =
+            Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName == "ru";
+        string mergeInfoFormat =
+            "threshold {0:0.##}·FWHM: lines merge closer than {1:0.#} keV at 100, {2:0.#} at 662, {3:0.#} at 1500";
+        string statusFormat = "lines: {0} of {1} · nuclides: {2}";
         bool suppressGroupCheck;
         string hintPicked = "Applies to the ticked nuclides ({0}).";
         string hintNone = "Tick a nuclide - the buttons apply to it.";
@@ -1002,8 +1010,8 @@ namespace BecquerelMonitor.RoiWizard
                     nuclides[line.Nuclide] = true;
                 }
             }
-            this.statusLabel.Text = string.Format(CultureInfo.CurrentCulture,
-                "lines: {0} of {1} · nuclides: {2}", selected, this.lines.Count, nuclides.Count);
+            this.statusLabel.Text = string.Format(CultureInfo.CurrentCulture, this.statusFormat,
+                selected, this.lines.Count, nuclides.Count);
         }
 
         // ─── русские подписи ────────────────────────────────────────────────
@@ -1031,6 +1039,9 @@ namespace BecquerelMonitor.RoiWizard
             this.groupXrf.Text = "ХРИ — элементы";
             this.labelXrf.Text = "Материалы защиты и детектора:";
             this.hintPicked = "Применяется к отмеченным ({0}).";
+            this.mergeInfoFormat = "порог {0:0.##}·FWHM: сливаются линии ближе {1:0.#} кэВ на 100, " +
+                                   "{2:0.#} на 662, {3:0.#} на 1500";
+            this.statusFormat = "линий: {0} из {1} · нуклидов: {2}";
             this.hintNone = "Отметьте нуклид — кнопки применятся к нему.";
 
             this.groupSelected.Text = "Выбрано";

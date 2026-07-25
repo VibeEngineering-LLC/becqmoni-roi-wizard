@@ -150,19 +150,20 @@ namespace BecquerelMonitor.RoiWizard
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
 
             this.textSearch.Location = new System.Drawing.Point(8, 20);
-            this.textSearch.Size = new System.Drawing.Size(140, 21);
+            this.textSearch.Size = new System.Drawing.Size(314, 21);
             this.buttonAddSingle.Text = "Add";
-            this.buttonAddSingle.Location = new System.Drawing.Point(154, 19);
-            this.buttonAddSingle.Size = new System.Drawing.Size(54, 23);
+            this.textSearch.Size = new System.Drawing.Size(140, 21);
+            this.buttonAddSingle.Location = new System.Drawing.Point(8, 46);
+            this.buttonAddSingle.Size = new System.Drawing.Size(100, 23);
             this.buttonAddFamily.Text = "+ family";
-            this.buttonAddFamily.Location = new System.Drawing.Point(212, 19);
-            this.buttonAddFamily.Size = new System.Drawing.Size(56, 23);
+            this.buttonAddFamily.Location = new System.Drawing.Point(112, 46);
+            this.buttonAddFamily.Size = new System.Drawing.Size(104, 23);
             this.buttonAddChain.Text = "+ chain";
-            this.buttonAddChain.Location = new System.Drawing.Point(272, 19);
-            this.buttonAddChain.Size = new System.Drawing.Size(50, 23);
+            this.buttonAddChain.Location = new System.Drawing.Point(220, 46);
+            this.buttonAddChain.Size = new System.Drawing.Size(102, 23);
 
-            this.tableCatalog.Location = new System.Drawing.Point(8, 48);
-            this.tableCatalog.Size = new System.Drawing.Size(314, 250);
+            this.tableCatalog.Location = new System.Drawing.Point(8, 76);
+            this.tableCatalog.Size = new System.Drawing.Size(314, 222);
             this.tableCatalog.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -488,8 +489,8 @@ namespace BecquerelMonitor.RoiWizard
             this.labelAnchor.Text = "anchor line";
             this.labelAnchor.Location = new System.Drawing.Point(376, 53);
             this.labelAnchor.AutoSize = true;
-            this.comboAnchor.Location = new System.Drawing.Point(446, 50);
-            this.comboAnchor.Size = new System.Drawing.Size(300, 21);
+            this.comboAnchor.Location = new System.Drawing.Point(468, 50);
+            this.comboAnchor.Size = new System.Drawing.Size(278, 21);
             this.comboAnchor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.buttonCreateSet.Text = "Add set to the library";
             this.buttonCreateSet.Location = new System.Drawing.Point(754, 49);

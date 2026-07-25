@@ -277,6 +277,10 @@ namespace BecquerelMonitor.RoiWizard
         [XmlAttribute]
         public string Context { get; set; }
 
+        // русское пояснение — форма показывает его при русской культуре интерфейса
+        [XmlAttribute]
+        public string ContextRu { get; set; }
+
         [XmlArray("Lines"), XmlArrayItem("Line")]
         public List<XrfLine> Lines { get; set; }
 

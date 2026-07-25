@@ -169,7 +169,10 @@ def main():
         element = xrf[symbol]
         out.append(u"    <Element%s%s%s>" % (
             attr("Symbol", symbol), attr("Z", element.get("Z", 0)),
-            attr("Context", element.get("ctx_en") or element.get("ctx", ""))))
+            # оба языка: форма показывает пояснение по текущей культуре интерфейса,
+            # как это делает веб-версия
+            attr("Context", element.get("ctx_en") or element.get("ctx", "")) +
+            attr("ContextRu", element.get("ctx", ""))))
         out.append(u"      <Lines>")
         for line in element.get("lines", []):
             out.append(u'        <Line%s E="%s" I="%s" />' % (attr("Label", line[0]), line[1], line[2]))

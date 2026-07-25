@@ -2329,7 +2329,7 @@
     </Chain>
   </Chains>
   <XrfElements>
-    <Element Symbol="Ba" Z="56" Context="Cs-137 to Ba-137m conversion; LaBr3 internal background">
+    <Element Symbol="Ba" Z="56" Context="Cs-137 to Ba-137m conversion; LaBr3 internal background" ContextRu="конверсия Cs-137→Ba-137m; собственный фон LaBr3">
       <Lines>
         <Line Label="Kα1" E="32.19" I="100" />
         <Line Label="Kα2" E="31.82" I="54.9" />
@@ -2337,7 +2337,7 @@
         <Line Label="Kβ2" E="37.26" I="7.2" />
       </Lines>
     </Element>
-    <Element Symbol="Cd" Z="48" Context="cadmium layer of a graded shield">
+    <Element Symbol="Cd" Z="48" Context="cadmium layer of a graded shield" ContextRu="кадмиевый слой градиентной защиты">
       <Lines>
         <Line Label="Kα1" E="23.17" I="100" />
         <Line Label="Kα2" E="22.98" I="54.1" />
@@ -2345,21 +2345,21 @@
         <Line Label="Kβ2" E="26.64" I="6.8" />
       </Lines>
     </Element>
-    <Element Symbol="Cu" Z="29" Context="copper shield liner, cryostat, electronics">
+    <Element Symbol="Cu" Z="29" Context="copper shield liner, cryostat, electronics" ContextRu="медный вкладыш защиты, криостат, электроника">
       <Lines>
         <Line Label="Kα1" E="8.05" I="100" />
         <Line Label="Kα2" E="8.03" I="52.1" />
         <Line Label="Kβ1" E="8.91" I="21.3" />
       </Lines>
     </Element>
-    <Element Symbol="Fe" Z="26" Context="container steel, electronics, soil">
+    <Element Symbol="Fe" Z="26" Context="container steel, electronics, soil" ContextRu="сталь контейнера, электроника, грунт">
       <Lines>
         <Line Label="Kα1" E="6.4" I="100" />
         <Line Label="Kα2" E="6.39" I="51.3" />
         <Line Label="Kβ1" E="7.06" I="19.7" />
       </Lines>
     </Element>
-    <Element Symbol="I" Z="53" Context="NaI(Tl) crystal - escape peaks and fluorescence">
+    <Element Symbol="I" Z="53" Context="NaI(Tl) crystal - escape peaks and fluorescence" ContextRu="кристалл NaI(Tl) — пики вылета и флуоресценция">
       <Lines>
         <Line Label="Kα1" E="28.61" I="100" />
         <Line Label="Kα2" E="28.32" I="54.6" />
@@ -2367,7 +2367,7 @@
         <Line Label="Kβ2" E="33.04" I="7.2" />
       </Lines>
     </Element>
-    <Element Symbol="La" Z="57" Context="LaBr3(Ce) crystal; La-138 internal activity">
+    <Element Symbol="La" Z="57" Context="LaBr3(Ce) crystal; La-138 internal activity" ContextRu="кристалл LaBr3(Ce); собственная активность La-138">
       <Lines>
         <Line Label="Kα1" E="33.44" I="100" />
         <Line Label="Kα2" E="33.03" I="55.1" />
@@ -2375,7 +2375,7 @@
         <Line Label="Kβ2" E="38.73" I="7.3" />
       </Lines>
     </Element>
-    <Element Symbol="Pb" Z="82" Context="lead shielding - the most common XRF signature">
+    <Element Symbol="Pb" Z="82" Context="lead shielding - the most common XRF signature" ContextRu="свинцовая защита — самая частая ХРИ-сигнатура">
       <Lines>
         <Line Label="Kα1" E="74.97" I="100" />
         <Line Label="Kα2" E="72.8" I="59.9" />
@@ -2387,7 +2387,7 @@
         <Line Label="Lγ1" E="14.76" I="10" />
       </Lines>
     </Element>
-    <Element Symbol="Sn" Z="50" Context="tin layer of a graded shield">
+    <Element Symbol="Sn" Z="50" Context="tin layer of a graded shield" ContextRu="оловянный слой градиентной защиты">
       <Lines>
         <Line Label="Kα1" E="25.27" I="100" />
         <Line Label="Kα2" E="25.04" I="54.3" />
@@ -2395,7 +2395,7 @@
         <Line Label="Kβ2" E="29.11" I="6.8" />
       </Lines>
     </Element>
-    <Element Symbol="Te" Z="52" Context="I-125/Sb-125 conversion; CdZnTe crystal">
+    <Element Symbol="Te" Z="52" Context="I-125/Sb-125 conversion; CdZnTe crystal" ContextRu="конверсия I-125/Sb-125; кристалл CdZnTe">
       <Lines>
         <Line Label="Kα1" E="27.47" I="100" />
         <Line Label="Kα2" E="27.2" I="54.6" />
@@ -2403,7 +2403,7 @@
         <Line Label="Kβ2" E="31.71" I="7.0" />
       </Lines>
     </Element>
-    <Element Symbol="W" Z="74" Context="tungsten collimator; Ka1 overlaps Am-241 59.54!">
+    <Element Symbol="W" Z="74" Context="tungsten collimator; Ka1 overlaps Am-241 59.54!" ContextRu="вольфрамовый коллиматор; Kα1 накладывается на Am-241 59.54!">
       <Lines>
         <Line Label="Kα1" E="59.32" I="100" />
         <Line Label="Kα2" E="57.98" I="58.5" />
