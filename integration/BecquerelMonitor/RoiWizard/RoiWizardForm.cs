@@ -537,16 +537,28 @@ namespace BecquerelMonitor.RoiWizard
         void RefreshAnchorCombo()
         {
             this.comboAnchor.Items.Clear();
+            // Кандидаты держатся списком, а не вычисляются по индексу заново: список
+            // выбранных линий меняется галками, и индекс в комбобоксе иначе съезжает
+            // на соседнюю линию. ХРИ и вторичные маркеры в кандидаты не попадают —
+            // якорь на них означал бы опору с условным положением или интенсивностью.
+            this.anchorCandidates.Clear();
             SpectralLine automatic = AnchorPicker.Pick(this.SelectedLines(), this.Resolution);
             this.comboAnchor.Items.Add(automatic != null
                 ? "auto — " + automatic.Label + " " + automatic.Energy.ToString("0.0", CultureInfo.CurrentCulture)
                 : "auto");
             foreach (SpectralLine line in this.SelectedLines())
             {
+                if (!AnchorPicker.IsAcceptable(line))
+                {
+                    continue;
+                }
+                this.anchorCandidates.Add(line);
                 this.comboAnchor.Items.Add(line.Label + " " + line.Energy.ToString("0.0", CultureInfo.CurrentCulture));
             }
             this.comboAnchor.SelectedIndex = 0;
         }
+
+        readonly List<SpectralLine> anchorCandidates = new List<SpectralLine>();
 
         List<SpectralLine> SelectedLines()
         {
@@ -568,8 +580,7 @@ namespace BecquerelMonitor.RoiWizard
             {
                 return null;                       // 0 — автоматический выбор
             }
-            List<SpectralLine> selected = this.SelectedLines();
-            return index - 1 < selected.Count ? selected[index - 1] : null;
+            return index - 1 < this.anchorCandidates.Count ? this.anchorCandidates[index - 1] : null;
         }
 
         void RunChecks()
@@ -581,7 +592,8 @@ namespace BecquerelMonitor.RoiWizard
             {
                 this.listIssues.Items.Add("ROI · " + issue.Text);
             }
-            foreach (SetIssue issue in SetChecker.Check(this.lines, true, this.zones, this.Resolution))
+            foreach (SetIssue issue in SetChecker.Check(this.lines, true, this.zones, this.Resolution,
+                                                        this.CurrentAnchor()))
             {
                 if (issue.Level == IssueLevel.Error)
                 {
@@ -652,7 +664,8 @@ namespace BecquerelMonitor.RoiWizard
             // для набора совпавшие энергии и нулевая интенсивность — ошибки: две линии на
             // одной позиции вырождают подгонку амплитуд, а Intencity = 0 выбрасывает линию
             // из связки по цепочке
-            List<SetIssue> issues = SetChecker.Check(this.lines, true, this.zones, this.Resolution);
+            List<SetIssue> issues = SetChecker.Check(this.lines, true, this.zones, this.Resolution,
+                                                     this.CurrentAnchor());
             List<SetIssue> errors = issues.FindAll(delegate(SetIssue i) { return i.Level == IssueLevel.Error; });
             if (errors.Count > 0)
             {

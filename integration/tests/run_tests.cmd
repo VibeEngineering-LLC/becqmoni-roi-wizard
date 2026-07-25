@@ -2,9 +2,10 @@
 rem Test runner for the RoiWizard core.
 rem
 rem No dependencies: builds with the compiler shipped in the .NET Framework, so no test
-rem framework is pulled into the BecqMoni solution. SetExporter.cs and RoiWizardForm*.cs
-rem are deliberately left out of this build - they depend on host types (ROIConfigData,
-rem NuclideDefinition, XPTable); what is verified here is the calculation core.
+rem framework is pulled into the BecqMoni solution. SetExporter.cs is built against the
+rem minimal host-type stubs in HostStubs.cs (never part of the BecqMoni build). Only
+rem RoiWizardForm*.cs stays out: it needs XPTable and the managers, i.e. the application
+rem tree itself.
 rem
 rem Usage:  tests\run_tests.cmd
 rem Exit code: 0 - all tests passed, 1 - failures.
@@ -26,6 +27,8 @@ if not exist "%CSC%" set CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe
   "%CORE%\AnchorPicker.cs" ^
   "%CORE%\SetChecker.cs" ^
   "%CORE%\ZoneCalculator.cs" ^
+  "%CORE%\SetExporter.cs" ^
+  "%~dp0HostStubs.cs" ^
   "%~dp0RoiWizardTests.cs"
 if errorlevel 1 (
   echo BUILD FAILED

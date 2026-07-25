@@ -33,6 +33,15 @@ namespace BecquerelMonitor.RoiWizard
         public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
                                            ZoneCalculator zones, ResolutionModel resolution)
         {
+            return Check(lines, forLibrary, zones, resolution, null);
+        }
+
+        // anchorOverride — якорь, выбранный руками. Проверять надо именно его: в набор
+        // уйдёт он, а не тот, что предложил бы AnchorPicker.
+        public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
+                                           ZoneCalculator zones, ResolutionModel resolution,
+                                           SpectralLine anchorOverride)
+        {
             List<SetIssue> issues = new List<SetIssue>();
             List<SpectralLine> sorted = new List<SpectralLine>();
             foreach (SpectralLine line in lines)
@@ -71,10 +80,24 @@ namespace BecquerelMonitor.RoiWizard
                     });
                 }
             }
-            if (forLibrary && resolution != null)
+            if (forLibrary && (resolution != null || anchorOverride != null))
             {
-                SpectralLine anchor = AnchorPicker.Pick(sorted, resolution);
-                if (anchor == null)
+                SpectralLine anchor = anchorOverride ?? AnchorPicker.Pick(sorted, resolution);
+                if (anchorOverride != null && !AnchorPicker.IsAcceptable(anchorOverride))
+                {
+                    issues.Add(new SetIssue
+                    {
+                        Level = IssueLevel.Error,
+                        Text = string.Format(CultureInfo.CurrentCulture,
+                            "якорем выбрана линия «{0}» ({1} кэВ): это {2}, а не линия распада. " +
+                            "Фит сел бы на опору, положение или интенсивность которой условны",
+                            anchorOverride.LibraryName, anchorOverride.Energy,
+                            anchorOverride.Type == LineType.Xrf
+                                ? "характеристический рентген материала"
+                                : "расчётный вторичный маркер")
+                    });
+                }
+                else if (anchor == null)
                 {
                     issues.Add(new SetIssue
                     {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -32,6 +33,7 @@ namespace BecquerelMonitor.RoiWizard.Tests
             AnchorTests(catalogPath);
             SetTests(catalogPath);
             SecondaryTests();
+            ExporterTests();
 
             Console.WriteLine();
             Console.WriteLine("пройдено: {0}, провалено: {1}", passed, failed);
@@ -306,6 +308,97 @@ namespace BecquerelMonitor.RoiWizard.Tests
                     Near("доля CE 6 %", line.Intensity, 85.1 * 0.06, 0.01);
                 }
             }
+        }
+
+        // ── 7. Экспорт: сборка объектов BecqMoni ──
+        //
+        // Собирается против заглушек типов хоста (HostStubs.cs) — иначе SetExporter.cs
+        // остаётся единственным файлом модуля, который вне дерева BecqMoni не
+        // компилируется вовсе, и туда незаметно проходят вещи вроде забытого
+        // using System.Drawing.
+        static void ExporterTests()
+        {
+            Section("SetExporter");
+
+            ResolutionModel resolution = new ResolutionModel(7.5);
+            SetExporter exporter = new SetExporter(resolution);
+
+            SpectralLine cs = Gamma("Cs-137", 661.66, 85.1);
+            SpectralLine ba = Gamma("Ba-133", 356.0, 62.1);
+            SpectralLine dropped = Gamma("K-40", 1460.8, 10.55);
+            dropped.Selected = false;
+            SpectralLine xrf = Gamma("XRF Pb Ka1", 74.97, 100.0);
+            xrf.Type = LineType.Xrf;
+            List<SpectralLine> lines = new List<SpectralLine> { cs, ba, dropped, xrf };
+
+            ROIConfigData config = exporter.BuildRoiConfig(lines, "", delegate { return Color.Red; });
+            Equal("снятые галки в конфигурацию не идут",
+                  config.ROIDefinitions.Count.ToString(CultureInfo.InvariantCulture), "3");
+            Equal("пустое имя заменяется", config.Name, "IAEA lines");
+            Check("guid проставлен", !string.IsNullOrEmpty(config.Guid));
+
+            // режим маркеров: BecqMoni ждёт -10, это признак «зоны нет»
+            foreach (ROIDefinitionData roi in config.ROIDefinitions)
+            {
+                if (roi.PeakEnergy == 661.66)
+                {
+                    Near("маркер: нижняя граница -10", roi.LowerLimit, -10, 1e-9);
+                    Near("маркер: верхняя граница -10", roi.UpperLimit, -10, 1e-9);
+                    Near("интенсивность перенесена", roi.Intencity, 85.1, 1e-9);
+                    Near("стабильный период даёт 0", roi.HalfLife, 0, 1e-9);
+                }
+            }
+
+            // режим зон: границы обязаны совпасть с ZoneCalculator, иначе проверка
+            // перекрытий в форме считает одно, а в конфигурацию уходит другое
+            SetExporter zoned = new SetExporter(resolution);
+            zoned.Zones.Style = RoiStyle.Zones;
+            zoned.Zones.WidthMode = ZoneWidthMode.PercentOfEnergy;
+            zoned.Zones.ZonePercent = 5.0;
+            ROIConfigData zonedConfig = zoned.BuildRoiConfig(new List<SpectralLine> { cs }, "z",
+                                                            delegate { return Color.Red; });
+            double lower, upper;
+            zoned.Zones.LimitsFor(cs, out lower, out upper);
+            Near("зона: нижняя граница как у калькулятора", zonedConfig.ROIDefinitions[0].LowerLimit, lower, 1e-9);
+            Near("зона: верхняя граница как у калькулятора", zonedConfig.ROIDefinitions[0].UpperLimit, upper, 1e-9);
+
+            List<NuclideDefinition> definitions;
+            NuclideSet set = exporter.BuildNuclideSet(lines, "", delegate { return Color.Gray; },
+                                                      null, out definitions);
+            Equal("в наборе только выбранные",
+                  definitions.Count.ToString(CultureInfo.InvariantCulture), "3");
+            int anchors = 0;
+            NuclideDefinition anchorDefinition = null;
+            foreach (NuclideDefinition definition in definitions)
+            {
+                if (definition.IsAnchor)
+                {
+                    anchors++;
+                    anchorDefinition = definition;
+                }
+                Check("запись отнесена к набору: " + definition.Name, definition.Sets.Contains(set.Id));
+            }
+            Equal("ровно один якорь в выгрузке", anchors.ToString(CultureInfo.InvariantCulture), "1");
+            Check("якорь — γ-линия, а не ХРИ с условной интенсивностью 100",
+                  anchorDefinition != null && anchorDefinition.Name == "Cs-137");
+            foreach (NuclideDefinition definition in definitions)
+            {
+                if (definition.Name == "XRF Pb Ka1")
+                {
+                    Near("у ХРИ период полураспада не заполняется", definition.HalfLife, 0, 1e-9);
+                }
+            }
+
+            // Ручной выбор якоря: экспорт слепо ставит IsAnchor на переданную линию,
+            // поэтому неприемлемый якорь обязан отсекаться проверками ДО записи.
+            NuclideSet forced = exporter.BuildNuclideSet(lines, "forced", delegate { return Color.Gray; },
+                                                         xrf, out definitions);
+            Check("ручной якорь уважается экспортом", forced != null && definitions.Exists(
+                delegate(NuclideDefinition d) { return d.IsAnchor && d.Name == "XRF Pb Ka1"; }));
+            Check("ХРИ ручным якорем — ошибка проверки",
+                  HasError(SetChecker.Check(lines, true, null, resolution, xrf), "не линия распада"));
+            Check("γ-линия ручным якорем ошибкой не считается",
+                  !HasError(SetChecker.Check(lines, true, null, resolution, ba), "не линия распада"));
         }
 
         // ── вспомогательное ────────────────────────────────────────────────
