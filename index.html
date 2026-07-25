@@ -98,9 +98,8 @@
       обедняется. <b>Вручную</b> — прежнее поведение (2–3×FWHM — грубое окно идентификации).</p>
       </details>
     </div>
-    <p class="hint" style="margin:2px 0 0"><span id="mergeHint"></span></p>
   </div>
-  <div class="infoline" id="mergeInfo">Sparrow: ближе 0,85·FWHM дублет неразрешим — для маркеров сливаем.</div>
+  <div class="infoline" id="mergeInfo"><span id="mergeHint"></span></div>
   <div class="cols2">
   <div class="gbox"><span class="lg">Фильтры</span>
    <div class="line">
@@ -186,11 +185,13 @@
           <input type="checkbox" class="secT" value="pu2"> наложение 2×E (pile-up)</span>
         <button id="genSec">Сгенерировать</button>
       </div>
+      <details class="doc"><summary>формулы</summary>
       <p class="hint" id="secHint">BS = E/(1+2E/511); CE = E−BS; SE = E−511 (E&gt;1122); DE = E−1022 (E&gt;1222);
         I-escape для E&lt;200 кэВ. <b>SUM</b> = E1+E2 — истинные совпадения каскадных линий одного
         нуклида (заметно при близкой геометрии: Co-60 → 2505, Y-88 → 2734); <b>PU</b> = 2×E — наложение
         импульсов одной сильной линии при большой загрузке (Cs-137 → 1324). Маркерная интенсивность:
         10 % от родительской (для SUM — от слабейшей из пары). Формулы: Knoll гл. 10–12, 17 (pile-up).</p>
+      </details>
     </div>
   </div>
   <div class="group" id="nearGroup">
@@ -1349,13 +1350,18 @@ $("mMode").addEventListener("change", applyMergeMode);
 // живой пример: порог слияния в кэВ при текущих R и k
 function updMergeHint(){
   var r = parseFloat($("mR662").value)||7.5, k = parseFloat($("mK").value)||0.85;
+  var mode = $("mMode") ? $("mMode").value : "sparrow";
+  var name = mode==="sparrow" ? T("Sparrow","Sparrow")
+           : mode==="anchor" ? T("Якорный набор","Anchored set") : T("Вручную","Manual");
   function w(E){ return k*r/100*Math.sqrt(662*E); }
-  function f(E){ return w(E)<10 ? w(E).toFixed(1) : Math.round(w(E)); }
-  $("mergeHint").innerHTML = LANG==="en"
-    ? "<b>Now (R="+r+" %, threshold "+k+"×FWHM):</b> lines merge if they are closer than "+
-      f(100)+" keV at 100 keV, "+f(662)+" keV at 662, "+f(1500)+" keV at 1500."
-    : "<b>Сейчас (R="+r+" %, порог "+k+"×FWHM):</b> сливаются линии ближе "+
-      f(100)+" кэВ на 100 кэВ, "+f(662)+" кэВ на 662, "+f(1500)+" кэВ на 1500.";
+  function f(E){ return fmtSci(w(E)<10 ? w(E).toFixed(1) : String(Math.round(w(E)))); }
+  var merged = sel.merged.length;
+  $("mergeHint").innerHTML = "<b>"+name+" (R = "+fmtSci(String(r))+" %, "+
+    T("порог ","threshold ")+fmtSci(String(k))+"·FWHM):</b> "+
+    (merged ? T("слито групп ","merged groups ")+merged+" · " : "")+
+    T("сливаются линии ближе ","lines merge closer than ")+
+    f(100)+T(" кэВ на 100"," keV at 100")+", "+f(662)+T(" на 662"," at 662")+", "+
+    f(1500)+T(" на 1500"," at 1500")+".";
 }
 applyMergeMode();
 $("clearAll").addEventListener("click", function(){
