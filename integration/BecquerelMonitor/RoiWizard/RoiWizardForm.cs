@@ -108,6 +108,8 @@ namespace BecquerelMonitor.RoiWizard
             this.comboMinHalfLifeUnit.SelectedIndex = 2;      // сутки, как в вебе
             this.comboMaxHalfLifeUnit.Items.AddRange((object[])units.Clone());
             this.comboMaxHalfLifeUnit.SelectedIndex = 3;      // годы
+            this.comboNearHalfLifeUnit.Items.AddRange((object[])units.Clone());
+            this.comboNearHalfLifeUnit.SelectedIndex = 2;
             this.SyncZoneControls();
         }
 
@@ -236,6 +238,9 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonSelectAll.Click += delegate { this.SetVisibleSelected(true); };
             this.buttonSelectNone.Click += delegate { this.SetVisibleSelected(false); };
             this.buttonGenerateSecondary.Click += delegate { this.GenerateSecondary(); };
+            this.buttonNearSearch.Click += delegate { this.SearchNearby(); };
+            this.buttonNearAdd.Click += delegate { this.AddFromNearby(); };
+            this.listNear.DoubleClick += delegate { this.AddFromNearby(); };
             this.buttonSelectTop.Click += delegate
             {
                 LineSetBuilder.SelectTopPerNuclide(this.lines, (int)this.numTopN.Value);
@@ -702,6 +707,129 @@ namespace BecquerelMonitor.RoiWizard
                 this.secondaryFormat, generated.Count);
         }
 
+        // Кто ещё светит рядом: та же выборка, что на странице — γ и X всех нуклидов базы
+        // плюс линии ХРИ, отсортированные по удалённости от заданной энергии.
+        // Классический случай — 186 кэВ: Ra-226 3,6 % против U-235 57,2 %.
+        void SearchNearby()
+        {
+            double energy = (double)this.numNearEnergy.Value;
+            double window = (double)this.numNearWindow.Value;
+            double minIntensity = (double)this.numNearIntensity.Value;
+            double minHalfLife = HalfLifeYears(this.numNearHalfLife, this.comboNearHalfLifeUnit);
+
+            this.nearHits.Clear();
+            foreach (CatalogNuclide nuclide in this.catalog.Nuclides)
+            {
+                if (minHalfLife > 0 && nuclide.HalfLifeYears < minHalfLife)
+                {
+                    continue;
+                }
+                foreach (CatalogGammaLine gamma in nuclide.Gamma)
+                {
+                    if (Math.Abs(gamma.Energy - energy) <= window && gamma.Intensity >= minIntensity)
+                    {
+                        this.nearHits.Add(new NearHit(nuclide.Name, gamma.Energy, gamma.Intensity,
+                                                      "γ", nuclide.HalfLifeText, null));
+                    }
+                }
+                foreach (CatalogXrayLine xray in nuclide.Xray)
+                {
+                    if (Math.Abs(xray.Energy - energy) <= window && xray.Intensity >= minIntensity)
+                    {
+                        this.nearHits.Add(new NearHit(nuclide.Name, xray.Energy, xray.Intensity,
+                                                      "X " + xray.Shell, nuclide.HalfLifeText, null));
+                    }
+                }
+            }
+            foreach (XrfElement element in this.catalog.XrfElements)
+            {
+                foreach (XrfLine line in element.Lines)
+                {
+                    if (Math.Abs(line.Energy - energy) <= window)
+                    {
+                        this.nearHits.Add(new NearHit("XRF " + element.Symbol, line.Energy, line.Intensity,
+                                                      "XRF " + line.Label, "—", element.Symbol));
+                    }
+                }
+            }
+            double centre = energy;
+            this.nearHits.Sort(delegate(NearHit a, NearHit b)
+            {
+                return Math.Abs(a.Energy - centre).CompareTo(Math.Abs(b.Energy - centre));
+            });
+
+            this.listNear.BeginUpdate();
+            this.listNear.Items.Clear();
+            foreach (NearHit hit in this.nearHits)
+            {
+                double delta = hit.Energy - energy;
+                bool added = hit.XrfSymbol != null
+                    ? this.selection.XrfElements.Contains(hit.XrfSymbol)
+                    : this.selection.Nuclides.ContainsKey(hit.Nuclide);
+                this.listNear.Items.Add(string.Format(CultureInfo.CurrentCulture,
+                    "{0}{1:0.0}   {2,-14} {3,9:0.00} кэВ   I {4,7:0.###} %   {5,-8} {6}{7}",
+                    delta >= 0 ? "+" : "", delta, hit.Nuclide, hit.Energy, hit.Intensity,
+                    hit.Type, hit.HalfLife, added ? "   ✓" : ""));
+            }
+            this.listNear.EndUpdate();
+            if (this.nearHits.Count == 0)
+            {
+                this.listNear.Items.Add(string.Format(CultureInfo.CurrentCulture,
+                    this.nearEmptyFormat, energy, window));
+            }
+        }
+
+        void AddFromNearby()
+        {
+            int index = this.listNear.SelectedIndex;
+            if (index < 0 || index >= this.nearHits.Count)
+            {
+                return;
+            }
+            NearHit hit = this.nearHits[index];
+            if (hit.XrfSymbol != null)
+            {
+                this.selection.XrfElements.Add(hit.XrfSymbol);
+                for (int i = 0; i < this.xrfSymbols.Count; i++)
+                {
+                    if (string.Equals(this.xrfSymbols[i], hit.XrfSymbol, StringComparison.Ordinal))
+                    {
+                        this.checkedXrf.SetItemChecked(i, true);
+                    }
+                }
+            }
+            else
+            {
+                this.selection.Add(this.catalog, hit.Nuclide, AddMode.Single);
+            }
+            this.RefreshGroupList();
+            this.Rebuild();
+            this.SearchNearby();
+        }
+
+        sealed class NearHit
+        {
+            public readonly string Nuclide;
+            public readonly double Energy;
+            public readonly double Intensity;
+            public readonly string Type;
+            public readonly string HalfLife;
+            public readonly string XrfSymbol;
+
+            public NearHit(string nuclide, double energy, double intensity,
+                           string type, string halfLife, string xrfSymbol)
+            {
+                this.Nuclide = nuclide;
+                this.Energy = energy;
+                this.Intensity = intensity;
+                this.Type = type;
+                this.HalfLife = string.IsNullOrEmpty(halfLife) ? "—" : halfLife;
+                this.XrfSymbol = xrfSymbol;
+            }
+        }
+
+        readonly List<NearHit> nearHits = new List<NearHit>();
+
         void SetColorMode(bool byChain)
         {
             this.colorByChain = byChain;
@@ -836,6 +964,7 @@ namespace BecquerelMonitor.RoiWizard
             "threshold {0:0.##}·FWHM: lines merge closer than {1:0.#} keV at 100, {2:0.#} at 662, {3:0.#} at 1500";
         string statusFormat = "lines: {0} of {1} · nuclides: {2}";
         string secondaryFormat = "secondary markers added: {0}";
+        string nearEmptyFormat = "nothing found within {0} ± {1} keV";
         bool suppressGroupCheck;
         string hintPicked = "Applies to the ticked nuclides ({0}).";
         string hintNone = "Tick a nuclide - the buttons apply to it.";
@@ -1132,8 +1261,8 @@ namespace BecquerelMonitor.RoiWizard
             foreach (string owner in owners)
             {
                 Panel swatch = new Panel();
-                swatch.Size = new Size(20, 20);
-                swatch.Margin = new Padding(2, 4, 2, 2);
+                swatch.Size = new Size(18, 18);
+                swatch.Margin = new Padding(2, 4, 4, 2);
                 swatch.BackColor = this.ColorForOwner(owner);
                 swatch.BorderStyle = BorderStyle.FixedSingle;
                 swatch.Cursor = Cursors.Hand;
@@ -1143,7 +1272,7 @@ namespace BecquerelMonitor.RoiWizard
                 Label caption = new Label();
                 caption.Text = owner;
                 caption.AutoSize = true;
-                caption.Margin = new Padding(0, 7, 12, 2);
+                caption.Margin = new Padding(0, 5, 14, 2);
 
                 this.panelColors.Controls.Add(swatch);
                 this.panelColors.Controls.Add(caption);
@@ -1270,6 +1399,17 @@ namespace BecquerelMonitor.RoiWizard
             this.checkHideUnselected.Text = "скрыть невыбранные";
             this.groupSecondary.Text = "Вторичные пики (расчёт по выбранным γ-линиям)";
             this.labelColors.Text = "Цвета";
+            this.groupNear.Text = "Поиск близких линий (по всей базе — кто ещё светит рядом)";
+            this.labelNearEnergy.Text = "энергия, кэВ";
+            this.labelNearWindow.Text = "± окно";
+            this.labelNearIntensity.Text = "I ≥, %";
+            this.labelNearHalfLife.Text = "T½ ≥";
+            this.buttonNearSearch.Text = "Искать";
+            this.buttonNearAdd.Text = "+ добавить";
+            this.comboNearHalfLifeUnit.Items.Clear();
+            this.comboNearHalfLifeUnit.Items.AddRange(new object[] { "сек", "ч", "сут", "лет" });
+            this.comboNearHalfLifeUnit.SelectedIndex = 2;
+            this.nearEmptyFormat = "в окне {0} ± {1} кэВ ничего не найдено";
             this.buttonColorByChain.Text = "по цепочке";
             this.buttonColorByNuclide.Text = "по нуклиду";
             this.labelSecondaryMin.Text = "для γ-линий с I ≥, %";
