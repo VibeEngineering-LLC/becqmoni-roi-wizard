@@ -70,6 +70,13 @@
   .modalhead button:hover{background:#2d4f79; border:none}
   .modalbody{overflow:auto; padding:10px 14px}
   .modalbody p{margin:0 0 8px}
+  /* таблица «что взято → откуда»: первая колонка уже, обе строки читаемы целиком */
+  .srctbl{width:100%; border-collapse:collapse; margin:2px 0 6px}
+  .srctbl th{text-align:left; white-space:normal}
+  .srctbl td{padding:4px 8px; vertical-align:top; line-height:1.4; white-space:normal;
+    border-bottom:1px solid var(--grid)}
+  .srctbl td:first-child{width:38%}
+  .srctbl a{color:var(--accent)}
   /* бейджи семейств в списке нуклидов */
   .fbadge{display:inline-block; font-size:10.5px; font-weight:600; padding:0 5px; margin-right:3px;
     border-radius:2px; letter-spacing:.02em}
