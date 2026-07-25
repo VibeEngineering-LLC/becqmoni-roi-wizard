@@ -1396,19 +1396,9 @@ namespace BecquerelMonitor.RoiWizard
             this.ApplyExporterSettings();
             ROIConfigData built = this.exporter.BuildRoiConfig(this.lines, this.textConfigName.Text,
                                                               this.ColorOfLine);
-            StringBuilder text = new StringBuilder();
-            List<SetIssue> issues = SetChecker.Check(this.lines, false, this.zones);
-            text.Append(issues.Count == 0
-                ? this.previewClean
-                : string.Format(CultureInfo.CurrentCulture, this.previewIssues, issues.Count));
-            text.Append(Environment.NewLine);
-            foreach (SetIssue issue in issues)
-            {
-                text.Append("  · ").Append(issue.Text).Append(Environment.NewLine);
-            }
-            text.Append(Environment.NewLine);
-            text.Append(Serialize(built));
-            this.textPreview.Text = text.ToString();
+            // без шапки с замечаниями: они уже перечислены в панели «Проверка данных»
+            // прямо над этим полем, а на странице такой панели нет — там шапка и нужна
+            this.textPreview.Text = Serialize(built);
             this.textPreview.Select(0, 0);
         }
 
@@ -1425,8 +1415,6 @@ namespace BecquerelMonitor.RoiWizard
         }
 
         string previewEmpty = "no lines selected";
-        string previewClean = "Data check: no issues.";
-        string previewIssues = "DATA CHECK — {0} note(s):";
 
         void CreateRoiConfig()
         {
@@ -1804,8 +1792,6 @@ namespace BecquerelMonitor.RoiWizard
             this.stepForward = "Вперёд ▸";
             this.buttonPreview.Text = "Предпросмотр";
             this.previewEmpty = "линии не выбраны";
-            this.previewClean = "Проверка данных: замечаний нет.";
-            this.previewIssues = "ПРОВЕРКА ДАННЫХ — замечаний: {0}";
             this.presetsCaption = "Пресеты:";
             this.labelSearchHint.Text = "Ввод сужает список: по имени или по коду семейства.";
             this.labelXrfHint.Text = "Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1 = 100) — только маркеры.";
