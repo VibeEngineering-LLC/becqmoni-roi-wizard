@@ -17,12 +17,14 @@ BecquerelMonitor/RoiWizard/
   LineMerger.cs         слияние близких линий под разрешение детектора
   SecondaryPeaks.cs     вторичные особенности: обратное рассеяние, край, вылеты, суммирование
   SetExporter.cs        выбор якоря, сборка ROIConfigData и NuclideSet, проверки перед сохранением
+  RoiWizardForm.cs           окно инструмента: три вкладки, обработчики, русские подписи
+  RoiWizardForm.Designer.cs  разметка формы (XPTable, как в NuclideSetForm)
   nuclides.xml          сам снимок (121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ; 96 КБ)
 tools/
   export_catalog.py     пересборка nuclides.xml из data/nuclides.js и data/xrf.js
 ```
 
-Формы (UI) в комплекте пока нет — ядро от неё не зависит и вызывается из любого окна.
+Ядро не зависит от формы: его можно вызвать из любого окна или использовать без UI вовсе.
 
 ## Как подключить
 
@@ -88,6 +90,56 @@ nuclides.NuclideSets.Add(set);
 nuclides.NuclideDefinitions.AddRange(definitions);
 nuclides.SaveDefinitionFile();
 ```
+
+## Форма
+
+`RoiWizardForm` — окно из трёх вкладок, повторяющих шаги веб-версии: изотопы, линии,
+оформление и экспорт. Разметка собрана руками в `RoiWizardForm.Designer.cs`, таблицы — на
+`XPTable` (как в `NuclideSetForm`), подписи по умолчанию английские, русские накладываются
+в `ApplyRussian()` по текущей культуре UI. Штатный `Localizable = true` с `.resx` намеренно
+не используется: держать координаты контролов в ресурсах ради двух языков дороже словаря
+подписей — если понадобится, форму можно открыть в дизайнере и включить локализацию.
+
+Подключение к меню приложения:
+
+```csharp
+// MainForm.cs — рядом с ShowNuclideSetForm()
+public void ShowRoiWizardForm()
+{
+    using (var form = new RoiWizard.RoiWizardForm(this.RoiWizardResolution))
+    {
+        form.ShowDialog(this);
+    }
+}
+
+// Разрешение из FWHM-калибровки активного спектра. Вернуть 0, если взять неоткуда —
+// форма тогда просто оставит значение, введённое руками.
+double RoiWizardResolution()
+{
+    ResultData active = this.ActiveResultData;
+    if (active == null || active.EnergySpectrum == null) return 0;
+
+    // выбрать диапазон каналов вокруг опорного пика (проще всего — вокруг активного ROI)
+    EnergyResolutionResult result =
+        EnergyResolutionCalculator.CalculateFWHM(active.EnergySpectrum, startChannel, endChannel);
+    return result != null ? result.Resolution : 0;
+}
+```
+
+Пункт меню добавляется там же, где `NuclideSetForm` и `NuclideDefinitionForm` — обработчик
+вызывает `ShowRoiWizardForm()`. Конструктор без аргументов тоже есть: тогда кнопка
+«из спектра» на втором шаге просто выключена, и форма работает автономно.
+
+Что делает форма по кнопкам:
+
+| Кнопка | Действие |
+|---|---|
+| **Создать ROI-конфигурацию** | собирает `ROIConfigData`, кладёт в `ROIConfigManager.ROIConfigList` и вызывает `SaveConfig`. Имя файла — из имени конфигурации, недопустимые символы заменяются |
+| **Добавить набор в библиотеку** | собирает `NuclideSet` и записи `NuclideDefinition`, добавляет в `NuclideDefinitionManager` и вызывает `SaveDefinitionFile()`. Существующие нуклиды и наборы не трогаются |
+| **Объединить близкие** | слияние под текущее R и критерий; «Вернуть исходные» откатывает к состоянию до слияния |
+
+Проверки перед сохранением встроены: для ROI выводится вопрос «сохранить всё равно?», для
+набора совпавшие энергии и нулевая интенсивность останавливают запись с объяснением.
 
 ## Точки сращивания с приложением
 
