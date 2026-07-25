@@ -54,7 +54,7 @@
 ## Как смотреть
 
 ```
-cd "C:\Users\Дмитрий\Мой диск\Рабочая папка ИИ\Codeaudit\tools\roi-wizard"
+cd <клон репозитория>
 git checkout ui-panel
 ```
 и открыть `index.html`. Вернуться к опубликованной версии — `git checkout main`.
