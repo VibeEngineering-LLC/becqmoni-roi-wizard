@@ -74,7 +74,7 @@ input[type=checkbox]{width:13px; height:13px; margin:0 3px 0 0; vertical-align:-
 .line > details.doc > summary:hover{background:#d5e6f5; border-color:#7aa7ce}
 .line > details.doc[open] > summary{background:var(--sel); border-color:var(--accent)}
 details.doc > summary{font-size:12px; color:var(--accent-ink); border-bottom:1px dotted var(--accent)}
-details.doc .hint{max-width:78ch}
+details.doc .hint{max-width:none}   /* тексты справки идут во всю ширину панели */
 /* всплывающая справка — как словарик кодов: жёлтая подложка, тот же кегль */
 .line > details.doc[open] > *:not(summary){font-size:11.5px; line-height:1.45; color:var(--ink)}
 .hint{font-size:11px; margin:3px 0 0}

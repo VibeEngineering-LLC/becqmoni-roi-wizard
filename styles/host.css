@@ -59,6 +59,17 @@
     z-index:40; margin:2px 0 0; padding:6px 9px; max-width:none;
     max-height:min(340px,46vh); overflow:auto;
     background:#ffffe1; border:1px solid #b0a060; box-shadow:0 4px 10px rgba(0,0,0,.2)}
+  /* справка по инструменту — поверх окна, во всю его ширину */
+  .modalback{position:fixed; inset:0; z-index:60; background:rgba(20,30,45,.35);
+    display:flex; align-items:center; justify-content:center; padding:12px}
+  .modal{display:flex; flex-direction:column; width:100%; max-height:100%;
+    background:#fff; border:1px solid #9fb0c6; box-shadow:0 10px 30px rgba(20,40,70,.35)}
+  .modalhead{display:flex; align-items:center; gap:10px; padding:5px 8px;
+    background:var(--head); color:#fff; flex-shrink:0}
+  .modalhead button{background:transparent; border:none; color:#dbe6f2; height:20px; padding:0 8px}
+  .modalhead button:hover{background:#2d4f79; border:none}
+  .modalbody{overflow:auto; padding:10px 14px}
+  .modalbody p{margin:0 0 8px}
   /* бейджи семейств в списке нуклидов */
   .fbadge{display:inline-block; font-size:10.5px; font-weight:600; padding:0 5px; margin-right:3px;
     border-radius:2px; letter-spacing:.02em}
@@ -83,7 +94,7 @@
   details.doc > summary{font-size:12.5px; color:var(--accent-ink); cursor:pointer;
     list-style:none; display:inline-block; border-bottom:1px dotted var(--accent)}
   details.doc > summary::-webkit-details-marker{display:none}
-  details.doc .hint{max-width:72ch}
+  details.doc .hint{max-width:none}   /* справка идёт во всю ширину панели */
   /* сегментный переключатель — там, где вариантов 2–3 */
   .seg{display:flex}
   .seg button{border-radius:0; border-right-width:0; flex:1; padding:3px 8px; font-size:12px}
