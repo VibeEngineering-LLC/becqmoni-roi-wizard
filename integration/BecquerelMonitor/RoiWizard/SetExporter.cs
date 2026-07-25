@@ -1,119 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 
 namespace BecquerelMonitor.RoiWizard
 {
-    public enum RoiStyle
-    {
-        // маркеры: границы −10, высота задаётся Intencity
-        Markers,
-        // зоны вокруг пика
-        Zones,
-        ZonesWithMarkers
-    }
-
-    public enum ZoneWidthMode
-    {
-        // процент от энергии — как задаётся ширина ROI в самом BecqMoni
-        PercentOfEnergy,
-        // k × FWHM по модели разрешения
-        FwhmFactor
-    }
-
-    // Якорная линия: ровно одна запись набора получает IsAnchor = true. Найдя её в спектре,
-    // BecqMoni сажает остальные линии набора на табличные позиции и подгоняет амплитуды
-    // (библиотечный фит). Без якоря механизм не запускается вовсе.
-    public static class AnchorPicker
-    {
-        // Хороший якорь — сильная И одинокая линия: сосед внутри FWHM смещает центроид
-        // найденного пика, и совпадение с табличной энергией перестаёт быть надёжным.
-        // Правило даёт 2614.5 для ряда Th-232 и 609.3 для Ra-226.
-        public static SpectralLine Pick(IList<SpectralLine> lines, ResolutionModel resolution)
-        {
-            if (lines == null || lines.Count == 0)
-            {
-                return null;
-            }
-            // Порог 0.2·max считается по ОДНИМ γ-линиям. Интенсивности ХРИ условные
-            // (Kα1 = 100), и если брать максимум по всем линиям, то у слабо-γ нуклида
-            // рядом с ХРИ свинца все настоящие γ уходят ниже порога.
-            double max = 0.0;
-            foreach (SpectralLine line in lines)
-            {
-                if (line.Type == LineType.Gamma && line.Intensity > max)
-                {
-                    max = line.Intensity;
-                }
-            }
-
-            SpectralLine best = null;
-            SpectralLine bestLonely = null;
-            foreach (SpectralLine line in lines)
-            {
-                if (line.Type != LineType.Gamma || line.Intensity < 0.2 * max)
-                {
-                    continue;
-                }
-                if (best == null || line.Intensity > best.Intensity)
-                {
-                    best = line;
-                }
-                if (IsLonely(line, lines, resolution, max) &&
-                    (bestLonely == null || line.Intensity > bestLonely.Intensity))
-                {
-                    bestLonely = line;
-                }
-            }
-            SpectralLine pick = bestLonely ?? best;
-            if (pick != null)
-            {
-                return pick;
-            }
-            // Фолбэк только на настоящие линии распада: у ХРИ интенсивность условная,
-            // у вторичных положение — эмпирическая поправка. Якорь на таком маркере
-            // означал бы, что LibraryPeakFitter сажает весь набор по нефизической опоре.
-            return Strongest(lines, LineType.Xray);
-        }
-
-        static SpectralLine Strongest(IList<SpectralLine> lines, LineType type)
-        {
-            SpectralLine pick = null;
-            foreach (SpectralLine line in lines)
-            {
-                if (line.Type == type && (pick == null || line.Intensity > pick.Intensity))
-                {
-                    pick = line;
-                }
-            }
-            return pick;
-        }
-
-        // Годится ли линия в якоря: набор без якоря библиотечный фит не запускает вовсе,
-        // а якорь на ХРИ или вторичном маркере хуже отсутствия — фит «найдёт» опору там,
-        // где её физически нет.
-        public static bool IsAcceptable(SpectralLine line)
-        {
-            return line != null && (line.Type == LineType.Gamma || line.Type == LineType.Xray);
-        }
-
-        static bool IsLonely(SpectralLine line, IList<SpectralLine> lines,
-                             ResolutionModel resolution, double max)
-        {
-            double window = resolution.Fwhm(line.Energy);
-            foreach (SpectralLine other in lines)
-            {
-                if (!ReferenceEquals(other, line) && other.Intensity >= 0.05 * max &&
-                    Math.Abs(other.Energy - line.Energy) < window)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
     // Сборка результата в объекты BecqMoni. Файлы не пишутся: конфигурация уходит в
     // ROIConfigManager, а записи набора — в NuclideDefinitionManager, то есть инструмент
     // работает как часть приложения, а не как генератор XML на диск.
@@ -121,41 +11,19 @@ namespace BecquerelMonitor.RoiWizard
     {
         readonly ResolutionModel resolution;
 
-        public SetExporter(ResolutionModel resolution)
+        public SetExporter(ResolutionModel resolution) : this(resolution, null)
+        {
+        }
+
+        public SetExporter(ResolutionModel resolution, ZoneCalculator zones)
         {
             this.resolution = resolution;
+            this.Zones = zones ?? new ZoneCalculator(resolution);
         }
 
-        public RoiStyle Style { get; set; }
-        public ZoneWidthMode WidthMode { get; set; }
-        public double ZonePercent { get; set; }
-        public double ZoneFwhmFactor { get; set; }
+        // границы зоны считает отдельный калькулятор — он же уходит в проверки
+        public ZoneCalculator Zones { get; private set; }
 
-        public SetExporter Reset()
-        {
-            this.Style = RoiStyle.Markers;
-            this.WidthMode = ZoneWidthMode.PercentOfEnergy;
-            this.ZonePercent = 5.0;
-            this.ZoneFwhmFactor = 3.0;
-            return this;
-        }
-
-        // Границы ROI. Для режима маркеров BecqMoni ожидает −10: это признак того, что
-        // зоны нет, а запись рисуется штрихом высотой по Intencity.
-        public void LimitsFor(SpectralLine line, out double lower, out double upper)
-        {
-            if (this.Style == RoiStyle.Markers)
-            {
-                lower = -10;
-                upper = -10;
-                return;
-            }
-            double halfWidth = this.WidthMode == ZoneWidthMode.PercentOfEnergy
-                ? line.Energy * this.ZonePercent / 100.0 / 2.0
-                : this.ZoneFwhmFactor * this.resolution.Fwhm(line.Energy) / 2.0;
-            lower = Math.Floor(line.Energy - halfWidth);
-            upper = Math.Ceiling(line.Energy + halfWidth);
-        }
 
         public ROIConfigData BuildRoiConfig(IEnumerable<SpectralLine> lines, string name,
                                             Func<SpectralLine, Color> colorOf)
@@ -175,7 +43,7 @@ namespace BecquerelMonitor.RoiWizard
             foreach (SpectralLine line in ordered)
             {
                 double lower, upper;
-                this.LimitsFor(line, out lower, out upper);
+                this.Zones.LimitsFor(line, out lower, out upper);
 
                 ROIDefinitionData roi = new ROIDefinitionData();
                 roi.Name = line.Label;
@@ -244,122 +112,4 @@ namespace BecquerelMonitor.RoiWizard
         }
     }
 
-    public enum IssueLevel
-    {
-        Warning,
-        Error
-    }
-
-    public class SetIssue
-    {
-        public IssueLevel Level { get; set; }
-        public string Text { get; set; }
-    }
-
-    // Проверки перед сохранением. Для ROI всё совещательное, для набора совпавшие энергии
-    // и нулевая интенсивность — ошибки: две линии на одной позиции вырождают подгонку
-    // амплитуд (два параметра на один пик), а Intencity = 0 выбрасывает линию из связки
-    // по цепочке.
-    public static class SetChecker
-    {
-        public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
-                                           SetExporter exporter)
-        {
-            return Check(lines, forLibrary, exporter, null);
-        }
-
-        // resolution нужен, чтобы проверить якорь ровно так же, как его выберет
-        // BuildNuclideSet; без модели разрешения проверка якоря пропускается
-        public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
-                                           SetExporter exporter, ResolutionModel resolution)
-        {
-            List<SetIssue> issues = new List<SetIssue>();
-            List<SpectralLine> sorted = new List<SpectralLine>();
-            foreach (SpectralLine line in lines)
-            {
-                if (line.Selected)
-                {
-                    sorted.Add(line);
-                }
-            }
-            sorted.Sort(delegate(SpectralLine a, SpectralLine b) { return a.Energy.CompareTo(b.Energy); });
-
-            IssueLevel level = forLibrary ? IssueLevel.Error : IssueLevel.Warning;
-            for (int i = 1; i < sorted.Count; i++)
-            {
-                if (Math.Abs(sorted[i].Energy - sorted[i - 1].Energy) < 1.0)
-                {
-                    issues.Add(new SetIssue
-                    {
-                        Level = level,
-                        Text = string.Format(CultureInfo.CurrentCulture,
-                            "равные энергии: «{0}» и «{1}» ({2} / {3} кэВ)",
-                            Name(sorted[i - 1], forLibrary), Name(sorted[i], forLibrary),
-                            sorted[i - 1].Energy, sorted[i].Energy)
-                    });
-                }
-            }
-            foreach (SpectralLine line in sorted)
-            {
-                if (!(line.Intensity > 0))
-                {
-                    issues.Add(new SetIssue
-                    {
-                        Level = level,
-                        Text = string.Format(CultureInfo.CurrentCulture, "нулевой выход: «{0}» ({1} кэВ)",
-                            Name(line, forLibrary), line.Energy)
-                    });
-                }
-            }
-            if (forLibrary && resolution != null)
-            {
-                SpectralLine anchor = AnchorPicker.Pick(sorted, resolution);
-                if (anchor == null)
-                {
-                    issues.Add(new SetIssue
-                    {
-                        Level = IssueLevel.Error,
-                        Text = "нет якорной линии: в наборе нет ни одной линии распада " +
-                               "(ХРИ и вторичные маркеры якорем быть не могут) — " +
-                               "библиотечный фит без якоря не запускается"
-                    });
-                }
-                else if (anchor.Type != LineType.Gamma)
-                {
-                    issues.Add(new SetIssue
-                    {
-                        Level = IssueLevel.Warning,
-                        Text = string.Format(CultureInfo.CurrentCulture,
-                            "якорь — рентгеновская линия «{0}» ({1} кэВ): для опоры фита надёжнее γ-линия",
-                            anchor.LibraryName, anchor.Energy)
-                    });
-                }
-            }
-            if (!forLibrary && exporter != null && exporter.Style != RoiStyle.Markers)
-            {
-                for (int i = 1; i < sorted.Count; i++)
-                {
-                    double lowerA, upperA, lowerB, upperB;
-                    exporter.LimitsFor(sorted[i - 1], out lowerA, out upperA);
-                    exporter.LimitsFor(sorted[i], out lowerB, out upperB);
-                    if (lowerB < upperA)
-                    {
-                        issues.Add(new SetIssue
-                        {
-                            Level = IssueLevel.Warning,
-                            Text = string.Format(CultureInfo.CurrentCulture,
-                                "перекрытие зон: «{0}» [{1}–{2}] и «{3}» [{4}–{5}]",
-                                sorted[i - 1].Label, lowerA, upperA, sorted[i].Label, lowerB, upperB)
-                        });
-                    }
-                }
-            }
-            return issues;
-        }
-
-        static string Name(SpectralLine line, bool forLibrary)
-        {
-            return forLibrary ? line.LibraryName : line.Label;
-        }
-    }
 }

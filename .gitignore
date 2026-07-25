@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 Thumbs.db
 desktop.ini
+integration/tests/*.exe
+integration/tests/*.pdb

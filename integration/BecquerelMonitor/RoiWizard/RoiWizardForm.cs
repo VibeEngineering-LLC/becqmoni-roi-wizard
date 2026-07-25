@@ -17,9 +17,10 @@ namespace BecquerelMonitor.RoiWizard
         readonly NuclideCatalog catalog;
         readonly SourceSelection selection = new SourceSelection();
         readonly LineSetBuilder builder;
-        // пересоздаётся при смене R: модель разрешения захватывается экземпляром,
+        // пересоздаются при смене R: модель разрешения захватывается экземпляром,
         // иначе ширина зон считалась бы по устаревшему значению
         SetExporter exporter;
+        ZoneCalculator zones;
 
         List<SpectralLine> lines = new List<SpectralLine>();
         List<SpectralLine> beforeMerge;
@@ -43,7 +44,8 @@ namespace BecquerelMonitor.RoiWizard
 
             this.catalog = NuclideCatalog.GetInstance();
             this.builder = new LineSetBuilder(this.catalog).Reset();
-            this.exporter = new SetExporter(this.Resolution).Reset();
+            this.zones = new ZoneCalculator(this.Resolution);
+            this.exporter = new SetExporter(this.Resolution, this.zones);
 
             this.FillCombos();
             this.FillGroups();
@@ -511,11 +513,12 @@ namespace BecquerelMonitor.RoiWizard
 
         void ApplyExporterSettings()
         {
-            this.exporter = new SetExporter(this.Resolution);
-            this.exporter.Style = (RoiStyle)this.comboStyle.SelectedIndex;
-            this.exporter.WidthMode = (ZoneWidthMode)Math.Max(0, this.comboWidthMode.SelectedIndex);
-            this.exporter.ZonePercent = (double)this.numZonePercent.Value;
-            this.exporter.ZoneFwhmFactor = (double)this.numZoneFactor.Value;
+            this.zones = new ZoneCalculator(this.Resolution);
+            this.zones.Style = (RoiStyle)this.comboStyle.SelectedIndex;
+            this.zones.WidthMode = (ZoneWidthMode)Math.Max(0, this.comboWidthMode.SelectedIndex);
+            this.zones.ZonePercent = (double)this.numZonePercent.Value;
+            this.zones.ZoneFwhmFactor = (double)this.numZoneFactor.Value;
+            this.exporter = new SetExporter(this.Resolution, this.zones);
         }
 
         void RefreshAnchorCombo()
@@ -561,11 +564,11 @@ namespace BecquerelMonitor.RoiWizard
             this.ApplyExporterSettings();
             this.listIssues.BeginUpdate();
             this.listIssues.Items.Clear();
-            foreach (SetIssue issue in SetChecker.Check(this.lines, false, this.exporter))
+            foreach (SetIssue issue in SetChecker.Check(this.lines, false, this.zones))
             {
                 this.listIssues.Items.Add("ROI · " + issue.Text);
             }
-            foreach (SetIssue issue in SetChecker.Check(this.lines, true, this.exporter, this.Resolution))
+            foreach (SetIssue issue in SetChecker.Check(this.lines, true, this.zones, this.Resolution))
             {
                 if (issue.Level == IssueLevel.Error)
                 {
@@ -590,7 +593,7 @@ namespace BecquerelMonitor.RoiWizard
             }
             this.ApplyExporterSettings();
 
-            List<SetIssue> issues = SetChecker.Check(this.lines, false, this.exporter);
+            List<SetIssue> issues = SetChecker.Check(this.lines, false, this.zones);
             if (issues.Count > 0 && !this.Confirm(issues, false))
             {
                 return;
@@ -630,7 +633,7 @@ namespace BecquerelMonitor.RoiWizard
             // для набора совпавшие энергии и нулевая интенсивность — ошибки: две линии на
             // одной позиции вырождают подгонку амплитуд, а Intencity = 0 выбрасывает линию
             // из связки по цепочке
-            List<SetIssue> issues = SetChecker.Check(this.lines, true, this.exporter, this.Resolution);
+            List<SetIssue> issues = SetChecker.Check(this.lines, true, this.zones, this.Resolution);
             List<SetIssue> errors = issues.FindAll(delegate(SetIssue i) { return i.Level == IssueLevel.Error; });
             if (errors.Count > 0)
             {
