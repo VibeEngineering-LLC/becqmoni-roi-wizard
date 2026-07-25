@@ -27,13 +27,30 @@ BecqMoni, PR живёт вместе с проектом.
 |---|---|---|
 | Расчётное ядро | `NuclideCatalog`, `SpectralLine`, `LineSetBuilder`, `LineMerger`, `SecondaryPeaks`, `AnchorPicker`, `ZoneCalculator`, `SetChecker` | ≈1600 |
 | Мост к приложению | `SetExporter` | 145 |
-| Форма | `RoiWizardForm` + `.Designer` | ≈1550 |
+| Форма | `RoiWizardForm` + `.Designer`, `WizardTheme`, `CatalogCellRenderers`, `HelpForm` | ≈2400 |
 | Правка хоста | пункт меню в `MainForm` + две строки ресурсов | ≈40 |
-| Данные | `nuclides.xml` — снимок IAEA/ENSDF: 121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ | 96 КБ |
-| Инструменты | `tools/export_catalog.py` — пересборка снимка | 194 |
+| Данные | `nuclides.xml` — снимок IAEA/ENSDF: 121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ, словарь семейств | 101 КБ |
+| | `help.xml` — текст справки на двух языках | 21 КБ |
+| Инструменты | `tools/export_catalog.py`, `tools/export_help.py` — пересборка снимка и справки | 280 |
 | Тесты | `tests/RoiWizardTests.cs`, `HostStubs.cs`, `run_tests.cmd` | 490 |
 
 Новых зависимостей нет: `XmlSerializer`, WinForms и `XPTable` — всё уже в проекте.
+
+### Как выглядит окно
+
+Полный набор снимков — **[docs/SCREENSHOTS.md](SCREENSHOTS.md)**: каждый экран
+в своём состоянии, с пояснениями. Снимки лежат в этом репозитории, а не в PR:
+класть мегабайт картинок в дерево BecqMoni незачем, в описании PR они вставляются
+ссылками на `raw.githubusercontent.com` и отображаются прямо в теле.
+
+Для описания PR достаточно четырёх — по одному на шаг плюс справка:
+
+```markdown
+![Шаг 1 · Изотопы](https://raw.githubusercontent.com/VibeEngineering-LLC/becqmoni-roi-wizard/main/docs/screenshots/03-step1-preset.png)
+![Шаг 2 · Линии](https://raw.githubusercontent.com/VibeEngineering-LLC/becqmoni-roi-wizard/main/docs/screenshots/05-step2-folded.png)
+![Шаг 3 · Оформление и экспорт](https://raw.githubusercontent.com/VibeEngineering-LLC/becqmoni-roi-wizard/main/docs/screenshots/08-step3.png)
+![Справка](https://raw.githubusercontent.com/VibeEngineering-LLC/becqmoni-roi-wizard/main/docs/screenshots/11-help.png)
+```
 
 ## 2. Состояние upstream (проверено 25.07.2026)
 

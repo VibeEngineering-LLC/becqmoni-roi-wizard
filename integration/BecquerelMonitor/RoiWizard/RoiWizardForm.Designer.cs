@@ -240,6 +240,7 @@ namespace BecquerelMonitor.RoiWizard
             this.tableCatalog.FullRowSelect = true;
             this.tableCatalog.GridLines = XPTable.Models.GridLines.Rows;
             this.tableCatalog.TableModel = this.tableModelCatalog;
+            this.tableCatalog.HeaderRenderer = new CenteredHeaderRenderer();
             // строка списка нуклидов повторяет .nuc на странице: имя, бейджи семейств,
             // приглушённый хвост «T½ γN XN». Высота 18 px — line-height 16 плюс padding.
             this.tableModelCatalog.RowHeight = 18;
@@ -250,6 +251,7 @@ namespace BecquerelMonitor.RoiWizard
             this.columnCatalogFamilies.Text = "Families";
             this.columnCatalogFamilies.Width = 132;
             this.columnCatalogFamilies.Renderer = new FamilyBadgeCellRenderer();
+            this.columnCatalogHalfLife.Alignment = XPTable.Models.ColumnAlignment.Right;
             this.columnCatalogHalfLife.Editable = false;
             this.columnCatalogHalfLife.Text = "T½";
             this.columnCatalogHalfLife.Width = 78;
@@ -338,10 +340,11 @@ namespace BecquerelMonitor.RoiWizard
             this.labelXrf.Location = new System.Drawing.Point(8, 20);
             this.labelXrf.AutoSize = true;
             this.checkedXrf.Location = new System.Drawing.Point(8, 44);
-            this.checkedXrf.Size = new System.Drawing.Size(380, 268);
+            this.checkedXrf.Size = new System.Drawing.Size(380, 258);
+            this.checkedXrf.HorizontalScrollbar = true;
             this.labelXrfHint.Text = "Ka/Kb (+L for heavy). Nominal intensities (Ka1 = 100) — markers only.";
-            this.labelXrfHint.Location = new System.Drawing.Point(8, 316);
-            this.labelXrfHint.Size = new System.Drawing.Size(380, 18);
+            this.labelXrfHint.Location = new System.Drawing.Point(8, 306);
+            this.labelXrfHint.Size = new System.Drawing.Size(380, 28);
             this.labelXrfHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.checkedXrf.CheckOnClick = true;
@@ -686,11 +689,13 @@ namespace BecquerelMonitor.RoiWizard
             this.tableLines.FullRowSelect = true;
             this.tableLines.GridLines = XPTable.Models.GridLines.Rows;
             this.tableLines.TableModel = this.tableModelLines;
+            this.tableLines.HeaderRenderer = new CenteredHeaderRenderer();
             // строка 20 px: шрифт темы 9 pt в штатные 15 px не помещается,
             // а на странице строка таблицы 21-22 px
             this.tableModelLines.RowHeight = 20;
             this.columnLineSelected.Resizable = false;
             this.columnLineSelected.Sortable = false;
+            this.columnLineSelected.Alignment = XPTable.Models.ColumnAlignment.Center;
             this.columnLineSelected.Text = "✓";
             this.columnLineSelected.Width = 30;
             this.columnLineName.Editable = false;
@@ -700,6 +705,7 @@ namespace BecquerelMonitor.RoiWizard
             this.columnLineEnergy.Text = "E, keV";
             this.columnLineEnergy.Width = 90;
             this.columnLineEnergy.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnLineEnergy.Renderer = new NumberCellRenderer();
             this.columnLineIntensity.Editable = false;
             this.columnLineIntensity.Text = "I, %";
             this.columnLineIntensity.Width = 90;
@@ -709,10 +715,12 @@ namespace BecquerelMonitor.RoiWizard
             this.columnLineRelative.Text = "I rel., %";
             this.columnLineRelative.Width = 80;
             this.columnLineRelative.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnLineRelative.Renderer = new NumberCellRenderer();
             this.columnLineHalfLife.Editable = false;
             this.columnLineHalfLife.Text = "T½";
             this.columnLineHalfLife.Width = 90;
             this.columnLineHalfLife.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnLineHalfLife.Renderer = new NumberCellRenderer();
             this.columnLineType.Editable = false;
             this.columnLineType.Renderer = new LineTypeCellRenderer();
             this.columnLineType.Text = "Type";

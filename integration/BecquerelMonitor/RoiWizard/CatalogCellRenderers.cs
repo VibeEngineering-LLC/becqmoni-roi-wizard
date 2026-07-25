@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using XPTable.Events;
+using XPTable.Models;
 using XPTable.Renderers;
 
 namespace BecquerelMonitor.RoiWizard
@@ -121,6 +122,43 @@ namespace BecquerelMonitor.RoiWizard
         }
     }
 
+    // Заголовки числовых колонок — по центру. Штатный рендерер выравнивает все
+    // подписи влево (Table.HeaderAlignWithColumn по умолчанию выключен), и подпись
+    // висела над левым краем, тогда как числа прижаты к правому.
+    public class CenteredHeaderRenderer : XPHeaderRenderer
+    {
+        public override void OnPaintHeader(PaintHeaderEventArgs e)
+        {
+            if (e.Column != null)
+            {
+                this.Alignment = e.Column.Alignment == ColumnAlignment.Right
+                    ? ColumnAlignment.Center
+                    : e.Column.Alignment;
+            }
+            base.OnPaintHeader(e);
+        }
+    }
+
+    // Числовая колонка с отступом от правого края: штатная ячейка прижимает число
+    // вплотную к границе, а на странице у td задан padding 0 7px.
+    public class NumberCellRenderer : CellRenderer
+    {
+        internal const int PadRight = 7;
+
+        protected override void OnPaint(PaintCellEventArgs e)
+        {
+            base.OnPaint(e);
+            if (e.Cell == null || string.IsNullOrEmpty(e.Cell.Text))
+            {
+                return;
+            }
+            Rectangle rect = this.ClientRectangle;
+            rect.Width -= PadRight;
+            TextRenderer.DrawText(e.Graphics, e.Cell.Text, this.Font, rect, this.ForeColor,
+                TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+        }
+    }
+
     // Микро-бар интенсивности: полупрозрачная заливка на долю относительной
     // интенсивности, число поверх неё справа. Видно, где сильные линии, не читая
     // чисел. Заливка именно полупрозрачная (--bar), а не сплошная: на выбранной
@@ -150,8 +188,9 @@ namespace BecquerelMonitor.RoiWizard
             }
             if (!string.IsNullOrEmpty(e.Cell.Text))
             {
+                rect.Width -= NumberCellRenderer.PadRight;   // тот же отступ, что у прочих чисел
                 TextRenderer.DrawText(e.Graphics, e.Cell.Text, this.Font, rect, this.ForeColor,
-                    TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+                    TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
             }
         }
     }

@@ -484,9 +484,9 @@ namespace BecquerelMonitor.RoiWizard
 
         // Свободное место таблицы линий уходит в имя нуклида: с пометкой цепочки
         // «Ra-228 X L (Th-232)» подписи длинные, а числовые колонки фиксированы.
-        // доли из разметки: имя, E, I, I отн., T½, тип
-        static readonly int[] LineColumnShares = { 320, 90, 90, 80, 90, 80 };
-
+        // Доли берутся из ТЕКУЩИХ ширин, а не из чисел разметки: границы колонок
+        // тянутся мышью (XPTable это умеет), и жёсткие доли возвращали бы их
+        // к исходным на первом же изменении размера окна.
         void LayoutLineColumns()
         {
             int free = this.tableLines.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4
@@ -499,18 +499,22 @@ namespace BecquerelMonitor.RoiWizard
                 this.columnLineName, this.columnLineEnergy, this.columnLineIntensity,
                 this.columnLineRelative, this.columnLineHalfLife, this.columnLineType };
             int total = 0;
-            foreach (int share in LineColumnShares)
+            foreach (Column column in columns)
             {
-                total += share;
+                total += column.Width;
+            }
+            if (total <= 0 || total == free)
+            {
+                return;
             }
             int used = 0;
             for (int i = 0; i < columns.Length - 1; i++)
             {
-                int width = free * LineColumnShares[i] / total;
+                int width = Math.Max(24, free * columns[i].Width / total);
                 columns[i].Width = width;
                 used += width;
             }
-            columns[columns.Length - 1].Width = free - used;   // остаток — последней
+            columns[columns.Length - 1].Width = Math.Max(24, free - used);   // остаток — последней
         }
 
         // Свободное место забирает колонка семейств: «T½ γN X N» остаётся прижатым
@@ -521,7 +525,7 @@ namespace BecquerelMonitor.RoiWizard
                        - this.columnCatalogName.Width
                        - this.columnCatalogHalfLife.Width
                        - this.columnCatalogLines.Width;
-            if (free > 60)
+            if (free > 60 && free != this.columnCatalogFamilies.Width)
             {
                 this.columnCatalogFamilies.Width = free;
             }

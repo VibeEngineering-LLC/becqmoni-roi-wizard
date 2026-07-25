@@ -208,6 +208,7 @@ N("Ra-223", "223ra", 0, fam=("erh","med"), chain="u235")  # несколько �
 |---|---|
 | [`integration/README.md`](integration/README.md) | модуль для BecqMoni: состав, подключение, контракты, тесты, «что важно не сломать» |
 | [`docs/UPSTREAM-PR.md`](docs/UPSTREAM-PR.md) | как вносить модуль в `Am6er/BecqMoni` через pull request: что доделать, куда встраивать, вопросы владельцу |
+| [`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md) | как выглядит окно модуля в BecqMoni: три шага в разных состояниях и справка |
 | [`docs/REFERENCES-secondary-peaks.md`](docs/REFERENCES-secondary-peaks.md) | вторичные пики по первоисточникам: главы и страницы Knoll и Gilmore, разбор ложных ссылок |
 | [`PLAN.md`](PLAN.md) | план доработки по рецензии, статус фаз, открытые вопросы |
 | [`FIELDS.md`](FIELDS.md), [`styles/README.md`](styles/README.md) | контракт темы оформления: поля страницы и что можно менять в CSS |
