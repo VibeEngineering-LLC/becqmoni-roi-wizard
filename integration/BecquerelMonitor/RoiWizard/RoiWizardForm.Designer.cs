@@ -32,6 +32,7 @@ namespace BecquerelMonitor.RoiWizard
             this.tableCatalog = new XPTable.Models.Table();
             this.columnModelCatalog = new XPTable.Models.ColumnModel();
             this.columnCatalogName = new XPTable.Models.TextColumn();
+            this.columnCatalogFamilies = new XPTable.Models.TextColumn();
             this.columnCatalogHalfLife = new XPTable.Models.TextColumn();
             this.columnCatalogLines = new XPTable.Models.TextColumn();
             this.tableModelCatalog = new XPTable.Models.TableModel();
@@ -48,8 +49,7 @@ namespace BecquerelMonitor.RoiWizard
             this.labelXrf = new System.Windows.Forms.Label();
 
             this.groupSelected = new System.Windows.Forms.GroupBox();
-            this.listSelected = new System.Windows.Forms.ListBox();
-            this.buttonRemove = new System.Windows.Forms.Button();
+            this.panelSelected = new System.Windows.Forms.FlowLayoutPanel();
             this.buttonClear = new System.Windows.Forms.Button();
 
             // — шаг 2: разрешение, слияние, фильтры, таблица линий
@@ -175,11 +175,19 @@ namespace BecquerelMonitor.RoiWizard
             this.SuspendLayout();
 
             // ─── вкладки ───────────────────────────────────────────────────
+            // размер задаётся до наполнения страниц: иначе дети запомнят расстояния
+            // до краёв страницы размером 200x100 по умолчанию и на реальном разъедутся
+            this.tabs.Size = new System.Drawing.Size(1180, 586);
             this.tabs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabs.Controls.Add(this.tabSources);
             this.tabs.Controls.Add(this.tabLines);
             this.tabs.Controls.Add(this.tabExport);
 
+            // размер каждой странице явно: TabControl размечает только выбранную,
+            // остальные остаются 200x100 и портят привязки своих детей
+            this.tabSources.Size = new System.Drawing.Size(1172, 560);
+            this.tabLines.Size = new System.Drawing.Size(1172, 560);
+            this.tabExport.Size = new System.Drawing.Size(1172, 560);
             this.tabSources.Text = "1 · Nuclides";
             this.tabSources.Padding = new System.Windows.Forms.Padding(6);
             this.tabSources.UseVisualStyleBackColor = true;
@@ -198,9 +206,10 @@ namespace BecquerelMonitor.RoiWizard
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
 
             this.textSearch.Location = new System.Drawing.Point(8, 20);
-            this.textSearch.Size = new System.Drawing.Size(360, 23);
+            this.textSearch.Size = new System.Drawing.Size(360, 21);
+            this.textSearch.Anchor = System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.buttonAddSingle.Text = "Add";
-            this.textSearch.Size = new System.Drawing.Size(140, 21);
             this.buttonAddSingle.Location = new System.Drawing.Point(8, 48);
             this.buttonAddSingle.Size = new System.Drawing.Size(104, 25);
             this.buttonAddFamily.Text = "+ family";
@@ -220,17 +229,27 @@ namespace BecquerelMonitor.RoiWizard
             this.tableCatalog.FullRowSelect = true;
             this.tableCatalog.GridLines = XPTable.Models.GridLines.Rows;
             this.tableCatalog.TableModel = this.tableModelCatalog;
+            // строка списка нуклидов повторяет .nuc на странице: имя, бейджи семейств,
+            // приглушённый хвост «T½ γN XN». Высота 18 px — line-height 16 плюс padding.
+            this.tableModelCatalog.RowHeight = 18;
             this.columnCatalogName.Editable = false;   // таблицы только для чтения: правки идут через контролы
             this.columnCatalogName.Text = "Nuclide";
-            this.columnCatalogName.Width = 120;
+            this.columnCatalogName.Width = 72;
+            this.columnCatalogFamilies.Editable = false;
+            this.columnCatalogFamilies.Text = "Families";
+            this.columnCatalogFamilies.Width = 132;
+            this.columnCatalogFamilies.Renderer = new FamilyBadgeCellRenderer();
             this.columnCatalogHalfLife.Editable = false;
             this.columnCatalogHalfLife.Text = "T½";
-            this.columnCatalogHalfLife.Width = 90;
+            this.columnCatalogHalfLife.Width = 78;
+            this.columnCatalogHalfLife.Renderer = new HintCellRenderer();
             this.columnCatalogLines.Editable = false;
             this.columnCatalogLines.Text = "Lines";
-            this.columnCatalogLines.Width = 70;
+            this.columnCatalogLines.Width = 56;
+            this.columnCatalogLines.Renderer = new LineCountCellRenderer();
             this.columnModelCatalog.Columns.AddRange(new XPTable.Models.Column[] {
-                this.columnCatalogName, this.columnCatalogHalfLife, this.columnCatalogLines });
+                this.columnCatalogName, this.columnCatalogFamilies,
+                this.columnCatalogHalfLife, this.columnCatalogLines });
 
             this.groupSearch.Controls.Add(this.textSearch);
             this.groupSearch.Controls.Add(this.buttonAddSingle);
@@ -293,30 +312,21 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupSelected.Text = "Selected";
             this.groupSelected.Location = new System.Drawing.Point(8, 352);
-            this.groupSelected.Size = new System.Drawing.Size(1164, 96);
-            this.groupSelected.Anchor = System.Windows.Forms.AnchorStyles.Top |
+            this.groupSelected.Size = new System.Drawing.Size(1156, 72);
+            this.groupSelected.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            this.panelSelected.Location = new System.Drawing.Point(8, 18);
+            this.panelSelected.Size = new System.Drawing.Size(1038, 48);
+            this.panelSelected.AutoScroll = true;
+            this.panelSelected.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
-            this.listSelected.Location = new System.Drawing.Point(8, 20);
-            this.listSelected.Size = new System.Drawing.Size(950, 66);
-            this.listSelected.MultiColumn = true;
-            this.listSelected.ColumnWidth = 128;
-            this.listSelected.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listSelected.Anchor = System.Windows.Forms.AnchorStyles.Top |
-                System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
-                System.Windows.Forms.AnchorStyles.Right;
-            this.buttonRemove.Text = "remove";
-            this.buttonRemove.Location = new System.Drawing.Point(966, 22);
-            this.buttonRemove.Size = new System.Drawing.Size(90, 23);
-            this.buttonRemove.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
-                System.Windows.Forms.AnchorStyles.Left;
             this.buttonClear.Text = "clear all";
-            this.buttonClear.Location = new System.Drawing.Point(966, 54);
-            this.buttonClear.Size = new System.Drawing.Size(90, 23);
-            this.buttonClear.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
-                System.Windows.Forms.AnchorStyles.Left;
-            this.groupSelected.Controls.Add(this.listSelected);
-            this.groupSelected.Controls.Add(this.buttonRemove);
+            this.buttonClear.Location = new System.Drawing.Point(1054, 18);
+            this.buttonClear.Size = new System.Drawing.Size(94, 25);
+            this.buttonClear.Anchor = System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Right;
+            this.groupSelected.Controls.Add(this.panelSelected);
             this.groupSelected.Controls.Add(this.buttonClear);
 
             this.tabSources.Controls.Add(this.groupSearch);
@@ -327,7 +337,7 @@ namespace BecquerelMonitor.RoiWizard
             // ─── шаг 2 ─────────────────────────────────────────────────────
             this.groupResolution.Text = "Detector-resolution adaptation";
             this.groupResolution.Location = new System.Drawing.Point(8, 6);
-            this.groupResolution.Size = new System.Drawing.Size(1164, 80);
+            this.groupResolution.Size = new System.Drawing.Size(1156, 80);
             this.groupResolution.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelResolution.Text = "R, % at 662 keV";
@@ -382,7 +392,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupFilters.Text = "Filters and selection";
             this.groupFilters.Location = new System.Drawing.Point(8, 82);
-            this.groupFilters.Size = new System.Drawing.Size(1164, 106);
+            this.groupFilters.Size = new System.Drawing.Size(1156, 106);
             this.groupFilters.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.checkIntensity.Text = "intensity ≥, %";
@@ -473,7 +483,7 @@ namespace BecquerelMonitor.RoiWizard
             // автоматически: маркеры добавляются к текущему набору линий.
             this.groupSecondary.Text = "Secondary peaks (computed from selected γ lines)";
             this.groupSecondary.Location = new System.Drawing.Point(8, 192);
-            this.groupSecondary.Size = new System.Drawing.Size(1164, 78);
+            this.groupSecondary.Size = new System.Drawing.Size(1156, 78);
             this.groupSecondary.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelSecondaryMin.Text = "for γ lines with I ≥, %";
@@ -551,7 +561,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupNear.Text = "Nearby-line search (whole database — who else emits here)";
             this.groupNear.Location = new System.Drawing.Point(8, 276);
-            this.groupNear.Size = new System.Drawing.Size(1164, 122);
+            this.groupNear.Size = new System.Drawing.Size(1156, 122);
             this.groupNear.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelNearEnergy.Text = "energy, keV";
@@ -595,7 +605,7 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonNearAdd.Location = new System.Drawing.Point(772, 22);
             this.buttonNearAdd.Size = new System.Drawing.Size(120, 25);
             this.listNear.Location = new System.Drawing.Point(8, 52);
-            this.listNear.Size = new System.Drawing.Size(1148, 62);
+            this.listNear.Size = new System.Drawing.Size(1140, 62);
             this.listNear.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.groupNear.Controls.Add(this.labelNearEnergy);
@@ -613,7 +623,7 @@ namespace BecquerelMonitor.RoiWizard
             this.tabLines.Controls.Add(this.groupNear);
 
             this.tableLines.Location = new System.Drawing.Point(8, 404);
-            this.tableLines.Size = new System.Drawing.Size(1164, 150);
+            this.tableLines.Size = new System.Drawing.Size(1156, 150);
             this.tableLines.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -661,7 +671,7 @@ namespace BecquerelMonitor.RoiWizard
             // ─── шаг 3 ─────────────────────────────────────────────────────
             this.groupStyle.Text = "ROI styling";
             this.groupStyle.Location = new System.Drawing.Point(8, 6);
-            this.groupStyle.Size = new System.Drawing.Size(1164, 104);
+            this.groupStyle.Size = new System.Drawing.Size(1156, 104);
             this.groupStyle.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelStyle.Text = "mode";
@@ -715,7 +725,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupExport.Text = "Export";
             this.groupExport.Location = new System.Drawing.Point(8, 114);
-            this.groupExport.Size = new System.Drawing.Size(1164, 120);
+            this.groupExport.Size = new System.Drawing.Size(1156, 120);
             this.groupExport.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelConfigName.Text = "ROI configuration name";
@@ -769,7 +779,7 @@ namespace BecquerelMonitor.RoiWizard
             this.labelIssues.Location = new System.Drawing.Point(12, 240);
             this.labelIssues.AutoSize = true;
             this.listIssues.Location = new System.Drawing.Point(8, 258);
-            this.listIssues.Size = new System.Drawing.Size(1164, 158);
+            this.listIssues.Size = new System.Drawing.Size(1156, 158);
             this.listIssues.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -787,7 +797,7 @@ namespace BecquerelMonitor.RoiWizard
             // ─── форма ─────────────────────────────────────────────────────
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1180, 560);
+            this.ClientSize = new System.Drawing.Size(1180, 608);
             this.MinimumSize = new System.Drawing.Size(1000, 500);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.statusStrip);
@@ -828,6 +838,7 @@ namespace BecquerelMonitor.RoiWizard
         XPTable.Models.Table tableCatalog;
         XPTable.Models.ColumnModel columnModelCatalog;
         XPTable.Models.TextColumn columnCatalogName;
+        XPTable.Models.TextColumn columnCatalogFamilies;
         XPTable.Models.TextColumn columnCatalogHalfLife;
         XPTable.Models.TextColumn columnCatalogLines;
         XPTable.Models.TableModel tableModelCatalog;
@@ -844,8 +855,7 @@ namespace BecquerelMonitor.RoiWizard
         System.Windows.Forms.CheckedListBox checkedXrf;
 
         System.Windows.Forms.GroupBox groupSelected;
-        System.Windows.Forms.ListBox listSelected;
-        System.Windows.Forms.Button buttonRemove;
+        System.Windows.Forms.FlowLayoutPanel panelSelected;
         System.Windows.Forms.Button buttonClear;
 
         System.Windows.Forms.GroupBox groupResolution;

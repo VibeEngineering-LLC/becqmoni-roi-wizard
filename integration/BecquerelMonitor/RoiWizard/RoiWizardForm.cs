@@ -63,6 +63,8 @@ namespace BecquerelMonitor.RoiWizard
             }
             // после ApplyRussian: списки и подсказки собираются из русских строк
             this.FillXrf();
+            this.LayoutSources();
+            this.LayoutLineColumns();
             this.RefreshGroupList();
             this.UpdateMergeInfo();
             this.UpdateStatus();
@@ -172,18 +174,99 @@ namespace BecquerelMonitor.RoiWizard
                 }
                 Row row = new Row();
                 row.Cells.Add(new Cell(nuclide.Name));
+                row.Cells.Add(new Cell(nuclide.Families ?? ""));
                 row.Cells.Add(new Cell(nuclide.HalfLifeText ?? "", nuclide.HalfLifeYears));
-                row.Cells.Add(new Cell(nuclide.LineCount.ToString(CultureInfo.InvariantCulture), nuclide.LineCount));
+                // счётчики уходят рендереру парой чисел: «γ» и «X» красятся по-разному
+                row.Cells.Add(new Cell(
+                    nuclide.Gamma.Count.ToString(CultureInfo.InvariantCulture) + " " +
+                    nuclide.Xray.Count.ToString(CultureInfo.InvariantCulture), nuclide.LineCount));
+                if (nuclide.LineCount == 0)
+                {
+                    row.ForeColor = WizardTheme.NoLines;   // .nuc.nolines — нечего искать в спектре
+                }
                 row.Tag = nuclide;
                 this.tableModelCatalog.Rows.Add(row);
             }
             this.tableCatalog.ResumeLayout();
+            this.LayoutCatalogColumns();
+        }
+
+        // Три колонки шага 1 делят ширину поровну — .cols3 на странице задана как
+        // grid-template-columns: repeat(3, 1fr). Привязки WinForms умеют только
+        // «держать край», поэтому доли считаются здесь; полоса «Выбрано» прижата к низу.
+        void LayoutSources()
+        {
+            int width = this.tabSources.ClientSize.Width;
+            int height = this.tabSources.ClientSize.Height;
+            if (width < 120 || height < 120)
+            {
+                return;
+            }
+            const int Pad = 8;
+            const int Gap = 8;
+            const int Top = 6;
+            this.groupSelected.SetBounds(Pad, height - Pad - this.groupSelected.Height,
+                                         width - Pad * 2, this.groupSelected.Height);
+            int column = (width - Pad * 2 - Gap * 2) / 3;
+            int boxHeight = this.groupSelected.Top - Gap - Top;
+            this.groupSearch.SetBounds(Pad, Top, column, boxHeight);
+            this.groupGroup.SetBounds(Pad + column + Gap, Top, column, boxHeight);
+            this.groupXrf.SetBounds(Pad + (column + Gap) * 2, Top,
+                                    width - Pad - (Pad + (column + Gap) * 2), boxHeight);
+        }
+
+        // Свободное место таблицы линий уходит в имя нуклида: с пометкой цепочки
+        // «Ra-228 X L (Th-232)» подписи длинные, а числовые колонки фиксированы.
+        // доли из разметки: имя, E, I, I отн., T½, тип
+        static readonly int[] LineColumnShares = { 320, 90, 90, 80, 90, 80 };
+
+        void LayoutLineColumns()
+        {
+            int free = this.tableLines.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4
+                       - this.columnLineSelected.Width;
+            if (free < 400)
+            {
+                return;
+            }
+            Column[] columns = {
+                this.columnLineName, this.columnLineEnergy, this.columnLineIntensity,
+                this.columnLineRelative, this.columnLineHalfLife, this.columnLineType };
+            int total = 0;
+            foreach (int share in LineColumnShares)
+            {
+                total += share;
+            }
+            int used = 0;
+            for (int i = 0; i < columns.Length - 1; i++)
+            {
+                int width = free * LineColumnShares[i] / total;
+                columns[i].Width = width;
+                used += width;
+            }
+            columns[columns.Length - 1].Width = free - used;   // остаток — последней
+        }
+
+        // Свободное место забирает колонка семейств: «T½ γN X N» остаётся прижатым
+        // к правому краю строки — это margin-left:auto у .nuc .hl на странице.
+        void LayoutCatalogColumns()
+        {
+            int free = this.tableCatalog.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4
+                       - this.columnCatalogName.Width
+                       - this.columnCatalogHalfLife.Width
+                       - this.columnCatalogLines.Width;
+            if (free > 60)
+            {
+                this.columnCatalogFamilies.Width = free;
+            }
         }
 
         // ─── события ────────────────────────────────────────────────────────
 
         void WireEvents()
         {
+            this.tabSources.Resize += delegate { this.LayoutSources(); };
+            this.tableCatalog.Resize += delegate { this.LayoutCatalogColumns(); };
+            this.tableLines.Resize += delegate { this.LayoutLineColumns(); };
             this.textSearch.TextChanged += delegate { this.RefreshCatalog(); };
             this.buttonAddSingle.Click += delegate { this.AddFromCatalog(AddMode.Single); };
             this.buttonAddFamily.Click += delegate { this.AddFromCatalog(AddMode.FamilyLines); };
@@ -197,7 +280,6 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonGroupChain.Click += delegate { this.AddFromGroup(AddMode.Chain); };
             this.checkedXrf.ItemCheck += this.OnXrfCheck;
 
-            this.buttonRemove.Click += delegate { this.RemoveSelected(); };
             this.buttonClear.Click += delegate
             {
                 this.selection.Clear();
@@ -536,15 +618,25 @@ namespace BecquerelMonitor.RoiWizard
             this.Rebuild();
         }
 
-        void RemoveSelected()
+        // Чип убирает свой источник по клику — крестик на странице делает то же самое.
+        void RemoveNuclide(string name)
         {
-            string entry = this.listSelected.SelectedItem as string;
-            if (entry == null)
+            this.selection.Remove(name);
+            this.RefreshGroupList();
+            this.Rebuild();
+        }
+
+        void RemoveXrf(string symbol)
+        {
+            for (int i = 0; i < this.xrfSymbols.Count; i++)
             {
-                return;
+                if (string.Equals(this.xrfSymbols[i], symbol, StringComparison.Ordinal))
+                {
+                    this.checkedXrf.SetItemChecked(i, false);   // снятие галки само уберёт элемент
+                    return;
+                }
             }
-            int space = entry.IndexOf(' ');
-            this.selection.Remove(space > 0 ? entry.Substring(0, space) : entry);
+            this.selection.XrfElements.Remove(symbol);
             this.Rebuild();
         }
 
@@ -589,22 +681,61 @@ namespace BecquerelMonitor.RoiWizard
             this.RefreshColorChips();
         }
 
+        // Полоса «Выбрано» — чипы .chip.on со страницы: фон --sel, рамка #7aa7ce,
+        // текст --accent-ink и крестик, снимающий источник.
         void RefreshSelectedList()
         {
-            this.listSelected.BeginUpdate();
-            this.listSelected.Items.Clear();
+            this.panelSelected.SuspendLayout();
+            this.panelSelected.Controls.Clear();
             foreach (KeyValuePair<string, string> entry in this.selection.Nuclides)
             {
-                this.listSelected.Items.Add(entry.Key == entry.Value
-                    ? entry.Key
-                    : entry.Key + "  →  " + entry.Value);
+                string name = entry.Key;
+                this.panelSelected.Controls.Add(
+                    this.Chip(name + " ×", delegate { this.RemoveNuclide(name); }));
             }
             foreach (string symbol in this.selection.XrfElements)
             {
-                this.listSelected.Items.Add("XRF " + symbol);
+                string element = symbol;
+                this.panelSelected.Controls.Add(
+                    this.Chip(this.xrfChipPrefix + element + " ×", delegate { this.RemoveXrf(element); }));
             }
-            this.listSelected.EndUpdate();
+            if (this.panelSelected.Controls.Count == 0)
+            {
+                Label empty = new Label();
+                empty.Text = this.emptySelectionHint;
+                empty.AutoSize = true;
+                empty.ForeColor = WizardTheme.Muted;
+                empty.Margin = new Padding(2, 4, 4, 2);
+                this.panelSelected.Controls.Add(empty);
+            }
+            this.panelSelected.ResumeLayout();
         }
+
+        Label Chip(string text, EventHandler onClick)
+        {
+            Label chip = new Label();
+            chip.Text = text;
+            chip.AutoSize = true;
+            chip.Padding = new Padding(7, 1, 7, 1);     // .chip{padding:1px 7px}
+            chip.Margin = new Padding(0, 2, 4, 2);      // .chipbar{gap:4px}
+            chip.BackColor = WizardTheme.Selection;
+            chip.ForeColor = WizardTheme.AccentInk;
+            chip.Cursor = Cursors.Hand;
+            chip.Click += onClick;
+            // рамку рисуем сами: BorderStyle у Label даёт системный цвет, а нужен #7aa7ce
+            chip.Paint += delegate(object sender, PaintEventArgs e)
+            {
+                Control control = (Control)sender;
+                using (Pen pen = new Pen(WizardTheme.ChipLine))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, control.Width - 1, control.Height - 1);
+                }
+            };
+            return chip;
+        }
+
+        string xrfChipPrefix = "XRF ";
+        string emptySelectionHint = "empty — start with a group above";
 
         void RefreshLines()
         {
@@ -1359,6 +1490,7 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonAddFamily.Text = "+ семейство";
             this.buttonAddChain.Text = "+ цепочка";
             this.columnCatalogName.Text = "Нуклид";
+            this.columnCatalogFamilies.Text = "Семейства";
             this.columnCatalogLines.Text = "Линий";
 
             this.groupGroup.Text = "Группа";
@@ -1374,8 +1506,9 @@ namespace BecquerelMonitor.RoiWizard
             this.hintNone = "Отметьте нуклид — кнопки применятся к нему.";
 
             this.groupSelected.Text = "Выбрано";
-            this.buttonRemove.Text = "убрать";
             this.buttonClear.Text = "очистить всё";
+            this.xrfChipPrefix = "ХРИ ";
+            this.emptySelectionHint = "пусто — начните с группы выше";
 
             this.groupResolution.Text = "Адаптация под разрешение детектора";
             this.labelResolution.Text = "R, % на 662 кэВ";

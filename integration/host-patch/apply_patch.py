@@ -32,6 +32,7 @@ CSPROJ_ENTRIES = """    <Compile Include="RoiWizard\\NuclideCatalog.cs" />
     <Compile Include="RoiWizard\\SetChecker.cs" />
     <Compile Include="RoiWizard\\SetExporter.cs" />
     <Compile Include="RoiWizard\\WizardTheme.cs" />
+    <Compile Include="RoiWizard\\CatalogCellRenderers.cs" />
     <Compile Include="RoiWizard\\RoiWizardForm.cs">
       <SubType>Form</SubType>
     </Compile>

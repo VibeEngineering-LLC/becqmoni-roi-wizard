@@ -25,6 +25,10 @@ namespace BecquerelMonitor.RoiWizard
         public static readonly Color AccentInk = Color.FromArgb(0x1F, 0x3A, 0x5F);   // --accent-ink
         public static readonly Color Selection = Color.FromArgb(0xCD, 0xE4, 0xF7);   // --sel
         public static readonly Color TabBack = Color.FromArgb(0xE4, 0xE4, 0xE4);     // --tabbg
+        public static readonly Color Chip = Color.FromArgb(0xE5, 0xE5, 0xE5);       // --chip
+        public static readonly Color ChipLine = Color.FromArgb(0x7A, 0xA7, 0xCE);   // .chip.on border
+        public static readonly Color Xray = Color.FromArgb(0x8A, 0x3D, 0x72);       // X-линии в списке
+        public static readonly Color NoLines = Color.FromArgb(0x9A, 0x9A, 0x9A);    // .nuc.nolines
 
         // 12px/1.4 "Segoe UI" из темы — это 9 pt
         public static Font BaseFont
@@ -35,6 +39,36 @@ namespace BecquerelMonitor.RoiWizard
         public static Font LegendFont
         {
             get { return new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point); }
+        }
+
+        // 11px мелкого текста списков (.nuc .hl) — 8.25 pt
+        public static Font HintFont
+        {
+            get { return new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point); }
+        }
+
+        // 9.5px полужирного бейджа семейства (.fbadge) — 7.125 pt
+        public static Font BadgeFont
+        {
+            get { return new Font("Segoe UI", 7.125F, FontStyle.Bold, GraphicsUnit.Point); }
+        }
+
+        // Цвета бейджей семейств — правила .f-popular … .f-waste темы, пара «фон/текст».
+        // Коды классификации: NORM, MED, IND, SNM по ANSI N42.34, остальные вне стандарта.
+        public static void FamilyColors(string code, out Color back, out Color fore)
+        {
+            switch ((code ?? "").ToLowerInvariant())
+            {
+                case "popular": back = Color.FromArgb(0xE2, 0xF0, 0xDC); fore = Color.FromArgb(0x2F, 0x6B, 0x3F); return;
+                case "norm":    back = Color.FromArgb(0xDC, 0xE9, 0xF5); fore = Color.FromArgb(0x28, 0x52, 0x7A); return;
+                case "med":     back = Color.FromArgb(0xF5, 0xE2, 0xEF); fore = Color.FromArgb(0x8A, 0x3D, 0x72); return;
+                case "ind":     back = Color.FromArgb(0xE6, 0xE2, 0xF5); fore = Color.FromArgb(0x4B, 0x3F, 0x8A); return;
+                case "snm":     back = Color.FromArgb(0xFD, 0xF0, 0xD0); fore = Color.FromArgb(0x8A, 0x6A, 0x1F); return;
+                case "fiss":    back = Color.FromArgb(0xFD, 0xE2, 0xDE); fore = Color.FromArgb(0x93, 0x37, 0x2C); return;
+                case "naa":     back = Color.FromArgb(0xDF, 0xF0, 0xF2); fore = Color.FromArgb(0x27, 0x6B, 0x73); return;
+                case "waste":   back = Color.FromArgb(0xEC, 0xE6, 0xDE); fore = Color.FromArgb(0x6B, 0x5A, 0x45); return;
+                default:        back = Chip;                             fore = Ink;                             return;
+            }
         }
 
         // Применяется после InitializeComponent: обходит дерево контролов и красит то,
