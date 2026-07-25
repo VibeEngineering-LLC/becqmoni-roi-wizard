@@ -54,12 +54,13 @@ namespace BecquerelMonitor.RoiWizard
             this.WireEvents();
 
             this.buttonFromSpectrum.Enabled = resolutionProvider != null;
-            this.SyncGroupButtons();
             this.SyncSetControls();
             if (Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName == "ru")
             {
                 this.ApplyRussian();
             }
+            // после ApplyRussian: подсказка под списком собирается из русских строк
+            this.RefreshGroupList();
             this.UpdateMergeInfo();
             this.UpdateStatus();
         }
@@ -175,7 +176,8 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonAddChain.Click += delegate { this.AddFromCatalog(AddMode.Chain); };
             this.tableCatalog.DoubleClick += delegate { this.AddFromCatalog(AddMode.Single); };
 
-            this.comboGroup.SelectedIndexChanged += delegate { this.SyncGroupButtons(); };
+            this.comboGroup.SelectedIndexChanged += delegate { this.RefreshGroupList(); };
+            this.checkedGroup.ItemCheck += this.OnGroupItemCheck;
             this.buttonGroupAll.Click += delegate { this.AddFromGroup(AddMode.Single); };
             this.buttonGroupFamily.Click += delegate { this.AddFromGroup(AddMode.FamilyLines); };
             this.buttonGroupChain.Click += delegate { this.AddFromGroup(AddMode.Chain); };
@@ -189,6 +191,7 @@ namespace BecquerelMonitor.RoiWizard
                 {
                     this.checkedXrf.SetItemChecked(i, false);
                 }
+                this.RefreshGroupList();
                 this.Rebuild();
             };
 
@@ -308,15 +311,148 @@ namespace BecquerelMonitor.RoiWizard
             return this.tableModelCatalog.Rows[index].Tag as CatalogNuclide;
         }
 
-        // «+ линии семейства» и «+ цепочкой» имеют смысл только для ряда распада: у семейства
-        // нет родителя, и раньше обе кнопки молча работали как «добавить все»
+        // Члены выбранной группы с галочками — как в веб-версии: галочка означает
+        // «нуклид взят», и она же выбирает цель для кнопок раскрытия.
+        void RefreshGroupList()
+        {
+            int index = this.comboGroup.SelectedIndex;
+            this.groupMembers.Clear();
+            if (index >= 0 && index < this.groupKeys.Count)
+            {
+                string key = this.groupKeys[index];
+                if (key.StartsWith("f:", StringComparison.Ordinal))
+                {
+                    foreach (CatalogNuclide nuclide in this.catalog.ByFamily(key.Substring(2)))
+                    {
+                        this.groupMembers.Add(nuclide.Name);
+                    }
+                }
+                else
+                {
+                    CatalogChain chain = this.catalog.FindChain(key.Substring(2));
+                    if (chain != null)
+                    {
+                        foreach (string member in chain.Members)
+                        {
+                            if (this.catalog.Find(member) != null)
+                            {
+                                this.groupMembers.Add(member);
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.suppressGroupCheck = true;
+            this.checkedGroup.BeginUpdate();
+            this.checkedGroup.Items.Clear();
+            foreach (string member in this.groupMembers)
+            {
+                CatalogNuclide nuclide = this.catalog.Find(member);
+                string title = nuclide != null && !string.IsNullOrEmpty(nuclide.HalfLifeText)
+                    ? member + "   " + nuclide.HalfLifeText
+                    : member;
+                this.checkedGroup.Items.Add(title, this.selection.Nuclides.ContainsKey(member));
+            }
+            this.checkedGroup.EndUpdate();
+            this.suppressGroupCheck = false;
+            this.SyncGroupButtons();
+        }
+
+        void OnGroupItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (this.suppressGroupCheck || e.Index < 0 || e.Index >= this.groupMembers.Count)
+            {
+                return;
+            }
+            string name = this.groupMembers[e.Index];
+            if (e.NewValue == CheckState.Checked)
+            {
+                this.selection.AddGroupMember(this.catalog, name);
+            }
+            else
+            {
+                this.selection.Remove(name);
+            }
+            // область действия кнопок зависит от того, что отмечено
+            this.BeginInvoke((MethodInvoker)delegate { this.SyncGroupButtons(); this.Rebuild(); });
+        }
+
+        // Отмеченные члены текущей группы — цели для кнопок раскрытия.
+        List<string> GroupPicked()
+        {
+            List<string> picked = new List<string>();
+            foreach (int index in this.checkedGroup.CheckedIndices)
+            {
+                if (index >= 0 && index < this.groupMembers.Count)
+                {
+                    picked.Add(this.groupMembers[index]);
+                }
+            }
+            return picked;
+        }
+
+        // Раскрытие («+ линии семейства», «+ цепочка») применяется к отмеченным; если
+        // не отмечено ничего — ко всей группе, и тогда оно осмысленно лишь там, где есть
+        // кого раскрывать. У члена ЕРН-ряда родитель задан самим рядом: подменять его
+        // предшественником нельзя, иначе цепочка развалится.
         void SyncGroupButtons()
         {
             int index = this.comboGroup.SelectedIndex;
             bool isChain = index >= 0 && index < this.groupKeys.Count &&
                            this.groupKeys[index].StartsWith("c:", StringComparison.Ordinal);
-            this.buttonGroupFamily.Enabled = isChain;
-            this.buttonGroupChain.Enabled = isChain;
+            List<string> picked = this.GroupPicked();
+            bool expandable;
+            if (picked.Count > 0)
+            {
+                expandable = false;
+                foreach (string name in picked)
+                {
+                    if (this.HasDaughters(name))
+                    {
+                        expandable = true;
+                        break;
+                    }
+                }
+            }
+            else if (isChain)
+            {
+                expandable = true;
+            }
+            else
+            {
+                expandable = false;
+                foreach (string name in this.groupMembers)
+                {
+                    CatalogNuclide nuclide = this.catalog.Find(name);
+                    if (nuclide != null && string.IsNullOrEmpty(nuclide.Chain) && this.HasDaughters(name))
+                    {
+                        expandable = true;
+                        break;
+                    }
+                }
+            }
+            this.buttonGroupFamily.Enabled = expandable;
+            this.buttonGroupChain.Enabled = expandable;
+            this.labelGroupHint.Text = picked.Count > 0
+                ? string.Format(CultureInfo.CurrentCulture, this.hintPicked, picked.Count)
+                : this.hintNone;
+        }
+
+        bool HasDaughters(string name)
+        {
+            CatalogNuclide nuclide = this.catalog.Find(name);
+            if (nuclide == null || string.IsNullOrEmpty(nuclide.Chain))
+            {
+                return false;
+            }
+            CatalogChain chain = this.catalog.FindChain(nuclide.Chain);
+            if (chain == null)
+            {
+                return false;
+            }
+            int start = chain.Members.IndexOf(name);
+            return start >= 0 && start < chain.Members.Count - 1;
         }
 
         void AddFromGroup(AddMode mode)
@@ -326,6 +462,19 @@ namespace BecquerelMonitor.RoiWizard
             {
                 return;
             }
+            // раскрытие — по отмеченным; «добавить все» всегда работает по группе
+            List<string> picked = this.GroupPicked();
+            if (mode != AddMode.Single && picked.Count > 0)
+            {
+                foreach (string name in picked)
+                {
+                    this.selection.Add(this.catalog, name, mode);
+                }
+                this.RefreshGroupList();
+                this.Rebuild();
+                return;
+            }
+
             string key = this.groupKeys[index];
             if (key.StartsWith("f:", StringComparison.Ordinal))
             {
@@ -353,6 +502,7 @@ namespace BecquerelMonitor.RoiWizard
                     this.selection.Add(this.catalog, chain.Root, mode);
                 }
             }
+            this.RefreshGroupList();
             this.Rebuild();
         }
 
@@ -564,6 +714,10 @@ namespace BecquerelMonitor.RoiWizard
         }
 
         readonly List<SpectralLine> anchorCandidates = new List<SpectralLine>();
+        readonly List<string> groupMembers = new List<string>();
+        bool suppressGroupCheck;
+        string hintPicked = "Applies to the ticked nuclides ({0}).";
+        string hintNone = "Tick a nuclide - the buttons apply to it.";
 
         void SyncSetControls()
         {
@@ -874,7 +1028,10 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonGroupAll.Text = "добавить все";
             this.buttonGroupFamily.Text = "+ линии семейства";
             this.buttonGroupChain.Text = "+ цепочкой";
-            this.labelXrf.Text = "ХРИ материалов защиты и детектора:";
+            this.groupXrf.Text = "ХРИ — элементы";
+            this.labelXrf.Text = "Материалы защиты и детектора:";
+            this.hintPicked = "Применяется к отмеченным ({0}).";
+            this.hintNone = "Отметьте нуклид — кнопки применятся к нему.";
 
             this.groupSelected.Text = "Выбрано";
             this.buttonRemove.Text = "убрать";

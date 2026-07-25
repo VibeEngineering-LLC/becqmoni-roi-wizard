@@ -86,11 +86,16 @@ namespace BecquerelMonitor.RoiWizard
             {
                 if (Math.Abs(sorted[i].Energy - sorted[i - 1].Energy) < 1.0)
                 {
+                    // Совпавшие энергии подгонку вырождают, но запрещать из-за них экспорт
+                    // нельзя: пара «рентген распада + ХРИ того же элемента» — физически одна
+                    // линия (K-серия свинца у Tl-208 и защиты), и снимать её или оставить —
+                    // решение оператора. Поэтому предупреждение, а не ошибка.
                     issues.Add(new SetIssue
                     {
-                        Level = level,
+                        Level = IssueLevel.Warning,
                         Text = string.Format(CultureInfo.CurrentCulture,
-                            "равные энергии: «{0}» и «{1}» ({2} / {3} кэВ)",
+                            "равные энергии: «{0}» и «{1}» ({2} / {3} кэВ) — подгонка амплитуд " +
+                            "на этой позиции вырождается",
                             Name(sorted[i - 1], forLibrary), Name(sorted[i], forLibrary),
                             sorted[i - 1].Energy, sorted[i].Energy)
                     });

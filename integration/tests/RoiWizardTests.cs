@@ -295,10 +295,20 @@ namespace BecquerelMonitor.RoiWizard.Tests
                 Gamma("A", 100.0, 10.0),
                 Gamma("B", 100.4, 10.0)
             };
-            Check("для набора совпадение энергий — ошибка",
-                  HasError(SetChecker.Check(pair, true, null, null), "равные энергии"));
-            Check("для ROI совпадение энергий — предупреждение",
+            // Совпавшие энергии — предупреждение, а не запрет: пара «рентген распада +
+            // ХРИ того же элемента» физически одна линия, и решение за оператором
+            Check("совпадение энергий не блокирует набор",
+                  !HasError(SetChecker.Check(pair, true, null, null), "равные энергии"));
+            Check("но о нём сообщается",
+                  HasIssue(SetChecker.Check(pair, true, null, null), "равные энергии"));
+            Check("для ROI — тоже предупреждение",
                   !HasError(SetChecker.Check(pair, false, null, null), "равные энергии"));
+
+            // а нулевая интенсивность набор по-прежнему останавливает: такая линия
+            // выпадает из связки по цепочке
+            List<SpectralLine> zero = new List<SpectralLine> { Gamma("A", 100.0, 0.0) };
+            Check("нулевой выход — ошибка для набора",
+                  HasError(SetChecker.Check(zero, true, null, null), "нулевой выход"));
         }
 
         // ── 6. Вторичные пики: формулы и поправки ──
@@ -686,6 +696,19 @@ namespace BecquerelMonitor.RoiWizard.Tests
             foreach (SetIssue issue in issues)
             {
                 if (issue.Level == IssueLevel.Error && issue.Text.IndexOf(fragment, StringComparison.Ordinal) >= 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // замечание любого уровня — чтобы отличать «не блокирует» от «промолчали»
+        static bool HasIssue(List<SetIssue> issues, string fragment)
+        {
+            foreach (SetIssue issue in issues)
+            {
+                if (issue.Text.IndexOf(fragment, StringComparison.Ordinal) >= 0)
                 {
                     return true;
                 }

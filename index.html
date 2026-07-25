@@ -1043,10 +1043,16 @@ function checkIssues(target){
   var mode = $("roiMode").value;
   var srt = lines.slice().sort(function(a,b){return a.E-b.E;});
   function nm(L){ return lib ? libLabel(L) : L.label; }
+  // Совпавшие энергии подгонку амплитуд вырождают, но запрещать экспорт из-за них
+  // нельзя: пара «рентген распада + ХРИ того же элемента» — это физически одна линия,
+  // и решение, оставлять её или снимать, за оператором. Поэтому предупреждение,
+  // а не запрет, — и для ROI, и для набора.
   for (var i=1;i<srt.length;i++){
     if (Math.abs(srt[i].E-srt[i-1].E) < 1.0)
-      (lib ? err : warn).push(T("равные энергии: «","equal energies: “")+nm(srt[i-1])+T("» и «","” and “")+nm(srt[i])+T("» ("," (")+srt[i-1].E+" / "+srt[i].E+T(" кэВ)"," keV)"));
+      warn.push(T("равные энергии: «","equal energies: “")+nm(srt[i-1])+T("» и «","” and “")+nm(srt[i])+T("» ("," (")+srt[i-1].E+" / "+srt[i].E+T(" кэВ)"," keV)"));
   }
+  // А вот нулевая интенсивность — именно ошибка: такая линия выпадает из связки
+  // по цепочке, и набор молча работает не так, как показан.
   lines.forEach(function(L){ if (!(L.I>0))
     (lib ? err : warn).push(T("нулевой выход: «","zero yield: “")+nm(L)+T("» ("," (")+L.E+T(" кэВ)"," keV)")); });
   if (lib){

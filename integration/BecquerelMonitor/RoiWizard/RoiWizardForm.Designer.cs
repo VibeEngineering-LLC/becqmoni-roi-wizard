@@ -41,6 +41,9 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonGroupAll = new System.Windows.Forms.Button();
             this.buttonGroupFamily = new System.Windows.Forms.Button();
             this.buttonGroupChain = new System.Windows.Forms.Button();
+            this.checkedGroup = new System.Windows.Forms.CheckedListBox();
+            this.labelGroupHint = new System.Windows.Forms.Label();
+            this.groupXrf = new System.Windows.Forms.GroupBox();
             this.checkedXrf = new System.Windows.Forms.CheckedListBox();
             this.labelXrf = new System.Windows.Forms.Label();
 
@@ -142,7 +145,7 @@ namespace BecquerelMonitor.RoiWizard
             // ─── шаг 1 ─────────────────────────────────────────────────────
             this.groupSearch.Text = "Nuclide search";
             this.groupSearch.Location = new System.Drawing.Point(8, 6);
-            this.groupSearch.Size = new System.Drawing.Size(330, 400);
+            this.groupSearch.Size = new System.Drawing.Size(330, 306);
             this.groupSearch.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
 
@@ -159,7 +162,7 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonAddChain.Size = new System.Drawing.Size(50, 23);
 
             this.tableCatalog.Location = new System.Drawing.Point(8, 48);
-            this.tableCatalog.Size = new System.Drawing.Size(314, 344);
+            this.tableCatalog.Size = new System.Drawing.Size(314, 250);
             this.tableCatalog.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -188,7 +191,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupGroup.Text = "Group";
             this.groupGroup.Location = new System.Drawing.Point(346, 6);
-            this.groupGroup.Size = new System.Drawing.Size(330, 400);
+            this.groupGroup.Size = new System.Drawing.Size(330, 306);
             this.groupGroup.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
             this.comboGroup.Location = new System.Drawing.Point(8, 20);
@@ -203,11 +206,29 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonGroupChain.Text = "+ chain";
             this.buttonGroupChain.Location = new System.Drawing.Point(212, 46);
             this.buttonGroupChain.Size = new System.Drawing.Size(110, 23);
-            this.labelXrf.Text = "XRF of shielding and detector materials:";
-            this.labelXrf.Location = new System.Drawing.Point(8, 76);
+            this.checkedGroup.Location = new System.Drawing.Point(8, 76);
+            this.checkedGroup.Size = new System.Drawing.Size(314, 204);
+            this.checkedGroup.CheckOnClick = true;
+            this.checkedGroup.Anchor = System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
+                System.Windows.Forms.AnchorStyles.Right;
+            this.labelGroupHint.Text = "Tick a nuclide - the buttons apply to it.";
+            this.labelGroupHint.Location = new System.Drawing.Point(8, 284);
+            this.labelGroupHint.Size = new System.Drawing.Size(314, 16);
+            this.labelGroupHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+
+            this.groupXrf.Text = "XRF elements";
+            this.groupXrf.Location = new System.Drawing.Point(684, 6);
+            this.groupXrf.Size = new System.Drawing.Size(290, 306);
+            this.groupXrf.Anchor = System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
+                System.Windows.Forms.AnchorStyles.Right;
+            this.labelXrf.Text = "Shielding and detector materials:";
+            this.labelXrf.Location = new System.Drawing.Point(8, 20);
             this.labelXrf.AutoSize = true;
-            this.checkedXrf.Location = new System.Drawing.Point(8, 94);
-            this.checkedXrf.Size = new System.Drawing.Size(314, 298);
+            this.checkedXrf.Location = new System.Drawing.Point(8, 40);
+            this.checkedXrf.Size = new System.Drawing.Size(274, 256);
             this.checkedXrf.CheckOnClick = true;
             this.checkedXrf.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
@@ -216,27 +237,32 @@ namespace BecquerelMonitor.RoiWizard
             this.groupGroup.Controls.Add(this.buttonGroupAll);
             this.groupGroup.Controls.Add(this.buttonGroupFamily);
             this.groupGroup.Controls.Add(this.buttonGroupChain);
-            this.groupGroup.Controls.Add(this.labelXrf);
-            this.groupGroup.Controls.Add(this.checkedXrf);
+            this.groupGroup.Controls.Add(this.checkedGroup);
+            this.groupGroup.Controls.Add(this.labelGroupHint);
+            this.groupXrf.Controls.Add(this.labelXrf);
+            this.groupXrf.Controls.Add(this.checkedXrf);
 
             this.groupSelected.Text = "Selected";
-            this.groupSelected.Location = new System.Drawing.Point(684, 6);
-            this.groupSelected.Size = new System.Drawing.Size(290, 400);
+            this.groupSelected.Location = new System.Drawing.Point(8, 318);
+            this.groupSelected.Size = new System.Drawing.Size(966, 88);
             this.groupSelected.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
             this.listSelected.Location = new System.Drawing.Point(8, 20);
-            this.listSelected.Size = new System.Drawing.Size(274, 342);
+            this.listSelected.Size = new System.Drawing.Size(768, 60);
+            this.listSelected.MultiColumn = true;
+            this.listSelected.ColumnWidth = 128;
+            this.listSelected.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listSelected.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
             this.buttonRemove.Text = "remove";
-            this.buttonRemove.Location = new System.Drawing.Point(8, 368);
+            this.buttonRemove.Location = new System.Drawing.Point(784, 20);
             this.buttonRemove.Size = new System.Drawing.Size(90, 23);
             this.buttonRemove.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
                 System.Windows.Forms.AnchorStyles.Left;
             this.buttonClear.Text = "clear all";
-            this.buttonClear.Location = new System.Drawing.Point(104, 368);
+            this.buttonClear.Location = new System.Drawing.Point(784, 50);
             this.buttonClear.Size = new System.Drawing.Size(90, 23);
             this.buttonClear.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
                 System.Windows.Forms.AnchorStyles.Left;
@@ -246,6 +272,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.tabSources.Controls.Add(this.groupSearch);
             this.tabSources.Controls.Add(this.groupGroup);
+            this.tabSources.Controls.Add(this.groupXrf);
             this.tabSources.Controls.Add(this.groupSelected);
 
             // ─── шаг 2 ─────────────────────────────────────────────────────
@@ -551,6 +578,9 @@ namespace BecquerelMonitor.RoiWizard
         XPTable.Models.TableModel tableModelCatalog;
 
         System.Windows.Forms.GroupBox groupGroup;
+        System.Windows.Forms.GroupBox groupXrf;
+        System.Windows.Forms.CheckedListBox checkedGroup;
+        System.Windows.Forms.Label labelGroupHint;
         System.Windows.Forms.ComboBox comboGroup;
         System.Windows.Forms.Button buttonGroupAll;
         System.Windows.Forms.Button buttonGroupFamily;
