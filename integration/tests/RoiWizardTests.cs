@@ -52,11 +52,35 @@ namespace BecquerelMonitor.RoiWizard.Tests
                 Line("Ac-228 (Th-232)", true, "964.8–969.0").LibraryName,
                 "Ac-228 964.8–969.0 (Th-232)");
 
+            // у одиночного нуклида родителя нет, но цепочку слитая линия обязана нести:
+            // иначе «Cs-137 658–664» — отдельная цепочка, не связанная с «Cs-137»
             Equal("слитая без родителя",
                 Line("Cs-137", true, "658–664").LibraryName,
-                "Cs-137 658–664");
+                "Cs-137 658–664 (Cs-137)");
 
-            // X-линия: суффикс вставляется до скобок ещё на сборке подписи,
+            // У корня ряда и у одиночного нуклида родителя в подписи нет, поэтому линия
+            // с суффиксом («U-238 X L») становилась бы собственной цепочкой и выпадала
+            // из связки — цепочка дописывается явно
+            SpectralLine rootXray = new SpectralLine
+            {
+                Key = "x|U-238|13.6", Nuclide = "U-238", Label = "U-238 X L",
+                Energy = 13.6, Intensity = 5, Type = LineType.Xray
+            };
+            Equal("X-линия корня ряда несёт цепочку", rootXray.LibraryName, "U-238 X L (U-238)");
+            SpectralLine plainGamma = new SpectralLine
+            {
+                Key = "g|Cs-137|661.7", Nuclide = "Cs-137", Label = "Cs-137",
+                Energy = 661.7, Intensity = 85, Type = LineType.Gamma
+            };
+            Equal("обычная γ-линия скобок не получает", plainGamma.LibraryName, "Cs-137");
+            SpectralLine xrf = new SpectralLine
+            {
+                Key = "xrf|Pb|74.97", Nuclide = "XRF Pb", Label = "XRF Pb Ka1",
+                Energy = 74.97, Intensity = 100, Type = LineType.Xrf
+            };
+            Equal("ХРИ материала цепочки не получает", xrf.LibraryName, "XRF Pb Ka1");
+
+            // X-линия члена ряда: суффикс вставляется до скобок ещё на сборке подписи,
             // поэтому родитель остаётся последним и после слияния
             string xrayLabel = LineSetBuilder.WithSuffix("Ac-228 (Th-232)", "X KA1");
             Equal("подпись X-линии", xrayLabel, "Ac-228 X KA1 (Th-232)");
@@ -640,7 +664,10 @@ namespace BecquerelMonitor.RoiWizard.Tests
         {
             return new SpectralLine
             {
-                Key = label, Nuclide = "X", Label = merged ? label + " (" + interval + ")" : label,
+                // Nuclide — имя до скобок: от него зависит цепочка, которую LibraryName
+                // дописывает линии, оставшейся без родителя
+                Key = label, Nuclide = label.Split(' ')[0],
+                Label = merged ? label + " (" + interval + ")" : label,
                 Merged = merged, Interval = interval, Energy = 100, Intensity = 1
             };
         }

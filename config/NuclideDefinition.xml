@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<NuclideDefinitionFile xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <NuclideDefinitions>
+    <Nuclide>
+      <Name>Cs134</Name>
+      <Energy>605</Energy>
+      <HalfLife>2.0648</HalfLife>
+      <NuclideColor>Gray</NuclideColor>
+      <Note />
+      <Visible>true</Visible>
+      <Intencity>0</Intencity>
+      <Sets />
+      <IsAnchor>false</IsAnchor>
+    </Nuclide>
+    <Nuclide>
+      <Name>Cs137</Name>
+      <Energy>662</Energy>
+      <HalfLife>30.07</HalfLife>
+      <NuclideColor>Gray</NuclideColor>
+      <Note />
+      <Visible>true</Visible>
+      <Intencity>0</Intencity>
+      <Sets />
+      <IsAnchor>false</IsAnchor>
+    </Nuclide>
+    <Nuclide>
+      <Name>Cs134</Name>
+      <Energy>798</Energy>
+      <HalfLife>2.0648</HalfLife>
+      <NuclideColor>Gray</NuclideColor>
+      <Note />
+      <Visible>true</Visible>
+      <Intencity>0</Intencity>
+      <Sets />
+      <IsAnchor>false</IsAnchor>
+    </Nuclide>
+    <Nuclide>
+      <Name>K40</Name>
+      <Energy>1460</Energy>
+      <HalfLife>1277000000</HalfLife>
+      <NuclideColor>Gray</NuclideColor>
+      <Note />
+      <Visible>true</Visible>
+      <Intencity>0</Intencity>
+      <Sets />
+      <IsAnchor>false</IsAnchor>
+    </Nuclide>
+  </NuclideDefinitions>
+  <NuclideSets />
+</NuclideDefinitionFile>

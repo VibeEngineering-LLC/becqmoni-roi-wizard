@@ -65,24 +65,47 @@ namespace BecquerelMonitor.RoiWizard
         {
             get
             {
-                if (!this.Merged || string.IsNullOrEmpty(this.Interval))
+                string name = this.Label;
+                if (this.Merged && !string.IsNullOrEmpty(this.Interval))
                 {
-                    return this.Label;
+                    string tail = " (" + this.Interval + ")";
+                    string baseName = name.EndsWith(tail, StringComparison.Ordinal)
+                        ? name.Substring(0, name.Length - tail.Length)
+                        : name;
+                    int close = baseName.LastIndexOf(')');
+                    int open = close > 0 ? baseName.LastIndexOf('(', close - 1) : -1;
+                    if (close == baseName.Length - 1 && open > 0)
+                    {
+                        string head = baseName.Substring(0, open).TrimEnd();
+                        string parent = baseName.Substring(open + 1, close - open - 1);
+                        name = head + " " + this.Interval + " (" + parent + ")";
+                    }
+                    else
+                    {
+                        name = baseName + " " + this.Interval;
+                    }
                 }
-                string tail = " (" + this.Interval + ")";
-                string baseName = this.Label.EndsWith(tail, StringComparison.Ordinal)
-                    ? this.Label.Substring(0, this.Label.Length - tail.Length)
-                    : this.Label;
-                int close = baseName.LastIndexOf(')');
-                int open = close > 0 ? baseName.LastIndexOf('(', close - 1) : -1;
-                if (close == baseName.Length - 1 && open > 0)
+                // ChainOf берёт цепочку из последних скобок, а без них — имя целиком.
+                // Поэтому «U-238 X L» становится собственной цепочкой и не связывается
+                // с «U-238»: линии с суффиксом у корня ряда и у одиночного нуклида
+                // выпадали из связки. Дописываем цепочку явно; у ХРИ материалов и
+                // вторичных маркеров связывать нечего, их не трогаем.
+                if (this.Type != LineType.Xrf && this.Type != LineType.Secondary &&
+                    !EndsWithBrackets(name) && !string.Equals(name, this.Nuclide, StringComparison.Ordinal))
                 {
-                    string head = baseName.Substring(0, open).TrimEnd();
-                    string parent = baseName.Substring(open + 1, close - open - 1);
-                    return head + " " + this.Interval + " (" + parent + ")";
+                    name += " (" + this.Nuclide + ")";
                 }
-                return baseName + " " + this.Interval;
+                return name;
             }
+        }
+
+        static bool EndsWithBrackets(string name)
+        {
+            if (string.IsNullOrEmpty(name) || name[name.Length - 1] != ')')
+            {
+                return false;
+            }
+            return name.LastIndexOf('(') >= 0;
         }
 
         public SpectralLine Clone()

@@ -995,11 +995,21 @@ function unmergeAll(){ sel.merged = []; sel.suppressed = {}; $("mergeStat").text
 // то есть связка амплитуд по ряду для слитых линий не собиралась. В библиотечном
 // экспорте интервал выносим из скобок, скобки оставляем родителю.
 function libLabel(L){
-  if (!L.mergedFlag || !L.elist) return L.label;
-  var tail = " ("+L.elist+")";
-  var base = L.label.slice(-tail.length)===tail ? L.label.slice(0, -tail.length) : L.label;
-  var m = /^(.*?)\s*\(([^()]*)\)\s*$/.exec(base);        // родитель в концевых скобках
-  return m ? m[1]+" "+L.elist+" ("+m[2]+")" : base+" "+L.elist;
+  var name = L.label;
+  if (L.mergedFlag && L.elist){
+    var tail = " ("+L.elist+")";
+    var base = name.slice(-tail.length)===tail ? name.slice(0, -tail.length) : name;
+    var m = /^(.*?)\s*\(([^()]*)\)\s*$/.exec(base);      // родитель в концевых скобках
+    name = m ? m[1]+" "+L.elist+" ("+m[2]+")" : base+" "+L.elist;
+  }
+  // ChainOf читает цепочку из ПОСЛЕДНИХ скобок, а при их отсутствии — берёт имя целиком.
+  // Поэтому «U-238 X L» оказывается собственной цепочкой и не связывается с «U-238»:
+  // у корня ряда и у одиночного нуклида линии с суффиксом выпадали из связки. Цепочку
+  // дописываем явно — для ХРИ материалов не делаем, у них связывать нечего.
+  if (L.type!=="xrf" && L.type!=="sec" && !/\([^()]*\)\s*$/.test(name) && name!==L.nuc){
+    name += " ("+L.nuc+")";
+  }
+  return name;
 }
 
 // ── проверки перед сохранением (аналог NuclideMaster) ──
