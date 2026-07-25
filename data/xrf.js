@@ -17,7 +17,7 @@ window.XRF_DB = {
    lines:[["Kα1",28.61,100],["Kα2",28.32,54.6],["Kβ1",32.29,28.7],["Kβ2",33.04,7.2]]},
  "Ba": {Z:56, ctx:"конверсия Cs-137→Ba-137m; собственный фон LaBr3", ctx_en:"Cs-137 to Ba-137m conversion; LaBr3 internal background",
    lines:[["Kα1",32.19,100],["Kα2",31.82,54.9],["Kβ1",36.38,28.9],["Kβ2",37.26,7.2]]},
- "La": {Z:57, ctx:"кристалл LaBr3(Ce) — флуоресценция и линии собственной активности La-138", ctx_en:"LaBr3(Ce) crystal - fluorescence and La-138 internal activity",
+ "La": {Z:57, ctx:"кристалл LaBr3(Ce); собственная активность La-138", ctx_en:"LaBr3(Ce) crystal; La-138 internal activity",
    lines:[["Kα1",33.44,100],["Kα2",33.03,55.1],["Kβ1",37.80,29.1],["Kβ2",38.73,7.3]]},
  "W": {Z:74, ctx:"вольфрамовый коллиматор; Kα1 накладывается на Am-241 59.54!", ctx_en:"tungsten collimator; Ka1 overlaps Am-241 59.54!",
    lines:[["Kα1",59.32,100],["Kα2",57.98,58.5],["Kβ1",67.24,30.4],["Kβ2",69.07,7.6],

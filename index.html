@@ -396,8 +396,8 @@
 </footer>
 </div>
 
-<script src="data/nuclides.js?v=20260725c"></script>
-<script src="data/xrf.js?v=20260725c"></script>
+<script src="data/nuclides.js?v=20260725d"></script>
+<script src="data/xrf.js?v=20260725d"></script>
 <script>
 "use strict";
 var DB = window.NUCLIDE_DB, XRF = window.XRF_DB;
@@ -518,8 +518,7 @@ function buildSelectors(){
     var ctx = (LANG==="en" && XRF[el].ctx_en) ? XRF[el].ctx_en : XRF[el].ctx;
     var d = document.createElement("div"); d.className = "nuc"; d.title = ctx;
     d.innerHTML = '<input type="checkbox" data-xrf="'+el+'" '+(sel.xrf[el]?"checked":"")+'>'+
-      '<span>'+el+'</span><span class="note">'+esc(ctx)+'</span>'+
-      '<span class="hl">'+XRF[el].lines.length+T(" лин."," lines")+'</span>';
+      '<span>'+el+'</span><span class="note">'+esc(ctx)+'</span>';
     xb.appendChild(d);
   });
 }
