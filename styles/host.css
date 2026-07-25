@@ -105,6 +105,13 @@
   button:hover{background:#e8f0f8; border-color:var(--accent)}
   button.primary{background:#dbe8f5; border-color:#7d9cbb; color:var(--accent-ink); font-weight:600}
   .row{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:flex-end}
+  /* компактная строка: подпись и поле в одну линию, без вертикальных label */
+  .line{display:flex; flex-wrap:wrap; align-items:center; gap:5px 9px; margin:0 0 4px}
+  .line:last-child{margin-bottom:0}
+  .line > label{display:inline; margin:0; white-space:nowrap}
+  .line .sep{color:var(--muted)}
+  .gbox{padding:7px 9px 8px}
+  .gbox + .gbox{margin-top:6px}
   .cols{display:grid; grid-template-columns:1fr; gap:10px}
   /* блок 1: заголовок / панель управления / список / хвост — строки колонок выровнены,
      поэтому все три списка начинаются на одной линии */

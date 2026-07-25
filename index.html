@@ -32,11 +32,9 @@
 <div class="tabbody on" data-body="1">
   <div class="cols3">
     <div class="gbox"><span class="lg">Поиск изотопа</span>
-      <div class="row">
-        <input type="text" id="nucSearch" placeholder="напр. Eu-152" style="flex:1; min-width:90px">
+      <div class="line">
+        <input type="text" id="nucSearch" placeholder="напр. Eu-152" style="flex:1; min-width:70px">
         <button id="nucAdd" title="Только выбранный нуклид, его собственные линии">Добавить</button>
-      </div>
-      <div class="row" style="margin-top:5px">
         <button id="nucAddF" title="Все линии дочерних под именем выбранного нуклида — один изотоп в списке">+ семейство</button>
         <button id="nucAddC" title="Дочерние отдельными нуклидами с пометкой родителя: «Tc-99m (Mo-99)»">+ цепочка</button>
       </div>
@@ -68,27 +66,24 @@
 <!-- ═══════════ 2. ЛИНИИ ═══════════ -->
 <div class="tabbody" data-body="2">
   <div class="gbox"><span class="lg">Адаптация под разрешение детектора (IDWin)</span>
-    <div class="row" style="align-items:flex-end">
-      <div><label>Разрешение R, % @662</label>
-        <input type="number" id="mR662" value="7.5" min="0.1" step="0.1" style="width:80px"
-          title="Разрешение детектора (FWHM) на 662 кэВ, %. NaI ~7–8, LaBr3 ~3, HPGe ~0.2"></div>
-      <div style="flex:1; min-width:190px"><label>Критерий неразделимости</label>
-        <select id="mMode" style="width:100%" title="Порог, ближе которого линии считаются нераздельными">
-          <option value="sparrow" selected>Sparrow — маркеры ROI</option>
-          <option value="anchor">якорный набор — библиотечный фит</option>
-          <option value="manual">вручную</option>
-        </select></div>
-      <div><label>× FWHM</label>
-        <input type="number" id="mK" value="0.85" min="0.05" step="0.05" style="width:74px"
-          title="Порог ΔE в единицах FWHM(E)"></div>
-    </div>
-    <div class="row" style="margin-top:7px; align-items:center">
+    <div class="line">
+      <label for="mR662">R =</label>
+      <input type="number" id="mR662" value="7.5" min="0.1" step="0.1" style="width:62px"
+        title="Разрешение детектора (FWHM) на 662 кэВ, %. NaI ~7–8, LaBr3 ~3, HPGe ~0.2">
+      <span>% на 662 кэВ</span><span class="sep">·</span><label for="mMode">критерий</label>
+      <select id="mMode" style="width:auto; max-width:240px" title="Порог, ближе которого линии считаются нераздельными">
+        <option value="sparrow" selected>предел Sparrow — маркеры ROI</option>
+        <option value="anchor">якорный набор — библиотечный фит</option>
+        <option value="manual">вручную</option>
+      </select>
+      <input type="number" id="mK" value="0.85" min="0.05" step="0.05" style="width:58px"
+        title="Порог ΔE в единицах FWHM(E)"><span>× FWHM</span>
       <button id="mergeBtn" title="Слить линии каждого нуклида (γ, X, ХРИ — независимо от выбора), которые ближе порога: E — центроид по I, I — сумма">Объединить близкие</button>
       <button id="unmergeBtn">Вернуть исходные</button>
       <span class="stat" id="mergeStat"></span>
-    </div>
-    <p class="hint" style="margin-top:5px"><span id="mergeHint"></span></p>
-    <details class="doc"><summary>подробнее о разрешении и критериях</summary>
+      <span style="flex:1"></span>
+      <span class="hint" style="margin:0">FWHM(E) = R·√(662·E)/100 · сцинтиллятор</span>
+      <details class="doc" style="margin:0"><summary>?</summary>
       <p class="hint" id="resHint">
       <b>R</b> — паспортное разрешение детектора (FWHM на 662 кэВ): NaI(Tl) 6.5–8 %, CsI(Tl) 8–10 %,
       SrI₂(Eu) 3–3.5 %, LaBr₃ 2.7–3.3 %. С энергией пик уширяется как √E: FWHM(E) = R·√(662·E)/100 —
@@ -101,67 +96,63 @@
       0.85 FWHM разбирает библиотечный фит по якорной линии (связка амплитуд по табличным
       интенсивностям), а более далёкие — деконволюция, поэтому сливать их нельзя — набор
       обедняется. <b>Вручную</b> — прежнее поведение (2–3×FWHM — грубое окно идентификации).</p>
-    </details>
+      </details>
+    </div>
+    <p class="hint" style="margin:2px 0 0"><span id="mergeHint"></span></p>
   </div>
   <div class="infoline" id="mergeInfo">Sparrow: ближе 0,85·FWHM дублет неразрешим — для маркеров сливаем.</div>
   <div class="cols2">
   <div class="gbox"><span class="lg">Фильтры</span>
-   <div class="row" style="align-items:flex-end">
-    <div><label style="cursor:pointer"><input type="checkbox" id="fIOn"> интенсивность ≥, %</label>
-      <div class="row" style="gap:6px">
-        <input type="number" id="fMinI" value="3" min="0" step="0.5" style="width:80px"
-          title="Порог интенсивности для маркеров ROI; 3 % — рабочее значение для сцинтиллятора с R ≈ 6 %">
-        <select id="iMode" style="width:auto">
-          <option value="rel" selected>относительная (внутри изотопа, макс = 100)</option>
-          <option value="abs">абсолютная (на распад)</option>
-        </select>
-      </div></div>
-    <div><label style="cursor:pointer"><input type="checkbox" id="fEOn"> энергия от — до, кэВ</label>
-      <div class="row" style="gap:6px">
-        <input type="number" id="fEmin" value="10" min="0" style="width:84px">
-        <input type="number" id="fEmax" value="3000" min="0" style="width:84px">
-      </div></div>
-    <div><label style="cursor:pointer"><input type="checkbox" id="fTOn"> T½ от — до</label>
-      <div class="row" style="gap:6px">
-        <input type="number" id="fTmin" value="1" min="0" style="width:64px">
-        <select id="fTminU" style="width:auto"><option value="1">сек</option><option value="3600">ч</option>
-          <option value="86400" selected>сут</option><option value="31557600">лет</option></select>
-        <input type="number" id="fTmax" placeholder="∞" min="0" style="width:64px">
-        <select id="fTmaxU" style="width:auto"><option value="1">сек</option><option value="3600">ч</option>
-          <option value="86400">сут</option><option value="31557600" selected>лет</option></select>
-      </div></div>
-    <div><label>Тип линий</label>
-      <div style="font-size:13.5px; padding-top:6px; white-space:nowrap">
-        <label style="display:inline; text-transform:none; letter-spacing:0; font-size:13.5px; color:var(--ink); font-weight:400"><input type="checkbox" class="fT" value="g" checked> γ</label>&nbsp;&nbsp;
-        <label style="display:inline; text-transform:none; letter-spacing:0; font-size:13.5px; color:var(--ink); font-weight:400"><input type="checkbox" class="fT" value="x" checked> X (распад)</label>&nbsp;&nbsp;
-        <label style="display:inline; text-transform:none; letter-spacing:0; font-size:13.5px; color:var(--ink); font-weight:400"><input type="checkbox" class="fT" value="xrf" checked> ХРИ</label>&nbsp;&nbsp;
-        <label style="display:inline; text-transform:none; letter-spacing:0; font-size:13.5px; color:var(--ink); font-weight:400"><input type="checkbox" class="fT" value="sec" checked> вторичные</label>
-      </div></div>
-    <div><label>Сортировка</label>
-      <select id="sortSel">
-        <option value="E|1" selected>энергия ↑</option><option value="E|-1">энергия ↓</option>
-        <option value="I|-1">интенсивность ↓</option><option value="I|1">интенсивность ↑</option>
-        <option value="hl|-1">период полураспада ↓</option><option value="hl|1">период полураспада ↑</option>
-        <option value="nuc|1">нуклид (А–Я)</option>
-      </select></div>
+   <div class="line">
+     <label><input type="checkbox" id="fIOn"> интенсивность ≥, %</label>
+     <input type="number" id="fMinI" value="3" min="0" step="0.5" style="width:56px"
+       title="Порог интенсивности для маркеров ROI; 3 % — рабочее значение для сцинтиллятора с R ≈ 6 %">
+     <select id="iMode" style="width:auto; max-width:250px">
+       <option value="rel" selected>относительная (внутри изотопа, макс = 100)</option>
+       <option value="abs">абсолютная (на распад)</option>
+     </select>
+   </div>
+   <div class="line">
+     <label><input type="checkbox" id="fEOn"> энергия, кэВ</label>
+     <input type="number" id="fEmin" value="10" min="0" style="width:62px">
+     <span class="sep">—</span>
+     <input type="number" id="fEmax" value="3000" min="0" style="width:62px">
+     <span class="sep">·</span>
+     <label><input type="checkbox" id="fTOn"> T½</label>
+     <input type="number" id="fTmin" value="1" min="0" style="width:48px">
+     <select id="fTminU" style="width:auto"><option value="1">сек</option><option value="3600">ч</option>
+       <option value="86400" selected>сут</option><option value="31557600">лет</option></select>
+     <span class="sep">—</span>
+     <input type="number" id="fTmax" placeholder="∞" min="0" style="width:48px">
+     <select id="fTmaxU" style="width:auto"><option value="1">сек</option><option value="3600">ч</option>
+       <option value="86400">сут</option><option value="31557600" selected>лет</option></select>
+   </div>
+   <div class="line">
+     <span>Тип линий</span>
+     <label><input type="checkbox" class="fT" value="g" checked> γ</label>
+     <label><input type="checkbox" class="fT" value="x" checked> X (распад)</label>
+     <label><input type="checkbox" class="fT" value="xrf" checked> ХРИ</label>
+     <label><input type="checkbox" class="fT" value="sec" checked> вторичные</label>
+     <span class="hint" style="margin:0">сортировка — клик по заголовку таблицы</span>
    </div>
   </div>
   <div>
   <div class="gbox"><span class="lg">Выбор и отображение</span>
-   <div class="row" style="align-items:center">
+   <div class="line">
     <button id="selVisible">✓ выбрать все видимые</button>
     <button id="unselVisible">✗ снять все видимые</button>
-    <span style="font-size:13px">топ-N по I на нуклид:</span>
-    <input type="number" id="topN" value="5" min="1" style="width:64px">
+    <label><input type="checkbox" id="hideUnsel"> скрыть невыбранные</label>
+   </div>
+   <div class="line">
+    <label for="topN">топ-N по I на нуклид</label>
+    <input type="number" id="topN" value="5" min="1" style="width:48px">
     <button id="selTop">Выбрать топ-N</button>
-    <label style="cursor:pointer; display:inline; font-weight:400">
-      <input type="checkbox" id="hideUnsel"> скрыть невыбранные</label>
    </div>
   </div>
   <div class="gbox"><span class="lg">Равновесие ряда</span>
-    <div><input type="checkbox" id="eqScale" checked>
-      пересчитать интенсивности на один распад <b>родителя ряда</b> (вековое равновесие)</div>
-    <details class="doc"><summary>что делает пересчёт</summary>
+    <div class="line"><label><input type="checkbox" id="eqScale" checked>
+      пересчитать интенсивности на один распад <b>родителя ряда</b></label>
+      <details class="doc" style="margin:0"><summary>?</summary>
     <p class="hint" id="eqHint">Без галки I — «на 100 распадов самого излучающего нуклида», как в базе IAEA и в файлах
       «Intensities» BecqMoni: у Tl-208 линия 2614 кэВ имеет I = 99.75 %. Но в равновесном ряду Th-232 через
       Tl-208 идёт лишь 35.94 % распадов (ветвление Bi-212: β 64 % / α 36 %), поэтому <b>на один распад Th-232</b>
@@ -170,17 +161,21 @@
       Po-211 ×0.00276); остальные члены ряда — ×1.
       Включайте, когда ROI-набор описывает равновесный ряд как целое (сравнение относительных высот линий
       разных членов между собой); выключайте, если хотите табличные значения «как в справочнике».</p>
-    </details>
+      </details>
+    </div>
+    <p class="hint" style="margin:2px 0 0">Tl-208 ×0,3594 · Po-212 ×0,6406 · остальные члены ряда ×1</p>
   </div>
   </div>
   </div>
-  <div class="group" id="secGroup" style="margin-top:12px">
+  <div class="cols2">
+  <div class="group" id="secGroup">
     <div class="ghead" onclick="this.parentNode.classList.toggle('open')">
       <span>Вторичные пики (расчёт по выбранным γ-линиям)</span><span>▾</span></div>
     <div class="gbody">
-      <div class="row">
-        <div><label>Для γ-линий с I ≥, %</label><input type="number" id="secMinI" value="10" style="width:80px"></div>
-        <div><label>Типы</label><span style="font-size:13px">
+      <div class="line">
+        <label for="secMinI">для γ-линий с I ≥, %</label>
+        <input type="number" id="secMinI" value="10" style="width:52px">
+        <span style="font-size:12px">
           <input type="checkbox" class="secT" value="bs" checked> рассеяние назад (BS)
           <input type="checkbox" class="secT" value="ce"> комптон-край (CE)
           <input type="checkbox" class="secT" value="se" checked> вылет 511 (SE)
@@ -188,8 +183,8 @@
           <input type="checkbox" class="secT" value="esc"> вылет I-K (NaI, −28.6)
           <input type="checkbox" class="secT" value="ann"> аннигиляция 511
           <input type="checkbox" class="secT" value="sum"> суммирование каскадное (E1+E2)
-          <input type="checkbox" class="secT" value="pu2"> наложение 2×E (pile-up)</span></div>
-        <div><button id="genSec">Сгенерировать</button></div>
+          <input type="checkbox" class="secT" value="pu2"> наложение 2×E (pile-up)</span>
+        <button id="genSec">Сгенерировать</button>
       </div>
       <p class="hint" id="secHint">BS = E/(1+2E/511); CE = E−BS; SE = E−511 (E&gt;1122); DE = E−1022 (E&gt;1222);
         I-escape для E&lt;200 кэВ. <b>SUM</b> = E1+E2 — истинные совпадения каскадных линий одного
@@ -198,22 +193,22 @@
         10 % от родительской (для SUM — от слабейшей из пары). Формулы: Knoll гл. 10–12, 17 (pile-up).</p>
     </div>
   </div>
-  <div class="group" id="nearGroup" style="margin-top:12px">
+  <div class="group" id="nearGroup">
     <div class="ghead" onclick="this.parentNode.classList.toggle('open')">
       <span>Поиск близких линий (по всей базе — кто ещё светит рядом)</span><span>▾</span></div>
     <div class="gbody" style="max-height:400px">
-      <div class="row">
-        <div><label>Энергия линии, кэВ</label><input type="number" id="nearE" value="362" style="width:100px"></div>
-        <div><label>Окно идент., ± кэВ</label><input type="number" id="nearW" value="10" min="0.5" style="width:80px"></div>
-        <div><label>I ≥, %</label><input type="number" id="nearI" value="0.5" min="0" style="width:74px"></div>
-        <div><label>T½ ≥</label><div class="row" style="gap:4px">
-          <input type="number" id="nearT" value="0" min="0" style="width:80px">
-          <select id="nearTu" style="width:auto"><option value="1">сек</option><option value="3600">ч</option>
-          <option value="86400" selected>сут</option><option value="31557600">лет</option></select></div></div>
-        <div><button id="nearBtn">Искать</button></div>
+      <div class="line">
+        <label for="nearE">энергия, кэВ</label><input type="number" id="nearE" value="362" style="width:64px">
+        <label for="nearW">± окно</label><input type="number" id="nearW" value="10" min="0.5" style="width:48px">
+        <label for="nearI">I ≥, %</label><input type="number" id="nearI" value="0.5" min="0" style="width:48px">
+        <label for="nearT">T½ ≥</label><input type="number" id="nearT" value="0" min="0" style="width:48px">
+        <select id="nearTu" style="width:auto"><option value="1">сек</option><option value="3600">ч</option>
+        <option value="86400" selected>сут</option><option value="31557600">лет</option></select>
+        <button id="nearBtn">Искать</button>
       </div>
-      <div id="nearOut" style="margin-top:8px; font-size:12px"></div>
+      <div id="nearOut" style="margin-top:6px; font-size:12px"></div>
     </div>
+  </div>
   </div>
   <div class="tblscroll">
     <table id="lineTbl">
@@ -230,34 +225,33 @@
 <!-- ═══════════ 3. ОФОРМЛЕНИЕ ═══════════ -->
 <div class="tabbody" data-body="3">
   <div class="gbox"><span class="lg">Оформление ROI</span>
-  <div><label>Режим</label>
-    <select id="roiMode" style="width:100%">
+  <div class="line">
+    <label for="roiMode">режим</label>
+    <select id="roiMode" style="width:auto; max-width:280px">
       <option value="marker" selected>линии-маркеры (высота ∝ I, без зон)</option>
       <option value="zone">зоны (границы вокруг пика)</option>
       <option value="zone+marker">зоны + маркеры интенсивности</option>
-    </select></div>
-  <div class="row" style="align-items:flex-end; margin-top:8px">
-    <div id="wModeBox" style="display:none; flex:1; min-width:150px"><label>Ширина зоны</label>
-      <select id="wMode" style="width:100%">
+    </select>
+    <span id="wModeBox" style="display:none"><label for="wMode" style="display:inline">ширина зоны</label>
+      <select id="wMode" style="width:auto">
         <option value="pct">% от энергии (как в BecqMoni)</option>
         <option value="fwhm">k × FWHM (сцинтиллятор)</option>
-      </select></div>
-    <div id="pctBox" style="display:none"><label>Ширина, % от E</label>
-      <input type="number" id="wPct" value="5" min="0.5" step="0.5" style="width:80px"></div>
-    <div id="fwhmBox" style="display:none">
-      <label>R, % @662 / k</label>
-      <div class="row" style="gap:6px">
-        <input type="number" id="r662" value="7.5" min="1" step="0.1" style="width:74px">
-        <input type="number" id="kF" value="3" min="1" step="0.5" style="width:64px">
-      </div></div>
+      </select></span>
+    <span id="pctBox" style="display:none"><label for="wPct" style="display:inline">% от E</label>
+      <input type="number" id="wPct" value="5" min="0.5" step="0.5" style="width:56px"></span>
+    <span id="fwhmBox" style="display:none"><label style="display:inline">R, % @662 / k</label>
+      <input type="number" id="r662" value="7.5" min="1" step="0.1" style="width:58px">
+      <input type="number" id="kF" value="3" min="1" step="0.5" style="width:48px"></span>
   </div>
   <p class="hint" id="wHint" style="display:none">FWHM(E) = R₆₆₂·√(662·E)/100; зона = E ± k·FWHM/2. Границы округляются наружу до целых кэВ.</p>
-  <h3>Цвета</h3>
-  <div class="seg" style="max-width:280px">
-    <button id="colByChain">по цепочке</button>
-    <button id="colByNuc">по нуклиду</button>
+  <div class="line" style="margin-top:6px">
+    <span>цвета</span>
+    <span class="seg" style="width:220px">
+      <button id="colByChain">по цепочке</button>
+      <button id="colByNuc">по нуклиду</button>
+    </span>
+    <span class="colorchips" id="colorBox" style="margin:0"></span>
   </div>
-  <span class="colorchips" id="colorBox"></span>
   </div>
   <div class="gbox grow"><span class="lg">Предпросмотр: набор на энергетической оси</span>
     <div class="speclegend"><span id="specTitle">высота штриха ∝ √I, цвет — нуклида; зоны — полупрозрачные окна</span>
@@ -269,21 +263,26 @@
 <!-- ═══════════ 4. ЭКСПОРТ ═══════════ -->
 <div class="tabbody" data-body="4">
   <div class="gbox"><span class="lg">Экспорт</span>
-  <div><label>Имя ROI-конфигурации</label><input type="text" id="cfgName" value="IAEA lines" style="width:100%"></div>
-  <div style="margin-top:8px"><button class="primary" id="btnXml">Скачать ROI .xml</button>
-    <button id="btnPreview">Предпросмотр</button></div>
-  <h3>Набор нуклидов для библиотеки</h3>
-  <div><label>Имя набора (NuclideSet)</label><input type="text" id="libName" value="Новый набор" style="width:100%"></div>
-  <div style="margin-top:8px"><label>Якорная линия</label><select id="anchorSel" style="width:100%"
-    title="Линия с IsAnchor=true: найдя её, BecqMoni сажает остальные линии набора на табличные позиции и фитует их амплитуды"></select></div>
-  <div style="margin-top:8px; display:flex; flex-direction:column; gap:3px">
-    <label style="font-weight:400; cursor:pointer; margin:0">
-      <input type="checkbox" id="libFull"> полный набор (все линии, для фита)</label>
-    <label style="font-weight:400; cursor:pointer; margin:0">
-      <input type="checkbox" id="bakOrig" checked> сохранить копию оригинала</label></div>
-  <div style="margin-top:8px"><button class="primary" id="btnNucXml" title="Выберите свой NuclideDefinition.xml — набор будет дописан в него, существующие нуклиды и наборы сохранятся">Дописать в библиотеку…</button>
-    <input type="file" id="mergeFile" accept=".xml" style="display:none"></div>
-  <div class="stat" id="expStat" style="margin-top:8px"></div>
+  <div class="line">
+    <label for="cfgName">имя ROI-конфигурации</label>
+    <input type="text" id="cfgName" value="IAEA lines" style="flex:1; min-width:120px; max-width:260px">
+    <button class="primary" id="btnXml">Скачать ROI .xml</button>
+    <button id="btnPreview">Предпросмотр</button>
+  </div>
+  <div class="line">
+    <label for="libName">имя набора (NuclideSet)</label>
+    <input type="text" id="libName" value="Новый набор" style="flex:1; min-width:120px; max-width:240px">
+    <label for="anchorSel">якорная линия</label>
+    <select id="anchorSel" style="width:auto; max-width:260px"
+      title="Линия с IsAnchor=true: найдя её, BecqMoni сажает остальные линии набора на табличные позиции и фитует их амплитуды"></select>
+  </div>
+  <div class="line">
+    <label><input type="checkbox" id="libFull"> полный набор (все линии, для фита)</label>
+    <label><input type="checkbox" id="bakOrig" checked> сохранить копию оригинала</label>
+    <button class="primary" id="btnNucXml" title="Выберите свой NuclideDefinition.xml — набор будет дописан в него, существующие нуклиды и наборы сохранятся">Дописать в библиотеку…</button>
+    <input type="file" id="mergeFile" accept=".xml" style="display:none">
+    <span class="stat" id="expStat"></span>
+  </div>
   <details class="doc" style="margin-top:10px"><summary>куда класть файлы и как работает якорь</summary>
   <p class="hint" id="expHint"><b>ROI-конфигурация</b> кладётся в <code>%APPDATA%\BecqMoni\config\ROI\</code> (обычно
     <code>C:\Users\&lt;имя&gt;\AppData\Roaming\BecqMoni\config\ROI\</code>) и появляется в списке ROI-конфигураций BecqMoni.
@@ -1381,12 +1380,6 @@ $("lineTbl").querySelector("thead").addEventListener("click", function(ev){
   var th = ev.target.closest("th"); if (!th) return;
   var k = th.dataset.k;
   if (sortK===k) sortDir = -sortDir; else { sortK = k; sortDir = 1; }
-  var opt = $("sortSel").querySelector('option[value="'+sortK+'|'+sortDir+'"]');
-  if (opt) $("sortSel").value = sortK+"|"+sortDir;
-  renderTable();
-});
-$("sortSel").addEventListener("change", function(){
-  var p = this.value.split("|"); sortK = p[0]; sortDir = parseInt(p[1]);
   renderTable();
 });
 $("roiMode").addEventListener("change", function(){
