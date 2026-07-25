@@ -563,13 +563,29 @@ function buildGroupSel(){
 function renderGroup(){
   var v = $("famSel").value, kind = v.slice(0,1), id = v.slice(2);
   var ctl = $("famCtl");
+  // Раскрывать «одним»/«цепочкой» имеет смысл, только если в группе есть нуклиды с
+  // дочерними ВНЕ ЕРН-рядов (Mo-99 → Tc-99m и подобные пары). У члена ряда родитель
+  // задан самим рядом, и подменять его предшественником нельзя — цепочка развалится.
+  var expandable = kind==="c" || famNucs(id).some(function(n){
+    var e = DB.nuclides[n];
+    return e && !e.chain && daughtersOf(n).filter(hasLines).length > 0;
+  });
+  var offHint = T("В этой группе нечего раскрывать: у членов рядов родитель задан самим рядом — выберите нужный ряд в разделе «Ряды».",
+                  "Nothing to expand here: for series members the parent comes from the series itself — pick the series under “Series”.");
+  function btn(mode, label, tip){
+    var off = !expandable && mode!=="all";
+    return '<button class="grpAdd" data-mode="'+mode+'"'+(off?" disabled":"")+
+           ' title="'+(off ? offHint : tip)+'">'+label+'</button> ';
+  }
   // те же три варианта, что и в поиске: по одному / линиями под именем родителя / цепочкой
   ctl.innerHTML =
-    '<button class="grpAdd" data-mode="all" title="'+T("Каждый член группы — отдельным нуклидом","Every member as a separate nuclide")+'">'+T("добавить все","add all")+'</button> '+
-    '<button class="grpAdd" data-mode="one" title="'+(kind==="c"
+    btn("all", T("добавить все","add all"),
+        T("Каждый член группы — отдельным нуклидом","Every member as a separate nuclide")) +
+    btn("one", T("+ линии семейства","+ family lines"), kind==="c"
         ? T("Все линии ряда под именем родителя — один изотоп","All series lines under the parent name — one nuclide")
-        : T("Дочерние — линиями под именем своего родителя","Daughters as lines under their parent’s name"))+'">'+T("+ линии семейства","+ family lines")+'</button> '+
-    '<button class="grpAdd" data-mode="chain" title="'+T("Дочерние отдельными нуклидами с пометкой родителя в скобках","Daughters as separate nuclides, parent in brackets")+'">'+T("+ цепочка","+ chain")+'</button>';
+        : T("Дочерние — линиями под именем своего родителя","Daughters as lines under their parent’s name")) +
+    btn("chain", T("+ цепочка","+ chain"),
+        T("Дочерние отдельными нуклидами с пометкой родителя в скобках","Daughters as separate nuclides, parent in brackets"));
   renderSource();
   if ($("famInfoBox").style.display !== "none") showFamInfo(true);
 }
@@ -1488,6 +1504,13 @@ function addGroup(mode){
   members.forEach(function(n){ addNuc(n); delete sel.attr[n]; delete sel.par[n]; delete sel.root[n]; });
   if (kind==="c" || mode==="all") return;            // ряд «все»/«цепочкой» — имена уже из ряда
   members.forEach(function(n){                       // семейство: раскрыть дочерних каждого члена
+    // Члена ЕРН-ряда раскрывать нельзя: его дочерние — это остаток того же ряда,
+    // и пометка «(предшественник)» подменяет собой корень. На семействе NORM,
+    // куда входят все члены трёх рядов, каждый нуклид переписывал родителя
+    // следующему, и вместо трёх цепочек набор распадался на 29 — BR-связка
+    // в BecqMoni не собиралась ни по одной. Родитель члена ряда и так известен
+    // из базы (nucLabel), трогать его не нужно.
+    if (DB.nuclides[n].chain) return;
     var ds = daughtersOf(n).filter(hasLines);
     if (!ds.length) return;
     ds.forEach(function(d){

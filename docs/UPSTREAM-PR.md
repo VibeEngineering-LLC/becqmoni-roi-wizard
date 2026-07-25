@@ -62,15 +62,18 @@ BecqMoni, PR живёт вместе с проектом.
 
 ## 4. Что доделать до отправки
 
-- [x] **Собрать в настоящей среде.** Сделано 25.07: `BecquerelMonitor.sln` собран MSBuild
-      из VS 2022 Build Tools вместе с модулем и патчем меню — **`BecquerelMonitor.exe`,
-      11,2 МБ, ни одной ошибки компиляции**; в сборке лежат `RoiWizardForm`, `AnchorPicker`,
-      `BuildFullSet` и ресурс `BecquerelMonitor.RoiWizard.nuclides.xml`. Targeting pack
-      4.8 в системе не установлен, поэтому reference assemblies взяты из NuGet-пакета
-      `Microsoft.NETFramework.ReferenceAssemblies.net48` и переданы через
-      `/p:TargetFrameworkRootPath=`. Единственный незакрытый шаг — линковка сателлитных
-      ресурсов (`ru\BecquerelMonitor.resources.dll`): для неё нужен `al.exe` из
-      .NET Framework SDK, которого в системе нет. К коду отношения не имеет.
+- [x] **Собрать в настоящей среде.** Сделано 25.07: полная пересборка
+      `BecquerelMonitor.sln` (MSBuild из VS 2022 Build Tools, `.NET Framework 4.8
+      Developer Pack`, `/t:Rebuild`) вместе с модулем и патчем меню — **ноль ошибок**.
+      Результат: `bin\Release\BecquerelMonitor.exe`, 11,2 МБ, внутри `RoiWizardForm`,
+      `AnchorPicker`, `BuildFullSet` и ресурс `BecquerelMonitor.RoiWizard.nuclides.xml`;
+      сателлитная сборка `ru\BecquerelMonitor.resources.dll` содержит подпись пункта меню
+      «Конструктор ROI и наборов нуклидов…». Единственное предупреждение сборки —
+      `MSB3327` про сертификат подписи ClickOnce, к вкладу отношения не имеет.
+      *(Если Developer Pack ставить некуда, решение собирается и без него: reference
+      assemblies из NuGet-пакета `Microsoft.NETFramework.ReferenceAssemblies.net48`
+      передаются через `/p:TargetFrameworkRootPath=`, недоступной остаётся только
+      линковка сателлитов — она требует `al.exe` из .NET Framework SDK.)*
 - [x] **Пункт меню и его подписи** — `integration/host-patch/` (§5): скрипт применяет
       правку к дереву и идемпотентен; разрешение детектора мастер получает из родной
       `FwhmCalibration` активного спектра, приведённой к R (%) на 662 кэВ.

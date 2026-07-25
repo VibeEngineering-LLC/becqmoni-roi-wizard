@@ -331,7 +331,7 @@ namespace BecquerelMonitor.RoiWizard
             {
                 foreach (CatalogNuclide nuclide in this.catalog.ByFamily(key.Substring(2)))
                 {
-                    this.selection.Add(this.catalog, nuclide.Name, AddMode.Single);
+                    this.selection.AddGroupMember(this.catalog, nuclide.Name);
                 }
             }
             else
@@ -345,7 +345,7 @@ namespace BecquerelMonitor.RoiWizard
                 {
                     foreach (string member in chain.Members)
                     {
-                        this.selection.Add(this.catalog, member, AddMode.Single);
+                        this.selection.AddGroupMember(this.catalog, member);
                     }
                 }
                 else

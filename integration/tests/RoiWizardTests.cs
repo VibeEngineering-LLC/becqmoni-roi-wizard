@@ -35,6 +35,7 @@ namespace BecquerelMonitor.RoiWizard.Tests
             SecondaryTests();
             ExporterTests();
             FullSetTests(catalogPath);
+            GroupMemberTests(catalogPath);
             MultiAnchorTests(catalogPath);
 
             Console.WriteLine();
@@ -466,6 +467,59 @@ namespace BecquerelMonitor.RoiWizard.Tests
                          99.755 * 0.3594, 0.5);
                 }
             }
+        }
+
+        // ── 8b. Групповое добавление не должно рвать цепочки ──
+        //
+        // Кнопка «добавить все» по ряду или по семейству добавляет членов ЕРН-рядов.
+        // Если подпись такого нуклида не несёт корень ряда, ChainOf в BecqMoni считает
+        // цепочкой его собственное имя — набор распадается на десятки одиночных
+        // «цепочек», и связка амплитуд не собирается ни по одной.
+        static void GroupMemberTests(string catalogPath)
+        {
+            Section("AddGroupMember");
+            NuclideCatalog catalog = LoadCatalog(catalogPath);
+            if (catalog == null)
+            {
+                return;
+            }
+
+            SourceSelection group = new SourceSelection();
+            foreach (string name in new string[] { "U-238", "Ra-226", "Bi-214", "Th-232", "Tl-208", "K-40" })
+            {
+                group.AddGroupMember(catalog, name);
+            }
+            Equal("корень ряда — без скобок", group.Nuclides["U-238"], "U-238");
+            Equal("член ряда несёт КОРЕНЬ, а не предшественника", group.Nuclides["Ra-226"], "Ra-226 (U-238)");
+            Equal("Bi-214 тоже от корня", group.Nuclides["Bi-214"], "Bi-214 (U-238)");
+            Equal("Tl-208 от Th-232", group.Nuclides["Tl-208"], "Tl-208 (Th-232)");
+            Equal("вне рядов — своим именем", group.Nuclides["K-40"], "K-40");
+
+            List<SpectralLine> lines = new LineSetBuilder(catalog).Reset().BuildFullSet(group);
+            Dictionary<string, int> chains = new Dictionary<string, int>();
+            foreach (SpectralLine line in lines)
+            {
+                string name = line.LibraryName;
+                int close = name.LastIndexOf(')');
+                int open = close > 0 ? name.LastIndexOf('(', close - 1) : -1;
+                string chain = close == name.Length - 1 && open > 0
+                    ? name.Substring(open + 1, close - open - 1)
+                    : line.Nuclide;
+                if (!chains.ContainsKey(chain))
+                {
+                    chains[chain] = 0;
+                }
+                chains[chain]++;
+            }
+            Check("цепочек ровно три: U-238, Th-232, K-40 (получено " + chains.Count + ")",
+                  chains.Count == 3 && chains.ContainsKey("U-238") &&
+                  chains.ContainsKey("Th-232") && chains.ContainsKey("K-40"));
+
+            // одиночное добавление — по-прежнему без родителя: равновесный пересчёт
+            // к нуклиду, взятому вне ряда, не применяется
+            SourceSelection single = new SourceSelection();
+            single.Add(catalog, "Tl-208", AddMode.Single);
+            Equal("одиночный нуклид остаётся без скобок", single.Nuclides["Tl-208"], "Tl-208");
         }
 
         // ── 9. Несколько якорных линий ──

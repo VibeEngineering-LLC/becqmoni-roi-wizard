@@ -64,6 +64,27 @@ namespace BecquerelMonitor.RoiWizard
             }
         }
 
+        // Добавление в составе группы: у члена ЕРН-ряда подпись обязана нести КОРЕНЬ ряда,
+        // а не имя самого нуклида. Иначе набор, собранный кнопкой «добавить все» по ряду
+        // или по семейству, распадается на два десятка одиночных «цепочек», и связка
+        // амплитуд в LibraryPeakFitter не собирается ни по одной.
+        //
+        // Отдельный метод, а не режим Single, потому что одиночно добавленный нуклид —
+        // это другой случай: у него родителя в наборе нет, подпись остаётся своей,
+        // и равновесный пересчёт к нему не применяется.
+        public void AddGroupMember(NuclideCatalog catalog, string name)
+        {
+            CatalogNuclide nuclide = catalog.Find(name);
+            if (nuclide == null)
+            {
+                return;
+            }
+            string root = catalog.ChainRoot(nuclide);
+            this.Nuclides[name] = string.IsNullOrEmpty(root) || string.Equals(root, name, StringComparison.Ordinal)
+                ? name
+                : name + " (" + root + ")";
+        }
+
         public void Remove(string name)
         {
             this.Nuclides.Remove(name);
