@@ -198,7 +198,7 @@ N("Ra-223", "223ra", 0, fam=("erh","med"), chain="u235")  # несколько �
 | γ- и X-линии распада, T½, ветвления | [IAEA Live Chart of Nuclides API](https://nds.iaea.org/relnsd/vcharthtml/VChartHTML.html) (ENSDF) |
 | ХРИ элементов (Kα/Kβ/L) | NIST X-Ray Transition Energies (Deslattes 2003), Bearden 1967 |
 | Формулы вторичных пиков | Knoll, *Radiation Detection and Measurement*, **3-е изд., 1999, гл. 10** (комптон-край — разд. II.B, обратное рассеяние и пики вылета — разд. III, суммирование — III.E); Gilmore, *Practical Gamma-ray Spectrometry*, 2-е изд., гл. 2 и 10. Сверено по оригиналам, с главами и страницами — [`docs/REFERENCES-secondary-peaks.md`](docs/REFERENCES-secondary-peaks.md) |
-| Поправки к положениям вторичных пиков | измерения комплекса Gamma-1C (NaI(Tl) 63×63 #0086-16, поверка 2024, защита Pb 50 мм): комптон-край −0,8·FWHM, обратное рассеяние +10 кэВ |
+| Поправки к положениям вторичных пиков | измерения комплекса Gamma-1C (NaI(Tl) 63×63, защита Pb 50 мм): комптон-край −0,8·FWHM, обратное рассеяние +10 кэВ |
 | Формат ROI-конфигурации | исходники [BecqMoni](https://github.com/Am6er/BecqMoni) (`ROIConfigData.cs`, FormatVersion 120920) |
 | Пороги слияния и требование якоря | `BecquerelMonitor/LibraryPeakFitter.cs`: `SparrowFwhm = 0.85`, `ClaimToleranceFwhm = 0.25`, гейт значимости Fisher z ≥ 4 |
 
