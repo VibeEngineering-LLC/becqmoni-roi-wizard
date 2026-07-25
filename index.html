@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ROI-мастер для BecqMoni — гамма, ХРИ, вторичные пики</title>
+<title>Конструктор ROI и наборов нуклидов для BecqMoni</title>
 <link rel="stylesheet" href="styles/host.css?v=20260725e" id="themeCss">
 <!-- тема поверх host.css; по умолчанию becqmoni, «?style=none» — голый host.css -->
 <script>(function(){var t=new URLSearchParams(location.search).get("style")||localStorage.getItem("roiStyle")||"becqmoni";if(t&&t!=="none"&&/^[\w.-]+$/.test(t))document.write('<link rel="stylesheet" href="styles/'+t+'.css">');})();</script>
@@ -11,22 +11,18 @@
 <body>
 <div class="app">
 <header class="topbar">
-  <h1>ROI-мастер для BecqMoni — <span id="titleCfg">IAEA lines</span></h1>
+  <h1>Конструктор ROI и наборов нуклидов — <span id="titleCfg">IAEA lines</span></h1>
   <span class="spacer"></span>
   <button id="langBtn">EN</button>
 </header>
 <div class="menubar" id="menubar">
-  <span data-menu="file">Файл</span><span data-menu="set">Набор</span>
-  <span data-menu="data">Данные</span><span data-menu="help">Справка</span>
-  <span class="spacer" style="flex:1"></span>
   <span class="sub" id="presetBar"></span>
   <span class="sub" id="dbinfo"></span>
 </div>
 <nav class="tabs" id="tabs">
   <button data-tab="1" class="on">1 · Изотопы</button>
   <button data-tab="2">2 · Линии</button>
-  <button data-tab="3">3 · Оформление ROI</button>
-  <button data-tab="4">4 · Экспорт</button>
+  <button data-tab="3">3 · Оформление и экспорт</button>
 </nav>
 
 <!-- ═══════════ 1. ВЫБОР ИСТОЧНИКОВ ═══════════ -->
@@ -101,8 +97,7 @@
     </div>
   </div>
   <div class="infoline" id="mergeInfo"><span id="mergeHint"></span></div>
-  <div class="cols2">
-  <div class="gbox"><span class="lg">Фильтры</span>
+  <div class="gbox"><span class="lg">Фильтры и выбор</span>
    <div class="line">
      <label><input type="checkbox" id="fIOn"> интенсивность ≥, %</label>
      <input type="number" id="fMinI" value="3" min="0" step="0.5" style="width:56px"
@@ -111,8 +106,7 @@
        <option value="rel" selected>относительная (внутри изотопа, макс = 100)</option>
        <option value="abs">абсолютная (на распад)</option>
      </select>
-   </div>
-   <div class="line">
+     <span class="sep">·</span>
      <label><input type="checkbox" id="fEOn"> энергия, кэВ</label>
      <input type="number" id="fEmin" value="10" min="0" style="width:62px">
      <span class="sep">—</span>
@@ -133,25 +127,18 @@
      <label><input type="checkbox" class="fT" value="x" checked> X (распад)</label>
      <label><input type="checkbox" class="fT" value="xrf" checked> ХРИ</label>
      <label><input type="checkbox" class="fT" value="sec" checked> вторичные</label>
-     <span class="hint" style="margin:0">сортировка — клик по заголовку таблицы</span>
+     <span class="sep">·</span>
+     <button id="selVisible">✓ выбрать все видимые</button>
+     <button id="unselVisible">✗ снять все видимые</button>
+     <label><input type="checkbox" id="hideUnsel"> скрыть невыбранные</label>
+     <span class="sep">·</span>
+     <label for="topN">топ-N по I на нуклид</label>
+     <input type="number" id="topN" value="5" min="1" style="width:48px">
+     <button id="selTop">Выбрать топ-N</button>
    </div>
-  </div>
-  <div>
-  <div class="gbox"><span class="lg">Выбор и отображение</span>
    <div class="line">
-    <button id="selVisible">✓ выбрать все видимые</button>
-    <button id="unselVisible">✗ снять все видимые</button>
-    <label><input type="checkbox" id="hideUnsel"> скрыть невыбранные</label>
-   </div>
-   <div class="line">
-    <label for="topN">топ-N по I на нуклид</label>
-    <input type="number" id="topN" value="5" min="1" style="width:48px">
-    <button id="selTop">Выбрать топ-N</button>
-   </div>
-  </div>
-  <div class="gbox"><span class="lg">Равновесие ряда</span>
-    <div class="line"><label><input type="checkbox" id="eqScale" checked>
-      пересчитать интенсивности на один распад <b>родителя ряда</b></label>
+      <label><input type="checkbox" id="eqScale" checked>
+      равновесие ряда: интенсивности на один распад <b>родителя ряда</b></label>
       <details class="doc" style="margin:0"><summary>?</summary>
     <p class="hint" id="eqHint">Без галки I — «на 100 распадов самого излучающего нуклида», как в базе IAEA и в файлах
       «Intensities» BecqMoni: у Tl-208 линия 2614 кэВ имеет I = 99.75 %. Но в равновесном ряду Th-232 через
@@ -162,10 +149,10 @@
       Включайте, когда ROI-набор описывает равновесный ряд как целое (сравнение относительных высот линий
       разных членов между собой); выключайте, если хотите табличные значения «как в справочнике».</p>
       </details>
-    </div>
-    <p class="hint" style="margin:2px 0 0">Tl-208 ×0,3594 · Po-212 ×0,6406 · остальные члены ряда ×1</p>
-  </div>
-  </div>
+      <span class="hint" style="margin:0">Tl-208 ×0,3594 · Po-212 ×0,6406 · остальные члены ряда ×1</span>
+      <span class="sep">·</span>
+      <span class="hint" style="margin:0">сортировка — клик по заголовку таблицы</span>
+   </div>
   </div>
   <div class="cols2">
   <div class="group" id="secGroup">
@@ -224,7 +211,7 @@
   </div>
 </div>
 
-<!-- ═══════════ 3. ОФОРМЛЕНИЕ ═══════════ -->
+<!-- ═══════════ 3. ОФОРМЛЕНИЕ И ЭКСПОРТ ═══════════ -->
 <div class="tabbody" data-body="3">
   <div class="gbox"><span class="lg">Оформление ROI</span>
   <div class="line">
@@ -255,15 +242,6 @@
     <span class="colorchips" id="colorBox" style="margin:0"></span>
   </div>
   </div>
-  <div class="gbox grow"><span class="lg">Предпросмотр: набор на энергетической оси</span>
-    <div class="speclegend"><span id="specTitle">высота штриха ∝ √I, цвет — нуклида; зоны — полупрозрачные окна</span>
-      <span style="flex:1"></span><span id="specHover"></span></div>
-    <div class="specwrap"><canvas id="specBar"></canvas></div>
-  </div>
-</div>
-
-<!-- ═══════════ 4. ЭКСПОРТ ═══════════ -->
-<div class="tabbody" data-body="4">
   <div class="gbox"><span class="lg">Экспорт</span>
   <div class="line">
     <label for="cfgName">имя ROI-конфигурации</label>
@@ -321,8 +299,6 @@
 <div class="statusbar">
   <span class="sum" id="sumBar"></span>
   <span style="flex:1"></span>
-  <button class="primary" id="btnXml2">Скачать ROI .xml</button>
-  <button class="primary" id="btnNucXml2">Дописать в библиотеку…</button>
   <button id="stepPrev">◂ Назад</button>
   <button id="stepNext" class="primary">Вперёд ▸</button>
 </div>
@@ -634,8 +610,10 @@ function renderTable(){
   vis.forEach(function(L){
     var tr = document.createElement("tr"); if (L.sel) tr.className = "selrow";
     var rel = relOf(L);
-    // микро-бар по относительной интенсивности: «где сильные линии» видно без чтения чисел
-    var bar = 'background:linear-gradient(90deg,var(--sel) '+rel.toFixed(1)+'%,transparent '+rel.toFixed(1)+'%)';
+    // микро-бар по относительной интенсивности: «где сильные линии» видно без чтения чисел.
+    // Полупрозрачная заливка, а не var(--sel): на выбранной строке фон и так --sel,
+    // сплошной бар с ним сливался бы
+    var bar = 'background:linear-gradient(90deg,var(--bar) '+rel.toFixed(1)+'%,transparent '+rel.toFixed(1)+'%)';
     tr.dataset.key = L.key;
     tr.innerHTML = '<td><input type="checkbox" data-key="'+L.key+'" '+(L.sel?"checked":"")+'></td>'+
       '<td>'+esc(dispNuc(L.label))+'</td><td>'+fmtSci(L.E.toFixed(L.E<100?2:1))+'</td>'+
@@ -644,7 +622,7 @@ function renderTable(){
       '<td>'+esc(L.hl)+'</td><td>'+BADGE[L.type]+'</td>';
     tb.appendChild(tr);
   });
-  renderColors(); renderSelBar(); renderExpStat(); drawSpec(); renderSum();
+  renderColors(); renderSelBar(); renderExpStat(); renderSum();
 }
 
 function renderSelBar(){
@@ -661,61 +639,6 @@ function renderSelBar(){
     T("пусто — начните с готового набора выше","empty — start with a preset above")+'</span>';
 }
 
-// ── полоса спектра: набор так, как он ляжет на энергетическую ось ──
-// Экспортируется список маркеров на оси E, поэтому его и показываем: видны
-// перекрытия зон, дырки в диапазоне и результат объединения близких линий.
-var specHit = null;                                   // линия под курсором
-function drawSpec(){
-  var cv = $("specBar"), box = cv.parentNode.getBoundingClientRect();
-  var dpr = window.devicePixelRatio || 1;
-  var W = Math.max(320, Math.round(box.width - 28)), H = 118;
-  cv.width = W*dpr; cv.height = H*dpr; cv.style.width = W+"px"; cv.style.height = H+"px";
-  var g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
-  var css = getComputedStyle(document.body);
-  var inkMuted = css.getPropertyValue("--muted").trim() || "#888";
-  var lineCol = css.getPropertyValue("--line").trim() || "#ddd";
-  var lines = visibleLines().filter(function(L){ return L.sel; });
-  var pad = {l:6, r:6, t:6, b:16}, plotH = H-pad.t-pad.b;
-  var eMax = 0; lines.forEach(function(L){ if (L.E>eMax) eMax = L.E; });
-  eMax = Math.max(500, Math.ceil((eMax*1.05)/500)*500);
-  function x(E){ return pad.l + (W-pad.l-pad.r)*E/eMax; }
-  // ось и подписи энергии
-  g.strokeStyle = lineCol; g.lineWidth = 1;
-  g.beginPath(); g.moveTo(pad.l, H-pad.b+.5); g.lineTo(W-pad.r, H-pad.b+.5); g.stroke();
-  g.fillStyle = inkMuted; g.font = "10px system-ui,sans-serif"; g.textAlign = "center";
-  var step = eMax<=600 ? 100 : eMax<=1600 ? 200 : eMax<=3200 ? 500 : 1000;
-  for (var E=0; E<=eMax; E+=step){
-    g.beginPath(); g.moveTo(x(E), H-pad.b); g.lineTo(x(E), H-pad.b+3); g.stroke();
-    g.fillText(String(E), x(E), H-pad.b+13);
-  }
-  if (!lines.length){
-    g.textAlign = "left";
-    g.fillText(T("нет выбранных линий","no selected lines"), pad.l+4, pad.t+plotH/2);
-    return;
-  }
-  var mx = 0; lines.forEach(function(L){ if (L.I>mx) mx = L.I; });
-  var mode = $("roiMode").value;
-  // зоны — полупрозрачными окнами под штрихами, видно перекрытия
-  if (mode!=="marker") lines.forEach(function(L){
-    var lim = limitsFor(L); g.globalAlpha = .16; g.fillStyle = lineColor(L);
-    g.fillRect(x(lim[0]), pad.t, Math.max(1, x(lim[1])-x(lim[0])), plotH); g.globalAlpha = 1;
-  });
-  lines.forEach(function(L){
-    var h = plotH * Math.sqrt(Math.max(L.I,0)/(mx||1));      // √I — слабые линии видны
-    g.strokeStyle = lineColor(L); g.lineWidth = (specHit && specHit.key===L.key) ? 3 : 1.4;
-    g.beginPath(); g.moveTo(x(L.E), H-pad.b); g.lineTo(x(L.E), H-pad.b-Math.max(2,h)); g.stroke();
-  });
-}
-function specLineAt(px){
-  var cv = $("specBar"), W = cv.clientWidth, pad = {l:6, r:6};
-  var lines = visibleLines().filter(function(L){ return L.sel; });
-  if (!lines.length) return null;
-  var eMax = 0; lines.forEach(function(L){ if (L.E>eMax) eMax = L.E; });
-  eMax = Math.max(500, Math.ceil((eMax*1.05)/500)*500);
-  var E = (px-pad.l)/(W-pad.l-pad.r)*eMax, best = null, bd = 1e9;
-  lines.forEach(function(L){ var d = Math.abs(L.E-E); if (d<bd){ bd = d; best = L; } });
-  return (bd < eMax*0.012) ? best : null;
-}
 // короткое подтверждение действия: скачивание само по себе ничего не сообщает
 var toastT = null;
 function toast(html, copyText){
@@ -739,6 +662,7 @@ function renderSum(){
   if (step===1){
     $("sumBar").innerHTML = "<b>"+Object.keys(sel.nuc).length+"</b>"+T(" нуклидов · "," nuclides · ")+
       "<b>"+sel.lines.length+"</b>"+T(" линий в базе выше порога"," lines above the database threshold");
+    updSteps();                      // иначе кнопки шагов и пресеты остаются от прошлого шага
     return;
   }
   $("sumBar").innerHTML =
@@ -1167,11 +1091,22 @@ function renderExpStat(){
 }
 
 // ── события ──
+// «?» в строке контролов — всплывающее окно: раскрытый текст висит над содержимым
+// (оформление в теме), поэтому закрывать его надо руками — кликом мимо или Esc
+function closeDocPops(except){
+  document.querySelectorAll(".line > details.doc[open]").forEach(function(d){
+    if (d!==except) d.open = false;
+  });
+}
+document.addEventListener("keydown", function(ev){
+  if (ev.key==="Escape"){ closeDocPops(null); $("famInfoBox").style.display = "none"; }
+});
 document.addEventListener("click", function(ev){
   var t = ev.target;
   // словарик закрывается кликом мимо него
   if (!t.closest || (!t.closest("#famInfoBox") && !t.closest("#famInfoBtn")))
     $("famInfoBox").style.display = "none";
+  if (t.closest) closeDocPops(t.closest(".line > details.doc"));
   if (t.classList.contains("grpAdd")){
     addGroup(t.dataset.mode);
     buildSelectors(); rebuildLines(); renderTable(); return;
@@ -1226,21 +1161,22 @@ $("tabs").addEventListener("click", function(ev){
   document.querySelectorAll(".tabs button").forEach(function(x){ x.classList.toggle("on", x===b); });
   document.querySelectorAll(".tabbody").forEach(function(x){
     x.classList.toggle("on", x.dataset.body===b.dataset.tab); });
-  renderSum(); if (b.dataset.tab==="3") drawSpec();
+  renderSum();
 });
+var NSTEP = 3;
 function goTab(n){
-  n = Math.max(1, Math.min(4, n));
+  n = Math.max(1, Math.min(NSTEP, n));
   document.querySelector('.tabs button[data-tab="'+n+'"]').click();
 }
 // кнопки внизу подписываются соседними шагами, как в окне хоста
-var STEPNAME = [["Изотопы","Nuclides"],["Линии","Lines"],["Оформление ROI","ROI styling"],["Экспорт","Export"]];
+var STEPNAME = [["Изотопы","Nuclides"],["Линии","Lines"],["Оформление и экспорт","Styling and export"]];
 function updSteps(){
   var cur = +(document.querySelector(".tabs button.on")||{dataset:{tab:"1"}}).dataset.tab;
   var p = $("stepPrev"), n = $("stepNext");
   p.textContent = cur>1 ? "◂ "+T(STEPNAME[cur-2][0],STEPNAME[cur-2][1]) : T("◂ Назад","◂ Back");
   p.disabled = cur<=1;
-  n.textContent = cur<4 ? T(STEPNAME[cur][0],STEPNAME[cur][1])+" ▸" : T("Вперёд ▸","Next ▸");
-  n.disabled = cur>=4;
+  n.textContent = cur<NSTEP ? T(STEPNAME[cur][0],STEPNAME[cur][1])+" ▸" : T("Вперёд ▸","Next ▸");
+  n.disabled = cur>=NSTEP;
   // пресеты нужны на первом шаге, сводка базы — на остальных
   $("presetBar").style.display = cur===1 ? "" : "none";
   $("dbinfo").style.display = cur===1 ? "none" : "";
@@ -1249,15 +1185,6 @@ $("stepPrev").addEventListener("click", function(){
   goTab(+document.querySelector(".tabs button.on").dataset.tab - 1); });
 $("stepNext").addEventListener("click", function(){
   goTab(+document.querySelector(".tabs button.on").dataset.tab + 1); });
-// строка меню хоста: пункты ведут на соответствующий шаг
-$("menubar").addEventListener("click", function(ev){
-  var m = ev.target.closest("[data-menu]"); if (!m) return;
-  var k = m.dataset.menu;
-  if (k==="file") goTab(4);
-  else if (k==="set"){ goTab(1); }
-  else if (k==="data") toast($("dbinfo").textContent);
-  else if (k==="help"){ goTab(1); showFamInfo(true); }
-});
 $("eqScale").addEventListener("change", function(){ rebuildLines(); renderTable(); });
 $("libFull").addEventListener("change", function(){ $("anchorSel").value = ""; renderExpStat(); });
 $("anchorSel").addEventListener("change", renderExpStat);
@@ -1469,10 +1396,10 @@ $("mergeFile").addEventListener("change", function(){
 
 // ── i18n: статические тексты ──
 var RU2EN = {
-  "ROI-мастер для BecqMoni":"ROI Wizard for BecqMoni",
+  "Конструктор ROI и наборов нуклидов":"ROI and nuclide set builder",
   "Изотопы, семейства, цепочки":"Nuclides, families, chains",
   "1 · Источники":"1 · Sources","2 · Линии":"2 · Lines","3 · Оформление":"3 · Styling",
-  "4 · Экспорт":"4 · Export","Готовые наборы":"Presets","Поиск":"Search",
+  "3 · Оформление и экспорт":"3 · Styling and export","Готовые наборы":"Presets","Поиск":"Search",
   "Группы и ряды":"Groups and series","Очистить":"Clear",
   "Разрешение R, % @662":"Resolution R, % @662","Критерий неразделимости":"Inseparability criterion",
   "Sparrow — маркеры ROI":"Sparrow — ROI markers","якорный набор — библиотечный фит":"anchored set — library fit",
@@ -1574,8 +1501,8 @@ function updDbInfo(){
 function setLang(l){
   LANG = l; localStorage.setItem("roiLang", l);
   document.documentElement.lang = l;
-  document.title = T("ROI-мастер для BecqMoni — гамма, ХРИ, вторичные пики",
-                     "BecqMoni ROI Wizard — gamma, XRF, secondary peaks");
+  document.title = T("Конструктор ROI и наборов нуклидов для BecqMoni",
+                     "ROI and nuclide set builder for BecqMoni");
   $("langBtn").textContent = T("EN","RU");
   $("nucSearch").placeholder = T("напр. Eu-152","e.g. Eu-152");
   i18nNodes.forEach(function(o){ o.node.nodeValue = l==="en" ? o.en : o.ru; });
@@ -1588,38 +1515,6 @@ function setLang(l){
 }
 $("langBtn").addEventListener("click", function(){ setLang(LANG==="en" ? "ru" : "en"); });
 
-// ── полоса спектра: наведение подсвечивает линию, клик снимает её выбор ──
-$("specBar").addEventListener("mousemove", function(ev){
-  var r = this.getBoundingClientRect(), L = specLineAt(ev.clientX-r.left);
-  if ((L && L.key) !== (specHit && specHit.key)){
-    specHit = L; drawSpec();
-    $("specHover").textContent = L ? dispNuc(L.label)+" · "+L.E.toFixed(2)+T(" кэВ · I "," keV · I ")+L.I+" %" : "";
-  }
-});
-$("specBar").addEventListener("mouseleave", function(){ specHit = null; $("specHover").textContent = ""; drawSpec(); });
-$("specBar").addEventListener("click", function(ev){
-  var r = this.getBoundingClientRect(), L = specLineAt(ev.clientX-r.left);
-  if (!L) return;
-  sel.lines.forEach(function(x){ if (x.key===L.key) x.sel = false; });
-  renderTable();
-});
-window.addEventListener("resize", drawSpec);
-// двусторонняя подсветка: строка таблицы ↔ штрих на полосе (в BecqMoni это будет
-// подсветка маркера на реальном спектре — механика та же)
-$("lineTbl").addEventListener("mouseover", function(ev){
-  var tr = ev.target.closest("tr[data-key]"); if (!tr) return;
-  var L = sel.lines.filter(function(x){ return x.key===tr.dataset.key; })[0];
-  if ((L && L.key) !== (specHit && specHit.key)){
-    specHit = L; drawSpec();
-    $("specHover").textContent = L ? dispNuc(L.label)+" · "+L.E.toFixed(2)+T(" кэВ"," keV") : "";
-  }
-});
-$("lineTbl").addEventListener("mouseleave", function(){
-  specHit = null; $("specHover").textContent = ""; drawSpec();
-});
-// дубли кнопок экспорта в строке итога — результат всегда под рукой
-$("btnXml2").addEventListener("click", function(){ $("btnXml").click(); });
-$("btnNucXml2").addEventListener("click", function(){ $("btnNucXml").click(); });
 
 // ── init ──
 setLang(LANG);
