@@ -532,6 +532,7 @@ namespace BecquerelMonitor.RoiWizard
         void WireEvents()
         {
             this.tabs.SelectedIndexChanged += delegate { this.UpdateStepButtons(); };
+            this.buttonHelp.Click += delegate { this.ShowHelp(); };
             this.buttonStepPrev.Click += delegate { this.GoStep(-1); };
             this.buttonStepNext.Click += delegate { this.GoStep(1); };
             this.tabSources.Resize += delegate { this.LayoutSources(); };
@@ -1817,6 +1818,16 @@ namespace BecquerelMonitor.RoiWizard
             return text.Length > 0 ? text : "ROI set";
         }
 
+        // Справка — тот же текст, что в модальном окне страницы; он лежит ресурсом,
+        // выгруженным из index.html, поэтому расходиться версиям негде.
+        void ShowHelp()
+        {
+            using (HelpForm help = new HelpForm())
+            {
+                help.ShowDialog(this);
+            }
+        }
+
         // Кнопки внизу подписываются именами соседних шагов, а на краях — обобщённо
         // и выключены. То же поведение, что у пары кнопок в строке состояния страницы.
         void GoStep(int delta)
@@ -1892,6 +1903,7 @@ namespace BecquerelMonitor.RoiWizard
             this.statusFormat = "линий: {0} из {1} · нуклидов: {2}";
             this.hintNone = "Отметьте нуклид — кнопки применятся к нему.";
 
+            this.buttonHelp.Text = "Справка";
             this.stepNames = new string[] { "Изотопы", "Линии", "Оформление и экспорт" };
             this.stepBack = "◂ Назад";
             this.stepForward = "Вперёд ▸";

@@ -163,6 +163,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.buttonHelp = new System.Windows.Forms.ToolStripButton();
             this.buttonStepPrev = new System.Windows.Forms.ToolStripButton();
             this.buttonStepNext = new System.Windows.Forms.ToolStripButton();
 
@@ -873,8 +874,12 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonStepNext.Text = "Next ▸";
             this.buttonStepNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.buttonStepNext.AutoToolTip = false;
+            this.buttonHelp.Text = "Help";
+            this.buttonHelp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.buttonHelp.AutoToolTip = false;
+            this.buttonHelp.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.statusLabel, this.buttonStepPrev, this.buttonStepNext });
+                this.statusLabel, this.buttonHelp, this.buttonStepPrev, this.buttonStepNext });
 
             // ─── форма ─────────────────────────────────────────────────────
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1049,6 +1054,7 @@ namespace BecquerelMonitor.RoiWizard
 
         System.Windows.Forms.StatusStrip statusStrip;
         System.Windows.Forms.ToolStripStatusLabel statusLabel;
+        System.Windows.Forms.ToolStripButton buttonHelp;
         System.Windows.Forms.ToolStripButton buttonStepPrev;
         System.Windows.Forms.ToolStripButton buttonStepNext;
     }

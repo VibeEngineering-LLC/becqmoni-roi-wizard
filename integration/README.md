@@ -20,14 +20,20 @@ BecquerelMonitor/RoiWizard/
   ZoneCalculator.cs     границы ROI-зоны
   SetChecker.cs         проверки перед сохранением: совещательные для ROI, блокирующие для набора
   SetExporter.cs        сборка ROIConfigData и NuclideSet — единственный файл, зависящий от типов хоста
+  WizardTheme.cs        палитра и шрифт из styles/becqmoni.css, обход дерева контролов
+  CatalogCellRenderers.cs  свои ячейки XPTable: бейджи семейств и типов, счётчики γ/X,
+                        микро-бар интенсивности (штатная ячейка знает один цвет)
   RoiWizardForm.cs           окно инструмента: три вкладки, обработчики, русские подписи
   RoiWizardForm.Designer.cs  разметка формы (XPTable, как в NuclideSetForm)
-  nuclides.xml          сам снимок (121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ; 96 КБ)
+  HelpForm.cs           окно справки: разбор того же подмножества разметки, что на странице
+  nuclides.xml          сам снимок (121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ; 101 КБ)
+  help.xml              текст справки на двух языках, выгружен из index.html
 host-patch/
   apply_patch.py        встраивание в дерево BecqMoni: файлы, .csproj, пункт меню, ресурсы
   README.md             то же самое построчно, если применять руками
 tools/
   export_catalog.py     пересборка nuclides.xml из data/nuclides.js и data/xrf.js
+  export_help.py        пересборка help.xml из index.html (оба языка)
 tests/
   RoiWizardTests.cs     тесты инвариантов, run_tests.cmd — сборка и прогон
   HostStubs.cs          заглушки типов BecqMoni: только для тестовой сборки,

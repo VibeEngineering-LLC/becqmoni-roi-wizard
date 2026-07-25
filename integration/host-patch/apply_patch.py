@@ -33,6 +33,9 @@ CSPROJ_ENTRIES = """    <Compile Include="RoiWizard\\NuclideCatalog.cs" />
     <Compile Include="RoiWizard\\SetExporter.cs" />
     <Compile Include="RoiWizard\\WizardTheme.cs" />
     <Compile Include="RoiWizard\\CatalogCellRenderers.cs" />
+    <Compile Include="RoiWizard\\HelpForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="RoiWizard\\RoiWizardForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -184,10 +187,17 @@ def patch_csproj(root):
     text = read(path)
     steps = []
     # Записи проверяются по одной: в дереве, куда патч уже применяли, часть файлов
-    # прописана, а новый файл модуля иначе молча не попал бы в сборку.
-    missing = [block for block in CSPROJ_ENTRIES.strip("\n").split("\n")
-               if block.lstrip().startswith("<Compile Include=") and
-               block.split('"')[1] not in text]
+    # прописана, а новый файл модуля иначе молча не попал бы в сборку. Запись —
+    # это блок: либо самозакрытая строка, либо <Compile …> … </Compile> с потрохами
+    # (SubType, DependentUpon). Вставлять такой блок построчно нельзя — .csproj
+    # перестаёт разбираться.
+    blocks = []
+    for line in CSPROJ_ENTRIES.strip("\n").split("\n"):
+        if line.lstrip().startswith("<Compile Include="):
+            blocks.append([line])
+        elif blocks:
+            blocks[-1].append(line)
+    missing = ["\n".join(block) for block in blocks if block[0].split('"')[1] not in text]
     if not missing:
         steps.append("уже есть: записи Compile")
     else:
@@ -196,22 +206,21 @@ def patch_csproj(root):
         if index < 0:
             raise SystemExit("не найден ItemGroup в .csproj")
         end = index + len(anchor)
-        # файлы формы идут парой с их разметкой — вставляем блок целиком, если он новый
-        addition = CSPROJ_ENTRIES if len(missing) > 3 else "\n".join(missing) + "\n"
-        text = text[:end] + addition + text[end:]
+        text = text[:end] + "\n".join(missing) + "\n" + text[end:]
         steps.append("вставлено записей Compile: %d" % len(missing))
 
-    if "RoiWizard\\nuclides.xml" in text:
-        steps.append("уже есть: EmbeddedResource")
-    else:
+    for resource in ["RoiWizard\\nuclides.xml", "RoiWizard\\help.xml"]:
+        if resource in text:
+            steps.append("уже есть: EmbeddedResource %s" % resource)
+            continue
         anchor = "    <EmbeddedResource Include="
         index = text.find(anchor)
         if index < 0:
             raise SystemExit("не найден ни один EmbeddedResource в .csproj")
         text = (text[:index] +
-                '    <EmbeddedResource Include="RoiWizard\\nuclides.xml" />\n' +
+                '    <EmbeddedResource Include="%s" />\n' % resource +
                 text[index:])
-        steps.append("вставлено: EmbeddedResource")
+        steps.append("вставлено: EmbeddedResource %s" % resource)
 
     write(path, text)
     return steps
