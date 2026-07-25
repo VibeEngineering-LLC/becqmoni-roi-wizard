@@ -232,10 +232,10 @@ namespace BecquerelMonitor.RoiWizard
             this.checkTypeXrf.CheckedChanged += refreshLines;
             this.checkTypeSecondary.CheckedChanged += refreshLines;
             this.checkEquilibrium.CheckedChanged += rebuild;
-            this.checkSecondary.CheckedChanged += rebuild;
 
             this.buttonSelectAll.Click += delegate { this.SetVisibleSelected(true); };
             this.buttonSelectNone.Click += delegate { this.SetVisibleSelected(false); };
+            this.buttonGenerateSecondary.Click += delegate { this.GenerateSecondary(); };
             this.buttonSelectTop.Click += delegate
             {
                 LineSetBuilder.SelectTopPerNuclide(this.lines, (int)this.numTopN.Value);
@@ -577,12 +577,6 @@ namespace BecquerelMonitor.RoiWizard
             this.lines = this.builder.Build(this.selection, this.CurrentFilter());
             this.beforeMerge = null;
 
-            if (this.checkSecondary.Checked)
-            {
-                SecondaryKind kinds = SecondaryKind.Backscatter | SecondaryKind.ComptonEdge |
-                                      SecondaryKind.SingleEscape | SecondaryKind.DoubleEscape;
-                this.lines.AddRange(SecondaryPeaks.Generate(this.lines, this.Resolution, kinds, 10.0));
-            }
             this.RefreshSelectedList();
             this.RefreshLines();
         }
@@ -673,6 +667,38 @@ namespace BecquerelMonitor.RoiWizard
         // Кнопки работают по ВИДИМЫМ строкам — как в вебе: при включённом «скрыть
         // невыбранные» или фильтре типов «снять все» не должно трогать то, чего
         // пользователь сейчас не видит.
+        // Виды особенностей — ровно те же восемь, что в вебе, и с теми же умолчаниями
+        SecondaryKind SelectedSecondaryKinds()
+        {
+            SecondaryKind kinds = SecondaryKind.None;
+            if (this.checkSecBackscatter.Checked) kinds |= SecondaryKind.Backscatter;
+            if (this.checkSecComptonEdge.Checked) kinds |= SecondaryKind.ComptonEdge;
+            if (this.checkSecSingleEscape.Checked) kinds |= SecondaryKind.SingleEscape;
+            if (this.checkSecDoubleEscape.Checked) kinds |= SecondaryKind.DoubleEscape;
+            if (this.checkSecIodine.Checked) kinds |= SecondaryKind.IodineEscape;
+            if (this.checkSecAnnihilation.Checked) kinds |= SecondaryKind.Annihilation;
+            if (this.checkSecSum.Checked) kinds |= SecondaryKind.CascadeSum;
+            if (this.checkSecPileUp.Checked) kinds |= SecondaryKind.PileUp;
+            return kinds;
+        }
+
+        void GenerateSecondary()
+        {
+            SecondaryKind kinds = this.SelectedSecondaryKinds();
+            if (kinds == SecondaryKind.None)
+            {
+                return;
+            }
+            // прежние маркеры заменяются: иначе повторное нажатие плодит дубли
+            this.lines.RemoveAll(delegate(SpectralLine line) { return line.Type == LineType.Secondary; });
+            List<SpectralLine> generated = SecondaryPeaks.Generate(
+                this.lines, this.Resolution, kinds, (double)this.numSecondaryMin.Value);
+            this.lines.AddRange(generated);
+            this.RefreshLines();
+            this.statusLabel.Text = string.Format(CultureInfo.CurrentCulture,
+                this.secondaryFormat, generated.Count);
+        }
+
         void SetVisibleSelected(bool value)
         {
             foreach (Row row in this.tableModelLines.Rows)
@@ -798,6 +824,7 @@ namespace BecquerelMonitor.RoiWizard
         string mergeInfoFormat =
             "threshold {0:0.##}·FWHM: lines merge closer than {1:0.#} keV at 100, {2:0.#} at 662, {3:0.#} at 1500";
         string statusFormat = "lines: {0} of {1} · nuclides: {2}";
+        string secondaryFormat = "secondary markers added: {0}";
         bool suppressGroupCheck;
         string hintPicked = "Applies to the ticked nuclides ({0}).";
         string hintNone = "Tick a nuclide - the buttons apply to it.";
@@ -1143,6 +1170,18 @@ namespace BecquerelMonitor.RoiWizard
             this.checkEquilibrium.Text = "равновесие ряда (интенсивности на распад родителя)";
             this.checkHalfLife.Text = "T½";
             this.checkHideUnselected.Text = "скрыть невыбранные";
+            this.groupSecondary.Text = "Вторичные пики (расчёт по выбранным γ-линиям)";
+            this.labelSecondaryMin.Text = "для γ-линий с I ≥, %";
+            this.checkSecBackscatter.Text = "рассеяние назад (BS)";
+            this.checkSecComptonEdge.Text = "комптон-край (CE)";
+            this.checkSecSingleEscape.Text = "вылет 511 (SE)";
+            this.checkSecDoubleEscape.Text = "вылет 1022 (DE)";
+            this.checkSecIodine.Text = "вылет I-K (NaI, −28.6)";
+            this.checkSecAnnihilation.Text = "аннигиляция 511";
+            this.checkSecSum.Text = "суммирование каскадное (E1+E2)";
+            this.checkSecPileUp.Text = "наложение 2×E";
+            this.buttonGenerateSecondary.Text = "Сгенерировать";
+            this.secondaryFormat = "добавлено вторичных маркеров: {0}";
             this.labelTypes.Text = "Тип линий";
             this.checkTypeXray.Text = "X (распад)";
             this.checkTypeXrf.Text = "ХРИ";
@@ -1157,7 +1196,6 @@ namespace BecquerelMonitor.RoiWizard
             this.comboMaxHalfLifeUnit.Items.Clear();
             this.comboMaxHalfLifeUnit.Items.AddRange(new object[] { "сек", "ч", "сут", "лет" });
             this.comboMaxHalfLifeUnit.SelectedIndex = 3;
-            this.checkSecondary.Text = "добавлять вторичные пики (рассеяние назад, край, вылеты)";
             this.buttonSelectTop.Text = "топ-N на нуклид";
             this.comboIntensityMode.Items.Clear();
             this.comboIntensityMode.Items.AddRange(new object[] {
