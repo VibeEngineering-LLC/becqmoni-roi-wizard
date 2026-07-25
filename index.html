@@ -5,62 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ROI-мастер для BecqMoni — гамма, ХРИ, вторичные пики</title>
 <style>
+  /* Оформление хоста (BecqMoni, WinForms): системный серо-синий, прямые углы,
+     Segoe UI 12 px, плотные списки. Панель должна быть неотличима от «Обнаружения пиков». */
   :root{
-    --bg:#f7f6f3; --card:#ffffff; --ink:#1c1b19; --muted:#605c54;
-    --line:#e3e0d8; --accent:#4a6b8a; --accent-ink:#2c4a63;
-    --ok:#1f6b3a; --input-bg:#fdfcfa; --sel:#eef4fb; --chip:#f0eee9;
+    --bg:#eef1f4; --card:#ffffff; --ink:#1a1a1a; --muted:#5a6472;
+    --line:#adadad; --accent:#2b6cb0; --accent-ink:#1f3a5f;
+    --ok:#1f6b3a; --input-bg:#ffffff; --sel:#cde4f7; --chip:#e5e5e5;
+    --panel:#f0f0f0; --head:#1f3a5f; --tabbg:#d3e0ee; --grid:#d7dde5;
   }
-  @media (prefers-color-scheme:dark){
-    :root{--bg:#1a1917; --card:#232220; --ink:#ece9e3; --muted:#a7a299;
-      --line:#38352f; --accent:#89aecb; --accent-ink:#a9c6df; --ok:#7fce9a;
-      --input-bg:#1c1b19; --sel:#2f4257; --chip:#2c2a26;}
-  }
-  :root[data-theme="dark"]{--bg:#1a1917; --card:#232220; --ink:#ece9e3; --muted:#a7a299;
-    --line:#38352f; --accent:#89aecb; --accent-ink:#a9c6df; --ok:#7fce9a;
-    --input-bg:#1c1b19; --sel:#2f4257; --chip:#2c2a26;}
-  :root[data-theme="light"]{--bg:#f7f6f3; --card:#ffffff; --ink:#1c1b19; --muted:#605c54;
-    --line:#e3e0d8; --accent:#4a6b8a; --accent-ink:#2c4a63; --ok:#1f6b3a;
-    --input-bg:#fdfcfa; --sel:#eef4fb; --chip:#f0eee9;}
   *{box-sizing:border-box}
   body{margin:0; background:var(--bg); color:var(--ink); height:100dvh; overflow:hidden;
-    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+    font:12px/1.45 "Segoe UI",Tahoma,Arial,sans-serif}
   /* ── каркас панели: шапка, слева шаги, справа результат ───────────────── */
   .app{height:100dvh; display:flex; flex-direction:column}
-  .topbar{display:flex; align-items:baseline; gap:12px; padding:7px 14px;
-    border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0}
-  .topbar h1{font-size:15px; margin:0; white-space:nowrap}
-  .topbar .sub{margin:0; font-size:12.5px; min-width:0; overflow:hidden; text-overflow:ellipsis;
-    white-space:nowrap}
+  .topbar{display:flex; align-items:center; gap:10px; padding:3px 8px;
+    background:var(--head); color:#fff; flex-shrink:0}
+  .topbar h1{font-size:12px; font-weight:600; margin:0; white-space:nowrap; color:#fff}
+  .topbar .sub{margin:0; font-size:11.5px; color:#c9d8ea; min-width:0; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap}
   .topbar .spacer{flex:1}
+  /* строка меню и статуса — как в окне хоста */
+  .menubar{display:flex; align-items:center; gap:14px; padding:2px 8px; font-size:12px;
+    background:var(--panel); border-bottom:1px solid var(--line); flex-shrink:0}
+  .menubar span[data-menu]{cursor:pointer; padding:1px 4px}
+  .menubar span[data-menu]:hover{background:var(--sel)}
+  .menubar .sub{color:var(--muted); font-size:11.5px; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap}
   .main{flex:1; display:flex; min-height:0}
-  .side{width:430px; flex-shrink:0; border-right:1px solid var(--line); background:var(--card);
+  .side{width:430px; flex-shrink:0; border-right:1px solid var(--line); background:var(--panel);
     display:flex; flex-direction:column; min-height:0}
   .tabs{display:flex; border-bottom:1px solid var(--line); flex-shrink:0}
-  .tabs button{flex:1; border:none; border-right:1px solid var(--line); border-radius:0;
-    background:transparent; padding:8px 4px; font-size:12.5px; color:var(--muted);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .tabs button{flex:1; border:1px solid #9fb0c6; border-bottom:none; border-radius:0;
+    background:var(--tabbg); padding:6px 8px; font-size:12px; color:var(--ink);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-right:-1px}
   .tabs button:last-child{border-right:none}
-  .tabs button.on{background:var(--sel); color:var(--accent-ink); font-weight:700;
-    box-shadow:inset 0 -2px 0 var(--accent)}
-  .tabbody{display:none; padding:12px 14px 20px; overflow-y:auto; flex:1; min-height:0}
+  .tabs button.on{background:#fff; color:var(--accent-ink); font-weight:600; box-shadow:none}
+  .tabbody{display:none; padding:8px 10px 16px; overflow-y:auto; flex:1; min-height:0;
+    background:#fff; border-top:1px solid #9fb0c6}
   .tabbody.on{display:block}
   .content{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0}
-  .footbar{display:flex; align-items:center; gap:12px; padding:8px 14px; flex-shrink:0;
-    border-top:1px solid var(--line); background:var(--card)}
+  .footbar{display:flex; align-items:center; gap:10px; padding:4px 8px; flex-shrink:0;
+    border-top:1px solid var(--line); background:var(--panel)}
   .footbar .sum{font-size:13px; font-variant-numeric:tabular-nums}
   .footbar .sum b{color:var(--accent-ink)}
   /* ── полоса спектра: линии набора на энергетической оси ───────────────── */
-  .specwrap{flex-shrink:0; border-bottom:1px solid var(--line); background:var(--card);
-    padding:6px 14px 2px}
+  .specwrap{flex-shrink:0; border-bottom:1px solid var(--line); background:#fff; padding:4px 8px 2px}
   #specBar{width:100%; height:118px; display:block; cursor:crosshair}
   .speclegend{display:flex; gap:12px; font-size:11.5px; color:var(--muted); padding:0 0 4px}
   h1{font-size:24px; margin:0 0 4px}
   .sub{color:var(--muted); font-size:14px; margin:0 0 6px}
-  .card{margin:0 0 14px}
-  h2{font-size:14px; margin:0 0 8px; color:var(--accent-ink)}
+  .card{margin:0 0 10px}
+  h2{font-size:12px; font-weight:600; margin:0 0 6px; color:var(--accent-ink);
+    border-bottom:1px solid var(--grid); padding-bottom:3px}
   h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:6px}
-  h3{font-size:13px; margin:12px 0 5px; color:var(--accent-ink)}
-  label{font-size:13px; color:var(--ink); font-weight:500; display:block; margin-bottom:3px}
+  h3{font-size:12px; font-weight:600; margin:8px 0 4px; color:var(--accent-ink)}
+  label{font-size:12px; color:var(--ink); font-weight:400; display:block; margin-bottom:2px}
   /* пояснения — под «подробнее», а не между полем и кнопкой */
   details.doc{margin:4px 0 0}
   details.doc > summary{font-size:12.5px; color:var(--accent-ink); cursor:pointer;
@@ -69,28 +68,28 @@
   details.doc .hint{max-width:72ch}
   /* сегментный переключатель — там, где вариантов 2–3 */
   .seg{display:flex}
-  .seg button{border-radius:0; border-right-width:0; flex:1; padding:6px 8px; font-size:13px}
-  .seg button:first-child{border-radius:8px 0 0 8px}
-  .seg button:last-child{border-radius:0 8px 8px 0; border-right-width:1px}
+  .seg button{border-radius:0; border-right-width:0; flex:1; padding:3px 8px; font-size:12px}
+  .seg button:last-child{border-right-width:1px}
   .seg button.on{background:var(--sel); border-color:var(--accent); color:var(--accent-ink);
     font-weight:600; position:relative; z-index:1}
   .srcPane{display:none}
   .srcPane.on{display:block}
-  .toast{position:absolute; right:16px; bottom:56px; z-index:40; max-width:min(560px,60vw);
-    background:var(--card); border:1px solid var(--accent); border-radius:10px;
-    padding:9px 12px; font-size:13px; box-shadow:0 10px 28px rgba(0,0,0,.2)}
+  .toast{position:absolute; right:10px; bottom:34px; z-index:40; max-width:min(560px,60vw);
+    background:#ffffe1; border:1px solid #b0a060; border-radius:0;
+    padding:6px 10px; font-size:12px; box-shadow:0 4px 12px rgba(0,0,0,.25)}
   .toast code{font-size:12px}
   .content{position:relative}
   tr.hovered{outline:2px solid var(--accent); outline-offset:-2px}
   input[type=number],input[type=text],select{
-    padding:7px 10px; font-size:14px; color:var(--ink); background:var(--input-bg);
-    border:1px solid var(--line); border-radius:8px; font-variant-numeric:tabular-nums}
+    padding:2px 5px; font-size:12px; height:23px; color:var(--ink); background:var(--input-bg);
+    border:1px solid var(--line); border-radius:0; font-variant-numeric:tabular-nums;
+    font-family:inherit}
   input:focus,select:focus{outline:2px solid var(--accent); outline-offset:1px}
-  button{padding:7px 14px; font-size:13.5px; border-radius:8px; border:1px solid var(--line);
-    background:var(--chip); color:var(--ink); cursor:pointer}
-  button:hover{border-color:var(--accent)}
-  button.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
-  .row{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end}
+  button{padding:3px 10px; font-size:12px; height:23px; border-radius:0; border:1px solid var(--line);
+    background:var(--chip); color:var(--ink); cursor:pointer; font-family:inherit}
+  button:hover{background:#e8f0f8; border-color:var(--accent)}
+  button.primary{background:#dbe8f5; border-color:#7d9cbb; color:var(--accent-ink); font-weight:600}
+  .row{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:flex-end}
   .cols{display:grid; grid-template-columns:1fr; gap:10px}
   /* блок 1: заголовок / панель управления / список / хвост — строки колонок выровнены,
      поэтому все три списка начинаются на одной линии */
@@ -99,15 +98,15 @@
     row-gap:0; align-content:start}
   .cols.aligned .ctl{align-self:start; position:relative}
   /* словарик кодов — всплывающей панелью поверх списка, чтобы не двигать вёрстку */
-  .infoPop{position:absolute; left:0; right:0; top:100%; z-index:20; margin:4px 0 0;
-    background:var(--card); border:1px solid var(--line); border-radius:10px;
-    padding:9px 11px; box-shadow:0 8px 24px rgba(0,0,0,.16)}
+  .infoPop{position:absolute; left:0; right:0; top:100%; z-index:20; margin:2px 0 0;
+    background:#ffffe1; border:1px solid #b0a060; border-radius:0;
+    padding:6px 9px; box-shadow:0 4px 10px rgba(0,0,0,.2)}
   @media(max-width:900px){
     .cols{grid-template-columns:1fr}
     .cols.aligned{grid-template-rows:none}
     .cols.aligned > div{display:block; grid-row:auto}
   }
-  .group{border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:8px 0}
+  .group{border:1px solid var(--line); border-radius:0; padding:6px 8px; margin:6px 0; background:#fff}
   .group .ghead{display:flex; justify-content:space-between; align-items:center; gap:8px;
     font-weight:700; font-size:13.5px; cursor:pointer}
   .gctl{display:flex; gap:6px; align-items:center; flex-wrap:nowrap; white-space:nowrap; flex-shrink:0}
@@ -117,27 +116,31 @@
   .group.open button.exp{transform:rotate(180deg)}
   .group .gbody{margin-top:8px; display:none; max-height:260px; overflow-y:auto}
   .group.open .gbody{display:block}
-  .nuc{display:flex; align-items:center; gap:7px; padding:2.5px 2px; font-size:13.5px;
+  .nuc{display:flex; align-items:center; gap:6px; padding:1px 4px; font-size:12px; line-height:16px;
     font-variant-numeric:tabular-nums}
   .nuc .hl{color:var(--muted); font-size:12px; margin-left:auto; white-space:nowrap}
   .nuc.nolines{opacity:.5}
-  .nuclist{border:1px solid var(--line); border-radius:10px; padding:6px 10px; margin-top:8px;
-    max-height:250px; overflow-y:auto}
-  .nuclist .nuc.hit{cursor:pointer; border-radius:6px; padding-left:5px}
+  .nuclist{border:1px solid var(--line); border-radius:0; padding:2px; margin-top:6px;
+    background:#fff; max-height:250px; overflow-y:auto}
+  .nuclist .nuc.hit{cursor:pointer; border-radius:0}
   .nuclist .nuc.hit:hover{background:var(--sel)}
   .nuclist .nuc .fam{color:var(--muted); font-size:11.5px; text-transform:uppercase; letter-spacing:.04em}
   .nuclist .nuc .note{color:var(--muted); font-size:11.5px; min-width:0; overflow:hidden;
     text-overflow:ellipsis; white-space:nowrap}
   .nuclist .empty{color:var(--muted); font-size:13px; padding:4px 2px}
   .chipbar{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
-  .chip{background:var(--chip); border:1px solid var(--line); border-radius:16px;
-    padding:4px 11px; font-size:13px; cursor:pointer; user-select:none}
+  .chip{background:var(--chip); border:1px solid var(--line); border-radius:0;
+    padding:2px 8px; font-size:12px; cursor:pointer; user-select:none}
   .chip.on{background:var(--sel); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
   .tblscroll{overflow:auto; max-height:520px; border:1px solid var(--line); border-radius:10px; margin-top:10px}
-  table{width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums}
-  th,td{border-bottom:1px solid var(--line); padding:5px 9px; text-align:right; white-space:nowrap}
-  th{position:sticky; top:0; background:var(--card); font-weight:700; cursor:pointer; user-select:none; z-index:2}
-  th:first-child,td:first-child{text-align:center; width:34px}
+  table{width:100%; border-collapse:collapse; font-size:12px; font-variant-numeric:tabular-nums}
+  th,td{border-bottom:1px solid var(--grid); padding:1px 8px; text-align:right; white-space:nowrap;
+    line-height:17px}
+  th{position:sticky; top:0; background:var(--panel); font-weight:600; cursor:pointer;
+    user-select:none; z-index:2; border-bottom:1px solid var(--line); padding:3px 8px}
+  th:first-child,td:first-child{text-align:center; width:26px}
+  td input[type=checkbox]{width:13px; height:13px; margin:0; vertical-align:middle}
+  tbody tr:hover{background:#eaf1f8}
   th:nth-child(2),td:nth-child(2),th:nth-child(7),td:nth-child(7){text-align:left}
   tr.selrow{background:var(--sel)}
   .badge{display:inline-block; font-size:11px; font-weight:700; border-radius:5px; padding:1px 6px}
@@ -150,7 +153,7 @@
   .cchip{display:flex; align-items:center; gap:6px; background:var(--chip); border:1px solid var(--line);
     border-radius:8px; padding:4px 9px; font-size:13px}
   .cchip input[type=color]{width:26px; height:22px; border:none; background:none; padding:0; cursor:pointer}
-  pre{background:var(--input-bg); border:1px solid var(--line); border-radius:9px; padding:11px 13px;
+  pre{background:var(--input-bg); border:1px solid var(--line); border-radius:0; padding:6px 8px;
     font-size:12px; overflow:auto; max-height:300px}
   .stat{font-size:13.5px; color:var(--muted)}
   .stat b{color:var(--ok); font-size:15px}
@@ -163,11 +166,15 @@
 <div class="app">
 <header class="topbar">
   <h1>ROI-мастер для BecqMoni</h1>
-  <p class="sub" id="dbinfo"></p>
   <span class="spacer"></span>
   <button id="langBtn">EN</button>
-  <button id="themeBtn">◑ тема</button>
 </header>
+<div class="menubar" id="menubar">
+  <span data-menu="file">Файл</span><span data-menu="set">Набор</span>
+  <span data-menu="data">Данные</span><span data-menu="help">Справка</span>
+  <span class="spacer" style="flex:1"></span>
+  <span class="sub" id="dbinfo"></span>
+</div>
 <div class="main">
 <aside class="side">
 <nav class="tabs" id="tabs">
@@ -474,6 +481,8 @@
   <div class="footbar">
     <span class="sum" id="sumBar"></span>
     <span style="flex:1"></span>
+    <button id="stepPrev">◂ назад</button>
+    <button id="stepNext">вперёд ▸</button>
     <button class="primary" id="btnXml2">Скачать ROI .xml</button>
     <button class="primary" id="btnNucXml2">Дописать в библиотеку…</button>
   </div>
@@ -887,13 +896,24 @@ function toast(html, copyText){
   });
   clearTimeout(toastT); toastT = setTimeout(function(){ el.style.display = "none"; }, 8000);
 }
+// статусная строка и счётчики на закладках — как в окне хоста: состояние шага
+// читается, не открывая шаг
 function renderSum(){
   var lines = sel.lines.filter(function(L){ return L.sel; });
   var nucs = {}; lines.forEach(function(L){ nucs[L.nuc] = 1; });
+  var shown = document.querySelectorAll("#lineTbl tbody tr").length;
   var a = anchorKeyOf(libLines()), aL = libLines().filter(function(L){ return L.key===a; })[0];
-  $("sumBar").innerHTML = "<b>"+Object.keys(nucs).length+"</b> "+T("нуклидов · ","nuclides · ")+
-    "<b>"+lines.length+"</b> "+T("линий","lines")+
+  $("sumBar").innerHTML =
+    T("Показано ","Shown ")+shown+T(" из ", " of ")+sel.lines.length+
+    T(" · выбрано "," · selected ")+"<b>"+lines.length+"</b>"+T(" линий у "," lines of ")+
+    "<b>"+Object.keys(nucs).length+"</b>"+T(" нуклидов"," nuclides")+
+    (sel.merged.length ? T(" · слито групп ", " · merged groups ")+sel.merged.length : "")+
     (aL ? " · "+T("якорь ","anchor ")+esc(dispNuc(aL.label))+" "+aL.E.toFixed(1) : "");
+  var t1 = document.querySelector('.tabs button[data-tab="1"]');
+  var t2 = document.querySelector('.tabs button[data-tab="2"]');
+  var nSrc = Object.keys(sel.nuc).length + Object.keys(sel.xrf).length;
+  t1.innerHTML = T("1 · Источники","1 · Sources")+(nSrc ? ' <b>'+nSrc+'</b>' : "");
+  t2.innerHTML = T("2 · Линии","2 · Lines")+(lines.length ? ' <b>'+lines.length+'</b>' : "");
 }
 
 // ── вторичные пики ──
@@ -1368,6 +1388,23 @@ $("tabs").addEventListener("click", function(ev){
   document.querySelectorAll(".tabbody").forEach(function(x){
     x.classList.toggle("on", x.dataset.body===b.dataset.tab); });
 });
+function goTab(n){
+  n = Math.max(1, Math.min(4, n));
+  document.querySelector('.tabs button[data-tab="'+n+'"]').click();
+}
+$("stepPrev").addEventListener("click", function(){
+  goTab(+document.querySelector(".tabs button.on").dataset.tab - 1); });
+$("stepNext").addEventListener("click", function(){
+  goTab(+document.querySelector(".tabs button.on").dataset.tab + 1); });
+// строка меню хоста: пункты ведут на соответствующий шаг
+$("menubar").addEventListener("click", function(ev){
+  var m = ev.target.closest("[data-menu]"); if (!m) return;
+  var k = m.dataset.menu;
+  if (k==="file") goTab(4);
+  else if (k==="set"){ goTab(1); }
+  else if (k==="data") toast($("dbinfo").textContent);
+  else if (k==="help"){ goTab(1); showFamInfo(true); }
+});
 $("srcSeg").addEventListener("click", function(ev){
   var b = ev.target.closest("button[data-src]"); if (!b) return;
   SRC = b.dataset.src;
@@ -1583,12 +1620,7 @@ $("mergeFile").addEventListener("change", function(){
   };
   rd.readAsText(f);
 });
-$("themeBtn").addEventListener("click", function(){
-  var cur = document.documentElement.getAttribute("data-theme");
-  var next = cur==="dark" ? "light" : (cur==="light" ? "dark" :
-    (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark"));
-  document.documentElement.setAttribute("data-theme", next);
-});
+// переключателя темы нет: панель наследует оформление хоста
 
 // ── i18n: статические тексты ──
 var RU2EN = {
