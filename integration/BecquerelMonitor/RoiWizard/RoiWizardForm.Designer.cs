@@ -103,6 +103,9 @@ namespace BecquerelMonitor.RoiWizard
             this.labelAnchor = new System.Windows.Forms.Label();
             this.comboAnchor = new System.Windows.Forms.ComboBox();
             this.buttonCreateSet = new System.Windows.Forms.Button();
+            this.checkFullSet = new System.Windows.Forms.CheckBox();
+            this.labelAnchorCount = new System.Windows.Forms.Label();
+            this.numAnchors = new System.Windows.Forms.NumericUpDown();
             this.listIssues = new System.Windows.Forms.ListBox();
             this.labelIssues = new System.Windows.Forms.Label();
 
@@ -117,6 +120,7 @@ namespace BecquerelMonitor.RoiWizard
             ((System.ComponentModel.ISupportInitialize)(this.numTopN)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numZonePercent)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numZoneFactor)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numAnchors)).BeginInit();
             this.SuspendLayout();
 
             // ─── вкладки ───────────────────────────────────────────────────
@@ -436,7 +440,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupExport.Text = "Export";
             this.groupExport.Location = new System.Drawing.Point(8, 66);
-            this.groupExport.Size = new System.Drawing.Size(966, 86);
+            this.groupExport.Size = new System.Drawing.Size(966, 116);
             this.groupExport.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelConfigName.Text = "ROI configuration name";
@@ -463,6 +467,17 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonCreateSet.Text = "Add set to the library";
             this.buttonCreateSet.Location = new System.Drawing.Point(754, 49);
             this.buttonCreateSet.Size = new System.Drawing.Size(192, 23);
+            this.checkFullSet.Text = "full set (all lines, for fitting)";
+            this.checkFullSet.Location = new System.Drawing.Point(148, 80);
+            this.checkFullSet.Size = new System.Drawing.Size(220, 19);
+            this.labelAnchorCount.Text = "anchor lines";
+            this.labelAnchorCount.Location = new System.Drawing.Point(376, 82);
+            this.labelAnchorCount.AutoSize = true;
+            this.numAnchors.Location = new System.Drawing.Point(446, 79);
+            this.numAnchors.Size = new System.Drawing.Size(60, 21);
+            this.numAnchors.Minimum = 1;
+            this.numAnchors.Maximum = 9;
+            this.numAnchors.Value = 3;
             this.groupExport.Controls.Add(this.labelConfigName);
             this.groupExport.Controls.Add(this.textConfigName);
             this.groupExport.Controls.Add(this.buttonCreateRoi);
@@ -471,12 +486,15 @@ namespace BecquerelMonitor.RoiWizard
             this.groupExport.Controls.Add(this.labelAnchor);
             this.groupExport.Controls.Add(this.comboAnchor);
             this.groupExport.Controls.Add(this.buttonCreateSet);
+            this.groupExport.Controls.Add(this.checkFullSet);
+            this.groupExport.Controls.Add(this.labelAnchorCount);
+            this.groupExport.Controls.Add(this.numAnchors);
 
             this.labelIssues.Text = "Data check:";
-            this.labelIssues.Location = new System.Drawing.Point(12, 158);
+            this.labelIssues.Location = new System.Drawing.Point(12, 188);
             this.labelIssues.AutoSize = true;
-            this.listIssues.Location = new System.Drawing.Point(8, 176);
-            this.listIssues.Size = new System.Drawing.Size(966, 230);
+            this.listIssues.Location = new System.Drawing.Point(8, 206);
+            this.listIssues.Size = new System.Drawing.Size(966, 200);
             this.listIssues.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
@@ -510,6 +528,7 @@ namespace BecquerelMonitor.RoiWizard
             ((System.ComponentModel.ISupportInitialize)(this.numTopN)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numZonePercent)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numZoneFactor)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numAnchors)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
         }
@@ -596,6 +615,9 @@ namespace BecquerelMonitor.RoiWizard
         System.Windows.Forms.Label labelAnchor;
         System.Windows.Forms.ComboBox comboAnchor;
         System.Windows.Forms.Button buttonCreateSet;
+        System.Windows.Forms.CheckBox checkFullSet;
+        System.Windows.Forms.Label labelAnchorCount;
+        System.Windows.Forms.NumericUpDown numAnchors;
         System.Windows.Forms.Label labelIssues;
         System.Windows.Forms.ListBox listIssues;
 

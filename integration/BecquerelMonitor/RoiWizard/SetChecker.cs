@@ -22,6 +22,18 @@ namespace BecquerelMonitor.RoiWizard
     // по цепочке.
     public static class SetChecker
     {
+        static bool HasGamma(List<SpectralLine> lines)
+        {
+            foreach (SpectralLine line in lines)
+            {
+                if (line.Type == LineType.Gamma)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
                                            ZoneCalculator zones)
         {
@@ -33,7 +45,8 @@ namespace BecquerelMonitor.RoiWizard
         public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
                                            ZoneCalculator zones, ResolutionModel resolution)
         {
-            return Check(lines, forLibrary, zones, resolution, null);
+            // приведение обязательно: без него null подходит обеим перегрузкам (CS0121)
+            return Check(lines, forLibrary, zones, resolution, (IList<SpectralLine>)null);
         }
 
         // anchorOverride — якорь, выбранный руками. Проверять надо именно его: в набор
@@ -41,6 +54,21 @@ namespace BecquerelMonitor.RoiWizard
         public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
                                            ZoneCalculator zones, ResolutionModel resolution,
                                            SpectralLine anchorOverride)
+        {
+            List<SpectralLine> anchors = null;
+            if (anchorOverride != null)
+            {
+                anchors = new List<SpectralLine>();
+                anchors.Add(anchorOverride);
+            }
+            return Check(lines, forLibrary, zones, resolution, anchors);
+        }
+
+        // Якорей может быть несколько: LibraryPeakFitter перебирает все записи с IsAnchor
+        // и требует совпадения с найденным пиком хотя бы одной из них.
+        public static List<SetIssue> Check(IEnumerable<SpectralLine> lines, bool forLibrary,
+                                           ZoneCalculator zones, ResolutionModel resolution,
+                                           IList<SpectralLine> anchorOverride)
         {
             List<SetIssue> issues = new List<SetIssue>();
             List<SpectralLine> sorted = new List<SpectralLine>();
@@ -80,24 +108,37 @@ namespace BecquerelMonitor.RoiWizard
                     });
                 }
             }
-            if (forLibrary && (resolution != null || anchorOverride != null))
+            if (forLibrary && (resolution != null || (anchorOverride != null && anchorOverride.Count > 0)))
             {
-                SpectralLine anchor = anchorOverride ?? AnchorPicker.Pick(sorted, resolution);
-                if (anchorOverride != null && !AnchorPicker.IsAcceptable(anchorOverride))
+                List<SpectralLine> anchors = anchorOverride != null && anchorOverride.Count > 0
+                    ? new List<SpectralLine>(anchorOverride)
+                    : AnchorPicker.PickMany(sorted, resolution, AnchorPicker.DefaultCount);
+
+                bool manual = anchorOverride != null && anchorOverride.Count > 0;
+                bool rejected = false;
+                if (manual)
                 {
-                    issues.Add(new SetIssue
+                    foreach (SpectralLine chosen in anchors)
                     {
-                        Level = IssueLevel.Error,
-                        Text = string.Format(CultureInfo.CurrentCulture,
-                            "якорем выбрана линия «{0}» ({1} кэВ): это {2}, а не линия распада. " +
-                            "Фит сел бы на опору, положение или интенсивность которой условны",
-                            anchorOverride.LibraryName, anchorOverride.Energy,
-                            anchorOverride.Type == LineType.Xrf
-                                ? "характеристический рентген материала"
-                                : "расчётный вторичный маркер")
-                    });
+                        if (AnchorPicker.IsAcceptable(chosen))
+                        {
+                            continue;
+                        }
+                        rejected = true;
+                        issues.Add(new SetIssue
+                        {
+                            Level = IssueLevel.Error,
+                            Text = string.Format(CultureInfo.CurrentCulture,
+                                "якорем выбрана линия «{0}» ({1} кэВ): это {2}, а не линия распада. " +
+                                "Фит сел бы на опору, положение или интенсивность которой условны",
+                                chosen.LibraryName, chosen.Energy,
+                                chosen.Type == LineType.Xrf
+                                    ? "характеристический рентген материала"
+                                    : "расчётный вторичный маркер")
+                        });
+                    }
                 }
-                else if (anchor == null)
+                if (!rejected && anchors.Count == 0)
                 {
                     issues.Add(new SetIssue
                     {
@@ -107,14 +148,14 @@ namespace BecquerelMonitor.RoiWizard
                                "библиотечный фит без якоря не запускается"
                     });
                 }
-                else if (anchor.Type != LineType.Gamma)
+                else if (!rejected && !HasGamma(anchors))
                 {
                     issues.Add(new SetIssue
                     {
                         Level = IssueLevel.Warning,
                         Text = string.Format(CultureInfo.CurrentCulture,
                             "якорь — рентгеновская линия «{0}» ({1} кэВ): для опоры фита надёжнее γ-линия",
-                            anchor.LibraryName, anchor.Energy)
+                            anchors[0].LibraryName, anchors[0].Energy)
                     });
                 }
             }

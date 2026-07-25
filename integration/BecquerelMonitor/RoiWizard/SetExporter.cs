@@ -67,6 +67,23 @@ namespace BecquerelMonitor.RoiWizard
                                           SpectralLine anchorOverride,
                                           out List<NuclideDefinition> definitions)
         {
+            List<SpectralLine> anchors = null;
+            if (anchorOverride != null)
+            {
+                anchors = new List<SpectralLine>();
+                anchors.Add(anchorOverride);
+            }
+            return this.BuildNuclideSet(lines, setName, colorOf, anchors,
+                                        AnchorPicker.DefaultCount, out definitions);
+        }
+
+        // anchorOverride — якоря, выбранные руками (null = выбрать автоматически).
+        // anchorCount действует только при автовыборе: сколько линий пометить IsAnchor.
+        public NuclideSet BuildNuclideSet(IEnumerable<SpectralLine> lines, string setName,
+                                          Func<SpectralLine, Color> colorOf,
+                                          IList<SpectralLine> anchorOverride, int anchorCount,
+                                          out List<NuclideDefinition> definitions)
+        {
             List<SpectralLine> ordered = Selected(lines);
             ordered.Sort(delegate(SpectralLine a, SpectralLine b) { return a.Energy.CompareTo(b.Energy); });
 
@@ -75,7 +92,9 @@ namespace BecquerelMonitor.RoiWizard
             set.Name = string.IsNullOrEmpty(setName) ? "IAEA set" : setName;
             set.HideUnknownPeaks = false;
 
-            SpectralLine anchor = anchorOverride ?? AnchorPicker.Pick(ordered, this.resolution);
+            List<SpectralLine> anchors = anchorOverride != null && anchorOverride.Count > 0
+                ? new List<SpectralLine>(anchorOverride)
+                : AnchorPicker.PickMany(ordered, this.resolution, anchorCount);
             definitions = new List<NuclideDefinition>();
 
             foreach (SpectralLine line in ordered)
@@ -92,10 +111,23 @@ namespace BecquerelMonitor.RoiWizard
                 definition.Visible = true;
                 definition.Intencity = line.Intensity;
                 definition.Sets.Add(set.Id);
-                definition.IsAnchor = ReferenceEquals(line, anchor);
+                definition.IsAnchor = Contains(anchors, line);
                 definitions.Add(definition);
             }
             return set;
+        }
+
+        // сравнение по ссылке: линия из набора и линия из списка якорей — один объект
+        static bool Contains(List<SpectralLine> anchors, SpectralLine line)
+        {
+            foreach (SpectralLine anchor in anchors)
+            {
+                if (ReferenceEquals(anchor, line))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         static List<SpectralLine> Selected(IEnumerable<SpectralLine> lines)

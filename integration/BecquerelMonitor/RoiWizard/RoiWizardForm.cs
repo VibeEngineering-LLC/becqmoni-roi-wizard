@@ -55,6 +55,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.buttonFromSpectrum.Enabled = resolutionProvider != null;
             this.SyncGroupButtons();
+            this.SyncSetControls();
             if (Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName == "ru")
             {
                 this.ApplyRussian();
@@ -222,6 +223,10 @@ namespace BecquerelMonitor.RoiWizard
             this.numZoneFactor.ValueChanged += delegate { this.RunChecks(); };
             this.buttonCreateRoi.Click += delegate { this.CreateRoiConfig(); };
             this.buttonCreateSet.Click += delegate { this.CreateNuclideSet(); };
+            // при «полном наборе» таблица и ручной якорь не участвуют — набор собирается
+            // заново из источников, поэтому выбор якоря отдаётся автоматике
+            this.checkFullSet.CheckedChanged += delegate { this.SyncSetControls(); this.RunChecks(); };
+            this.numAnchors.ValueChanged += delegate { this.RunChecks(); };
             this.buttonFromSpectrum.Click += delegate { this.TakeResolutionFromSpectrum(); };
             this.tabs.SelectedIndexChanged += delegate
             {
@@ -560,6 +565,12 @@ namespace BecquerelMonitor.RoiWizard
 
         readonly List<SpectralLine> anchorCandidates = new List<SpectralLine>();
 
+        void SyncSetControls()
+        {
+            this.comboAnchor.Enabled = !this.checkFullSet.Checked;
+            this.labelAnchor.Enabled = !this.checkFullSet.Checked;
+        }
+
         List<SpectralLine> SelectedLines()
         {
             List<SpectralLine> result = new List<SpectralLine>();
@@ -592,8 +603,17 @@ namespace BecquerelMonitor.RoiWizard
             {
                 this.listIssues.Items.Add("ROI · " + issue.Text);
             }
-            foreach (SetIssue issue in SetChecker.Check(this.lines, true, this.zones, this.Resolution,
-                                                        this.CurrentAnchor()))
+            // проверяется то, что реально уйдёт в библиотеку: при «полном наборе» это не
+            // содержимое таблицы, а все линии источников
+            SpectralLine manual = this.checkFullSet.Checked ? null : this.CurrentAnchor();
+            List<SpectralLine> manualAnchors = null;
+            if (manual != null)
+            {
+                manualAnchors = new List<SpectralLine>();
+                manualAnchors.Add(manual);
+            }
+            foreach (SetIssue issue in SetChecker.Check(this.LibraryLines(), true, this.zones,
+                                                        this.Resolution, manualAnchors))
             {
                 if (issue.Level == IssueLevel.Error)
                 {
@@ -651,21 +671,41 @@ namespace BecquerelMonitor.RoiWizard
                 "ROI configuration «{0}» created: {1} regions", config.Name, config.ROIDefinitions.Count);
         }
 
+        // Что уходит в библиотеку: либо выбранное в таблице, либо полный набор — все линии
+        // источников минуя галки, фильтры и слияние (профиль для библиотечного фита).
+        List<SpectralLine> LibraryLines()
+        {
+            return this.checkFullSet.Checked
+                ? this.builder.BuildFullSet(this.selection)
+                : this.lines;
+        }
+
         void CreateNuclideSet()
         {
-            List<SpectralLine> selected = this.SelectedLines();
-            if (selected.Count == 0)
+            List<SpectralLine> library = this.LibraryLines();
+            if (Count(library) == 0)
             {
                 MessageBox.Show(this, "No lines selected.", this.Text,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
+            // Ручной якорь уходит один — его выбрал пользователь. При автовыборе
+            // помечается несколько линий: LibraryPeakFitter требует, чтобы с найденным
+            // пиком совпала хотя бы одна, и единственный якорь делает набор хрупким.
+            SpectralLine manual = this.checkFullSet.Checked ? null : this.CurrentAnchor();
+            List<SpectralLine> anchors = null;
+            if (manual != null)
+            {
+                anchors = new List<SpectralLine>();
+                anchors.Add(manual);
+            }
+            int anchorCount = (int)this.numAnchors.Value;
+
             // для набора совпавшие энергии и нулевая интенсивность — ошибки: две линии на
             // одной позиции вырождают подгонку амплитуд, а Intencity = 0 выбрасывает линию
             // из связки по цепочке
-            List<SetIssue> issues = SetChecker.Check(this.lines, true, this.zones, this.Resolution,
-                                                     this.CurrentAnchor());
+            List<SetIssue> issues = SetChecker.Check(library, true, this.zones, this.Resolution, anchors);
             List<SetIssue> errors = issues.FindAll(delegate(SetIssue i) { return i.Level == IssueLevel.Error; });
             if (errors.Count > 0)
             {
@@ -680,16 +720,31 @@ namespace BecquerelMonitor.RoiWizard
             }
 
             List<NuclideDefinition> definitions;
-            NuclideSet set = this.exporter.BuildNuclideSet(this.lines, this.textSetName.Text, ColorOf,
-                                                          this.CurrentAnchor(), out definitions);
+            NuclideSet set = this.exporter.BuildNuclideSet(library, this.textSetName.Text, ColorOf,
+                                                           anchors, anchorCount, out definitions);
 
             NuclideDefinitionManager manager = NuclideDefinitionManager.GetInstance();
             manager.NuclideSets.Add(set);
             manager.NuclideDefinitions.AddRange(definitions);
             manager.SaveDefinitionFile();
 
+            int marked = definitions.FindAll(delegate(NuclideDefinition d) { return d.IsAnchor; }).Count;
             this.statusLabel.Text = string.Format(CultureInfo.CurrentCulture,
-                "set «{0}» added to the library: {1} lines, one anchor", set.Name, definitions.Count);
+                "set «{0}» added to the library: {1} lines, {2} anchor(s)",
+                set.Name, definitions.Count, marked);
+        }
+
+        static int Count(List<SpectralLine> lines)
+        {
+            int count = 0;
+            foreach (SpectralLine line in lines)
+            {
+                if (line.Selected)
+                {
+                    count++;
+                }
+            }
+            return count;
         }
 
         bool ConfirmOverwriteRoi(string name)
@@ -882,6 +937,8 @@ namespace BecquerelMonitor.RoiWizard
             this.labelSetName.Text = "имя набора (NuclideSet)";
             this.labelAnchor.Text = "якорная линия";
             this.buttonCreateSet.Text = "Добавить набор в библиотеку";
+            this.checkFullSet.Text = "полный набор (все линии, для фита)";
+            this.labelAnchorCount.Text = "якорей";
             this.labelIssues.Text = "Проверка данных:";
             this.textSetName.Text = "Набор IAEA";
         }

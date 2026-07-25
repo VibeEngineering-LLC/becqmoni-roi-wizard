@@ -34,6 +34,8 @@ namespace BecquerelMonitor.RoiWizard.Tests
             SetTests(catalogPath);
             SecondaryTests();
             ExporterTests();
+            FullSetTests(catalogPath);
+            MultiAnchorTests(catalogPath);
 
             Console.WriteLine();
             Console.WriteLine("пройдено: {0}, провалено: {1}", passed, failed);
@@ -378,9 +380,14 @@ namespace BecquerelMonitor.RoiWizard.Tests
                 }
                 Check("запись отнесена к набору: " + definition.Name, definition.Sets.Contains(set.Id));
             }
-            Equal("ровно один якорь в выгрузке", anchors.ToString(CultureInfo.InvariantCulture), "1");
-            Check("якорь — γ-линия, а не ХРИ с условной интенсивностью 100",
-                  anchorDefinition != null && anchorDefinition.Name == "Cs-137");
+            // якорей может быть несколько (LibraryPeakFitter перебирает все), но ХРИ среди
+            // них быть не должно: здесь γ-линий ровно две — обе и помечаются
+            Equal("якорями стали обе γ-линии", anchors.ToString(CultureInfo.InvariantCulture), "2");
+            Check("сильнейшая γ-линия среди якорей",
+                  anchorDefinition != null && definitions.Exists(
+                      delegate(NuclideDefinition d) { return d.IsAnchor && d.Name == "Cs-137"; }));
+            Check("ХРИ якорем не стал", !definitions.Exists(
+                delegate(NuclideDefinition d) { return d.IsAnchor && d.Name == "XRF Pb Ka1"; }));
             foreach (NuclideDefinition definition in definitions)
             {
                 if (definition.Name == "XRF Pb Ka1")
@@ -399,6 +406,157 @@ namespace BecquerelMonitor.RoiWizard.Tests
                   HasError(SetChecker.Check(lines, true, null, resolution, xrf), "не линия распада"));
             Check("γ-линия ручным якорем ошибкой не считается",
                   !HasError(SetChecker.Check(lines, true, null, resolution, ba), "не линия распада"));
+        }
+
+        // ── 8. Профиль «полный набор» ──
+        static void FullSetTests(string catalogPath)
+        {
+            Section("BuildFullSet");
+            NuclideCatalog catalog = LoadCatalog(catalogPath);
+            if (catalog == null)
+            {
+                return;
+            }
+
+            SourceSelection selection = new SourceSelection();
+            selection.Add(catalog, "Th-232", AddMode.Chain);
+
+            LineSetBuilder builder = new LineSetBuilder(catalog).Reset();
+            LineFilter filter = new LineFilter { IntensityOn = true, MinIntensity = 5.0, RelativeIntensity = true };
+            List<SpectralLine> filtered = builder.Build(selection, filter);
+            List<SpectralLine> full = builder.BuildFullSet(selection);
+
+            int filteredSelected = 0;
+            foreach (SpectralLine line in filtered)
+            {
+                if (line.Selected)
+                {
+                    filteredSelected++;
+                }
+            }
+            Check("фильтр отсекает часть линий (" + filteredSelected + " из " + filtered.Count + ")",
+                  filteredSelected < filtered.Count);
+
+            int fullSelected = 0;
+            bool secondary = false;
+            foreach (SpectralLine line in full)
+            {
+                if (line.Selected)
+                {
+                    fullSelected++;
+                }
+                if (line.Type == LineType.Secondary)
+                {
+                    secondary = true;
+                }
+            }
+            Equal("полный набор берёт все линии до единой",
+                  fullSelected.ToString(CultureInfo.InvariantCulture),
+                  full.Count.ToString(CultureInfo.InvariantCulture));
+            Check("полный набор не беднее отфильтрованного", fullSelected > filteredSelected);
+            Check("вторичных маркеров в полном наборе нет", !secondary);
+
+            // равновесие ряда обязано работать и здесь: веса связанных линий BecqMoni
+            // берёт из Intencity, и без пересчёта высоты линий разных членов ряда несопоставимы
+            foreach (SpectralLine line in full)
+            {
+                if (line.Nuclide == "Tl-208" && Math.Abs(line.Energy - 2614.511) < 0.2)
+                {
+                    Near("Tl-208 2614.5 пересчитан на распад Th-232", line.Intensity,
+                         99.755 * 0.3594, 0.5);
+                }
+            }
+        }
+
+        // ── 9. Несколько якорных линий ──
+        //
+        // LibraryPeakFitter перебирает все записи с IsAnchor, берёт сдвиг калибровки
+        // с сильнейшей по SNR и требует совпадения с найденным пиком хотя бы одной.
+        // Единственный якорь означает: не нашёлся он — молчит весь набор.
+        static void MultiAnchorTests(string catalogPath)
+        {
+            Section("PickMany");
+            NuclideCatalog catalog = LoadCatalog(catalogPath);
+            if (catalog == null)
+            {
+                return;
+            }
+
+            ResolutionModel resolution = new ResolutionModel(7.5);
+            List<SpectralLine> chain = BuildChain(catalog, "Th-232");
+            List<SpectralLine> anchors = AnchorPicker.PickMany(chain, resolution, 3);
+
+            Equal("выбрано три якоря", anchors.Count.ToString(CultureInfo.InvariantCulture), "3");
+            Check("первый якорь совпадает с одиночным выбором",
+                  ReferenceEquals(anchors[0], AnchorPicker.Pick(chain, resolution)));
+            // Порядок в списке не глобально убывающий: одинокие линии идут раньше сильных,
+            // но стоящих в дублете. Это и есть правило — сосед внутри FWHM смещает центроид
+            // найденного пика, и совпадение с табличной энергией перестаёт быть надёжным.
+            double maxGamma = 0.0;
+            foreach (SpectralLine line in chain)
+            {
+                if (line.Type == LineType.Gamma && line.Intensity > maxGamma)
+                {
+                    maxGamma = line.Intensity;
+                }
+            }
+            bool allGamma = true;
+            bool aboveThreshold = true;
+            foreach (SpectralLine anchor in anchors)
+            {
+                if (anchor.Type != LineType.Gamma)
+                {
+                    allGamma = false;
+                }
+                if (anchor.Intensity < 0.2 * maxGamma)
+                {
+                    aboveThreshold = false;
+                }
+            }
+            Check("все якоря — γ-линии", allGamma);
+            Check("все якоря сильнее 0.2·max по γ", aboveThreshold);
+            Check("якоря различны", !ReferenceEquals(anchors[0], anchors[1]) &&
+                                     !ReferenceEquals(anchors[1], anchors[2]));
+
+            // выгрузка: помечены ровно те линии, что выбраны
+            SetExporter exporter = new SetExporter(resolution);
+            List<NuclideDefinition> definitions;
+            exporter.BuildNuclideSet(chain, "Th-232 full", delegate { return Color.Gray; },
+                                     null, 3, out definitions);
+            int marked = 0;
+            foreach (NuclideDefinition definition in definitions)
+            {
+                if (definition.IsAnchor)
+                {
+                    marked++;
+                }
+            }
+            Equal("в выгрузке три якоря", marked.ToString(CultureInfo.InvariantCulture), "3");
+
+            exporter.BuildNuclideSet(chain, "Th-232 single", delegate { return Color.Gray; },
+                                     null, 1, out definitions);
+            marked = 0;
+            foreach (NuclideDefinition definition in definitions)
+            {
+                if (definition.IsAnchor)
+                {
+                    marked++;
+                }
+            }
+            Equal("количество якорей управляемо", marked.ToString(CultureInfo.InvariantCulture), "1");
+
+            // ХРИ и вторичные не попадают в якоря ни при каком количестве
+            List<SpectralLine> mixed = new List<SpectralLine>();
+            SpectralLine xrf1 = Gamma("XRF Pb Ka1", 74.97, 100.0);
+            xrf1.Type = LineType.Xrf;
+            SpectralLine xrf2 = Gamma("XRF Pb Kb1", 84.94, 60.0);
+            xrf2.Type = LineType.Xrf;
+            mixed.Add(xrf1);
+            mixed.Add(xrf2);
+            mixed.Add(Gamma("U-238", 49.55, 0.064));
+            List<SpectralLine> mixedAnchors = AnchorPicker.PickMany(mixed, resolution, 3);
+            Check("среди ХРИ якорем становится линия распада",
+                  mixedAnchors.Count == 1 && mixedAnchors[0].Nuclide == "U-238");
         }
 
         // ── вспомогательное ────────────────────────────────────────────────

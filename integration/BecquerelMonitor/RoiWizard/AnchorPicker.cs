@@ -12,6 +12,91 @@ namespace BecquerelMonitor.RoiWizard
         // Хороший якорь — сильная И одинокая линия: сосед внутри FWHM смещает центроид
         // найденного пика, и совпадение с табличной энергией перестаёт быть надёжным.
         // Правило даёт 2614.5 для ряда Th-232 и 609.3 для Ra-226.
+        // Сколько якорных линий помечать по умолчанию. LibraryPeakFitter перебирает все
+        // записи с IsAnchor, берёт сдвиг калибровки с сильнейшей по SNR и требует, чтобы
+        // с найденным пиком совпала хотя бы одна (допуск 0.5·FWHM). Единственный якорь —
+        // единственная точка отказа: не нашёлся 2614.5 — набор молчит целиком.
+        public const int DefaultCount = 3;
+
+        // Несколько якорей по тому же правилу: сильные и одинокие γ-линии, по убыванию
+        // интенсивности. Одинокие идут первыми — у них центроид найденного пика не смещён
+        // соседом; если одиноких не хватает, добираются просто сильные.
+        public static List<SpectralLine> PickMany(IList<SpectralLine> lines,
+                                                  ResolutionModel resolution, int count)
+        {
+            List<SpectralLine> picked = new List<SpectralLine>();
+            if (lines == null || lines.Count == 0 || count <= 0)
+            {
+                return picked;
+            }
+
+            double max = MaxGammaIntensity(lines);
+            List<SpectralLine> lonely = new List<SpectralLine>();
+            List<SpectralLine> rest = new List<SpectralLine>();
+            foreach (SpectralLine line in lines)
+            {
+                if (line.Type != LineType.Gamma || line.Intensity < 0.2 * max)
+                {
+                    continue;
+                }
+                if (IsLonely(line, lines, resolution, max))
+                {
+                    lonely.Add(line);
+                }
+                else
+                {
+                    rest.Add(line);
+                }
+            }
+            lonely.Sort(ByIntensityDesc);
+            rest.Sort(ByIntensityDesc);
+
+            foreach (SpectralLine line in lonely)
+            {
+                if (picked.Count >= count)
+                {
+                    break;
+                }
+                picked.Add(line);
+            }
+            foreach (SpectralLine line in rest)
+            {
+                if (picked.Count >= count)
+                {
+                    break;
+                }
+                picked.Add(line);
+            }
+            if (picked.Count == 0)
+            {
+                // γ-линий в наборе нет вовсе — та же оговорка, что и у Pick
+                SpectralLine fallback = Strongest(lines, LineType.Xray);
+                if (fallback != null)
+                {
+                    picked.Add(fallback);
+                }
+            }
+            return picked;
+        }
+
+        static int ByIntensityDesc(SpectralLine a, SpectralLine b)
+        {
+            return b.Intensity.CompareTo(a.Intensity);
+        }
+
+        static double MaxGammaIntensity(IList<SpectralLine> lines)
+        {
+            double max = 0.0;
+            foreach (SpectralLine line in lines)
+            {
+                if (line.Type == LineType.Gamma && line.Intensity > max)
+                {
+                    max = line.Intensity;
+                }
+            }
+            return max;
+        }
+
         public static SpectralLine Pick(IList<SpectralLine> lines, ResolutionModel resolution)
         {
             if (lines == null || lines.Count == 0)

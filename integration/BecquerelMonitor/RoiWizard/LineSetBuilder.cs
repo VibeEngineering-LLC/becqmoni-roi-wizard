@@ -249,6 +249,27 @@ namespace BecquerelMonitor.RoiWizard
             return lines;
         }
 
+        // Профиль «полный набор» для библиотечного фита: все γ- и X-линии выбранных
+        // источников, независимо от галок, фильтров и слияния.
+        //
+        // Прореживание набора вредит: по прогонам разработчика BecqMoni (RjmcmcTuning,
+        // итерация 9) полная цепочка ряда даёт recall 26/29 для Th-232 и 27/27 для Ra-226,
+        // а «набор пользователя из 16 сильных линий» не добавляет к слепому поиску ничего.
+        // Слияние тоже не применяется: пары от 0.25 до 0.85 FWHM разбирает сам библиотечный
+        // фит по якорю, и склеивать их — значит отнимать у него линии.
+        //
+        // Вторичных пиков здесь нет и быть не должно: escape- и сумм-компоненты
+        // LibraryPeakFitter строит сам, а имя вида «SE (Bi-214)» создало бы ложную цепочку.
+        public List<SpectralLine> BuildFullSet(SourceSelection selection)
+        {
+            List<SpectralLine> lines = this.Build(selection, null);
+            foreach (SpectralLine line in lines)
+            {
+                line.Selected = true;
+            }
+            return lines;
+        }
+
         // Фильтр решает, что выбрано, а не что видно
         static void ApplySelection(List<SpectralLine> lines, LineFilter filter)
         {
