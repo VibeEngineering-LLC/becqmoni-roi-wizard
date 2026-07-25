@@ -121,6 +121,85 @@ namespace BecquerelMonitor.RoiWizard
         }
     }
 
+    // Микро-бар интенсивности: полупрозрачная заливка на долю относительной
+    // интенсивности, число поверх неё справа. Видно, где сильные линии, не читая
+    // чисел. Заливка именно полупрозрачная (--bar), а не сплошная: на выбранной
+    // строке фон и так --sel, сплошной бар с ним сливался бы.
+    // Доля приходит в Cell.Tag — Data занят интенсивностью, по ней идёт сортировка.
+    public class IntensityBarCellRenderer : CellRenderer
+    {
+        protected override void OnPaint(PaintCellEventArgs e)
+        {
+            base.OnPaint(e);
+            if (e.Cell == null)
+            {
+                return;
+            }
+            Rectangle rect = this.ClientRectangle;
+            if (e.Cell.Tag is double)
+            {
+                double share = (double)e.Cell.Tag;
+                int width = (int)Math.Round(rect.Width * Math.Max(0.0, Math.Min(100.0, share)) / 100.0);
+                if (width > 0)
+                {
+                    using (SolidBrush brush = new SolidBrush(WizardTheme.Bar))
+                    {
+                        e.Graphics.FillRectangle(brush, rect.X, rect.Y + 1, width, rect.Height - 2);
+                    }
+                }
+            }
+            if (!string.IsNullOrEmpty(e.Cell.Text))
+            {
+                TextRenderer.DrawText(e.Graphics, e.Cell.Text, this.Font, rect, this.ForeColor,
+                    TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+            }
+        }
+    }
+
+    // Тип линии бейджем, как .badge в таблице на странице: γ, X, ХРИ, втор —
+    // каждый своей парой цветов.
+    public class LineTypeCellRenderer : CellRenderer
+    {
+        const int PadX = 5;
+        const int BadgeHeight = 14;
+
+        Font font = WizardTheme.BadgeFont;
+
+        protected override void OnPaint(PaintCellEventArgs e)
+        {
+            base.OnPaint(e);
+            if (e.Cell == null || string.IsNullOrEmpty(e.Cell.Text))
+            {
+                return;
+            }
+            string caption = e.Cell.Text;
+            Rectangle rect = this.ClientRectangle;
+            int width = TextRenderer.MeasureText(e.Graphics, caption, this.font,
+                new Size(rect.Width, BadgeHeight), TextFormatFlags.NoPadding).Width + PadX * 2;
+            int y = rect.Y + (rect.Height - BadgeHeight) / 2;
+            Color back;
+            Color fore;
+            WizardTheme.LineTypeColors(e.Cell.Tag as string, out back, out fore);
+            using (SolidBrush brush = new SolidBrush(back))
+            {
+                e.Graphics.FillRectangle(brush, rect.X, y, width, BadgeHeight);
+            }
+            TextRenderer.DrawText(e.Graphics, caption, this.font,
+                new Rectangle(rect.X + PadX, y, width - PadX * 2, BadgeHeight), fore,
+                TextFormatFlags.NoPadding | TextFormatFlags.VerticalCenter);
+        }
+
+        public override void Dispose()
+        {
+            if (this.font != null)
+            {
+                this.font.Dispose();
+                this.font = null;
+            }
+            base.Dispose();
+        }
+    }
+
     // Приглушённый хвост строки (.nuc .hl): 11 px цветом --muted. Цвет берётся
     // из ячейки, если он задан — так серым гаснет нуклид без линий.
     public class HintCellRenderer : CellRenderer

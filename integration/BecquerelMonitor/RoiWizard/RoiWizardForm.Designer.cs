@@ -679,13 +679,15 @@ namespace BecquerelMonitor.RoiWizard
             this.tableLines.Location = new System.Drawing.Point(8, 416);
             this.tableLines.Size = new System.Drawing.Size(1156, 150);
             this.tableLines.Anchor = System.Windows.Forms.AnchorStyles.Top |
-                System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
-                System.Windows.Forms.AnchorStyles.Right;
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.tableLines.BorderColor = System.Drawing.Color.Black;
             this.tableLines.ColumnModel = this.columnModelLines;
             this.tableLines.FullRowSelect = true;
             this.tableLines.GridLines = XPTable.Models.GridLines.Rows;
             this.tableLines.TableModel = this.tableModelLines;
+            // строка 20 px: шрифт темы 9 pt в штатные 15 px не помещается,
+            // а на странице строка таблицы 21-22 px
+            this.tableModelLines.RowHeight = 20;
             this.columnLineSelected.Resizable = false;
             this.columnLineSelected.Sortable = false;
             this.columnLineSelected.Text = "✓";
@@ -701,6 +703,7 @@ namespace BecquerelMonitor.RoiWizard
             this.columnLineIntensity.Text = "I, %";
             this.columnLineIntensity.Width = 90;
             this.columnLineIntensity.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnLineIntensity.Renderer = new IntensityBarCellRenderer();
             this.columnLineRelative.Editable = false;
             this.columnLineRelative.Text = "I rel., %";
             this.columnLineRelative.Width = 80;
@@ -710,6 +713,7 @@ namespace BecquerelMonitor.RoiWizard
             this.columnLineHalfLife.Width = 90;
             this.columnLineHalfLife.Alignment = XPTable.Models.ColumnAlignment.Right;
             this.columnLineType.Editable = false;
+            this.columnLineType.Renderer = new LineTypeCellRenderer();
             this.columnLineType.Text = "Type";
             this.columnLineType.Width = 80;
             this.columnModelLines.Columns.AddRange(new XPTable.Models.Column[] {

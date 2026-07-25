@@ -29,6 +29,9 @@ namespace BecquerelMonitor.RoiWizard
         public static readonly Color ChipLine = Color.FromArgb(0x7A, 0xA7, 0xCE);   // .chip.on border
         public static readonly Color Xray = Color.FromArgb(0x8A, 0x3D, 0x72);       // X-линии в списке
         public static readonly Color NoLines = Color.FromArgb(0x9A, 0x9A, 0x9A);    // .nuc.nolines
+        // --bar: rgba(20,72,116,.22) — микро-бар интенсивности полупрозрачный намеренно,
+        // иначе на выбранной строке сливался бы с --sel
+        public static readonly Color Bar = Color.FromArgb(56, 0x14, 0x48, 0x74);
 
         // 12px/1.4 "Segoe UI" из темы — это 9 pt
         public static Font BaseFont
@@ -51,6 +54,20 @@ namespace BecquerelMonitor.RoiWizard
         public static Font BadgeFont
         {
             get { return new Font("Segoe UI", 7.125F, FontStyle.Bold, GraphicsUnit.Point); }
+        }
+
+        // Цвета бейджей типов линий — правила .b-g / .b-x / .b-xrf / .b-sec темы.
+        // Ключ — не подпись (она переводится), а код типа.
+        public static void LineTypeColors(string kind, out Color back, out Color fore)
+        {
+            switch (kind)
+            {
+                case "g":   back = Color.FromArgb(0xD3, 0xE0, 0xEE); fore = Color.FromArgb(0x12, 0x50, 0x7A); return;
+                case "x":   back = Color.FromArgb(0xEC, 0xD9, 0xE8); fore = Color.FromArgb(0x8A, 0x4A, 0x7A); return;
+                case "xrf": back = Color.FromArgb(0xF6, 0xE6, 0xC8); fore = Color.FromArgb(0x8A, 0x64, 0x20); return;
+                case "sec": back = Color.FromArgb(0xD9, 0xE8, 0xDC); fore = Color.FromArgb(0x2F, 0x6B, 0x42); return;
+                default:    back = Chip;                             fore = Ink;                             return;
+            }
         }
 
         // Цвета бейджей семейств — правила .f-popular … .f-waste темы, пара «фон/текст».

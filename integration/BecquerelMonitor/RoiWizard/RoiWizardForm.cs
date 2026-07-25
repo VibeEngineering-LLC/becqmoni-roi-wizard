@@ -66,6 +66,8 @@ namespace BecquerelMonitor.RoiWizard
             // после ApplyRussian: списки и подсказки собираются из русских строк
             this.FillXrf();
             this.FillPresets();
+            this.SetFold(this.groupSecondary, false);
+            this.SetFold(this.groupNear, false);
             this.LayoutSources();
             this.LayoutLineColumns();
             this.RefreshGroupList();
@@ -352,6 +354,73 @@ namespace BecquerelMonitor.RoiWizard
             this.LayoutCatalogColumns();
         }
 
+        // Блоки вторичных пиков и поиска близких линий свёрнуты по умолчанию — на
+        // странице это .group с .gbody{display:none}. GroupBox так не умеет: прячем
+        // содержимое и ужимаем высоту до заголовка. Щелчок по полосе заголовка (верхние
+        // строки блока) переключает состояние, маркер ▾/▴ стоит в подписи.
+        readonly Dictionary<GroupBox, int> foldedHeights = new Dictionary<GroupBox, int>();
+        readonly Dictionary<GroupBox, string> foldedTitles = new Dictionary<GroupBox, string>();
+        readonly Dictionary<GroupBox, bool> foldedOpen = new Dictionary<GroupBox, bool>();
+
+        int HeaderHeight(GroupBox box)
+        {
+            return box.Font.Height + 8;
+        }
+
+        void SetFold(GroupBox box, bool open)
+        {
+            if (!this.foldedHeights.ContainsKey(box))
+            {
+                this.foldedHeights[box] = box.Height;
+                this.foldedTitles[box] = box.Text;
+            }
+            this.foldedOpen[box] = open;
+            foreach (Control child in box.Controls)
+            {
+                child.Visible = open;
+            }
+            box.Height = open ? this.foldedHeights[box] : this.HeaderHeight(box);
+            box.Text = this.foldedTitles[box] + (open ? "  ▴" : "  ▾");
+            this.LayoutLines();
+        }
+
+        void ToggleFold(GroupBox box, int y)
+        {
+            if (y <= this.HeaderHeight(box))
+            {
+                bool open;
+                this.SetFold(box, !(this.foldedOpen.TryGetValue(box, out open) && open));
+            }
+        }
+
+        // Вкладка «Линии» складывается сверху вниз: свернув блок, всё под ним
+        // поднимается, а остаток высоты достаётся таблице линий.
+        void LayoutLines()
+        {
+            int width = this.tabLines.ClientSize.Width;
+            int height = this.tabLines.ClientSize.Height;
+            if (width < 120 || height < 120)
+            {
+                return;
+            }
+            const int Pad = 8;
+            const int Gap = 6;
+            int y = 6;
+            GroupBox[] boxes = {
+                this.groupResolution, this.groupFilters, this.groupSecondary, this.groupNear };
+            foreach (GroupBox box in boxes)
+            {
+                box.SetBounds(Pad, y, width - Pad * 2, box.Height);
+                y += box.Height + Gap;
+            }
+            int rest = height - Pad - y;
+            if (rest < 60)
+            {
+                rest = 60;
+            }
+            this.tableLines.SetBounds(Pad, y, width - Pad * 2, rest);
+        }
+
         // Три колонки шага 1 делят ширину поровну — .cols3 на странице задана как
         // grid-template-columns: repeat(3, 1fr). Привязки WinForms умеют только
         // «держать край», поэтому доли считаются здесь; полоса «Выбрано» прижата к низу.
@@ -466,6 +535,15 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonStepPrev.Click += delegate { this.GoStep(-1); };
             this.buttonStepNext.Click += delegate { this.GoStep(1); };
             this.tabSources.Resize += delegate { this.LayoutSources(); };
+            this.tabLines.Resize += delegate { this.LayoutLines(); };
+            this.groupSecondary.MouseClick += delegate(object sender, MouseEventArgs e)
+            {
+                this.ToggleFold(this.groupSecondary, e.Y);
+            };
+            this.groupNear.MouseClick += delegate(object sender, MouseEventArgs e)
+            {
+                this.ToggleFold(this.groupNear, e.Y);
+            };
             this.tableCatalog.Resize += delegate { this.LayoutCatalogColumns(); };
             this.tableLines.Resize += delegate { this.LayoutLineColumns(); };
             this.textSearch.TextChanged += delegate { this.RefreshCatalog(); };
@@ -990,10 +1068,15 @@ namespace BecquerelMonitor.RoiWizard
                 row.Cells.Add(new Cell { Checked = line.Selected });
                 row.Cells.Add(new Cell(line.Label));
                 row.Cells.Add(new Cell(line.Energy.ToString("0.00", CultureInfo.CurrentCulture), line.Energy));
-                row.Cells.Add(new Cell(line.Intensity.ToString("0.###", CultureInfo.CurrentCulture), line.Intensity));
+                Cell intensity = new Cell(line.Intensity.ToString("0.###", CultureInfo.CurrentCulture),
+                                          line.Intensity);
+                intensity.Tag = relative;          // Data занят сортировкой, доля бара — в Tag
+                row.Cells.Add(intensity);
                 row.Cells.Add(new Cell(relative.ToString("0.#", CultureInfo.CurrentCulture), relative));
                 row.Cells.Add(new Cell(line.HalfLifeText ?? "", line.HalfLifeYears));
-                row.Cells.Add(new Cell(TypeName(line.Type)));
+                Cell kind = new Cell(this.TypeName(line.Type));
+                kind.Tag = TypeKind(line.Type);    // цвет бейджа — по коду, не по подписи
+                row.Cells.Add(kind);
                 row.Tag = line;
                 this.tableModelLines.Rows.Add(row);
             }
@@ -1013,13 +1096,24 @@ namespace BecquerelMonitor.RoiWizard
             }
         }
 
-        static string TypeName(LineType type)
+        string TypeName(LineType type)
         {
             switch (type)
             {
                 case LineType.Gamma: return "γ";
                 case LineType.Xray: return "X";
-                case LineType.Xrf: return "XRF";
+                case LineType.Xrf: return this.russian ? "ХРИ" : "XRF";
+                default: return this.russian ? "втор" : "sec";
+            }
+        }
+
+        static string TypeKind(LineType type)
+        {
+            switch (type)
+            {
+                case LineType.Gamma: return "g";
+                case LineType.Xray: return "x";
+                case LineType.Xrf: return "xrf";
                 default: return "sec";
             }
         }
@@ -1641,13 +1735,21 @@ namespace BecquerelMonitor.RoiWizard
                     owners.Add(owner);
                 }
             }
+            // Полоса чипов живёт строкой кнопок режима: размеры задаются здесь, уже после
+            // автомасштаба формы, поэтому считаются от фактической высоты кнопки, а не
+            // от чисел разметки — иначе квадраты встают выше центра.
+            this.panelColors.Top = this.buttonColorByChain.Top;
+            this.panelColors.Height = this.buttonColorByChain.Height;
+            int row = this.panelColors.ClientSize.Height;
+            int side = Math.Min(18, Math.Max(8, row - 6));
+
             this.panelColors.SuspendLayout();
             this.panelColors.Controls.Clear();
             foreach (string owner in owners)
             {
                 Panel swatch = new Panel();
-                swatch.Size = new Size(18, 18);
-                swatch.Margin = new Padding(2, 4, 4, 2);
+                swatch.Size = new Size(side, side);
+                swatch.Margin = new Padding(2, Math.Max(0, (row - side) / 2), 5, 0);
                 swatch.BackColor = this.ColorForOwner(owner);
                 swatch.BorderStyle = BorderStyle.FixedSingle;
                 swatch.Cursor = Cursors.Hand;
@@ -1656,8 +1758,11 @@ namespace BecquerelMonitor.RoiWizard
 
                 Label caption = new Label();
                 caption.Text = owner;
-                caption.AutoSize = true;
-                caption.Margin = new Padding(0, 5, 14, 2);
+                caption.AutoSize = false;
+                caption.TextAlign = ContentAlignment.MiddleLeft;
+                caption.Size = new Size(
+                    TextRenderer.MeasureText(owner, this.panelColors.Font).Width + 4, row);
+                caption.Margin = new Padding(0, 0, 14, 0);
 
                 this.panelColors.Controls.Add(swatch);
                 this.panelColors.Controls.Add(caption);
