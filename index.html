@@ -444,12 +444,15 @@ function renderSource(){
 // Готовые наборы: пустой старт не объясняет инструмент, а один клик — объясняет.
 var PRESETS = [
   {ru:"ЕРН-фон", en:"NORM background", tip:"Th-232 + U-238 цепочками + K-40",
+   tip_en:"Th-232 + U-238 as chains + K-40",
    run:function(){ ["th232","u238"].forEach(function(c){ pickGroup("c:"+c,"chain"); }); addNuc("K-40"); }},
   {ru:"Поверка Cs-137 / Co-60", en:"Cs-137 / Co-60 check", tip:"Контрольные источники",
+   tip_en:"Reference check sources",
    run:function(){ ["Cs-137","Co-60"].forEach(addNuc); }},
   {ru:"ОСГИ / калибровка", en:"Calibration set", tip:"Am-241, Ba-133, Eu-152, Cs-137, Co-60",
    run:function(){ ["Am-241","Ba-133","Eu-152","Cs-137","Co-60"].forEach(addNuc); }},
   {ru:"Медицинские", en:"Medical", tip:"Семейство MED",
+   tip_en:"MED family",
    run:function(){ pickGroup("f:med","all"); }},
   {ru:"ХРИ детектора и защиты", en:"Detector and shield XRF", tip:"Pb, W, La, Ba, I",
    run:function(){ ["Pb","W","La","Ba","I"].forEach(function(el){ sel.xrf[el] = true; }); }}
@@ -460,7 +463,8 @@ function buildPresets(){
   PRESETS.forEach(function(p, i){
     if (i) bar.appendChild(document.createTextNode(" · "));
     var c = document.createElement("span"); c.className = "preset"; c.dataset.preset = i;
-    c.textContent = LANG==="en" ? p.en : p.ru; c.title = p.tip;
+    c.textContent = LANG==="en" ? p.en : p.ru;
+    c.title = (LANG==="en" && p.tip_en) ? p.tip_en : p.tip;
     bar.appendChild(c);
   });
 }
@@ -661,7 +665,8 @@ function renderSum(){
   if (step===1){
     $("sumBar").innerHTML = "<b>"+Object.keys(sel.nuc).length+"</b>"+T(" нуклидов · "," nuclides · ")+
       "<b>"+sel.lines.length+"</b>"+T(" линий в базе выше порога"," lines above the database threshold");
-    updSteps();                      // иначе кнопки шагов и пресеты остаются от прошлого шага
+    updTabLabels(lines.length);       // иначе подписи закладок остаются на языке загрузки
+    updSteps();                       // и кнопки шагов — от прошлого шага
     return;
   }
   $("sumBar").innerHTML =
@@ -670,12 +675,17 @@ function renderSum(){
     "<b>"+Object.keys(nucs).length+"</b>"+T(" нуклидов"," nuclides")+
     (sel.merged.length ? T(" · слито групп ", " · merged groups ")+sel.merged.length : "")+
     (aL ? " · "+T("якорь ","anchor ")+esc(dispNuc(aL.label))+" "+aL.E.toFixed(1) : "");
+  updTabLabels(lines.length);
+  updSteps();
+}
+// подписи закладок со счётчиками; вызывается на любом шаге, иначе при переключении
+// языка на первом шаге закладка «Изотопы» оставалась на прежнем языке
+function updTabLabels(nLines){
   var nSrc = Object.keys(sel.nuc).length + Object.keys(sel.xrf).length;
   document.querySelector('.tabs button[data-tab="1"]').innerHTML =
     T("1 · Изотопы","1 · Nuclides")+(nSrc ? ' <b>'+nSrc+'</b>' : "");
   document.querySelector('.tabs button[data-tab="2"]').innerHTML =
-    T("2 · Линии","2 · Lines")+(lines.length ? ' <b>'+lines.length+'</b>' : "");
-  updSteps();
+    T("2 · Линии","2 · Lines")+(nLines ? ' <b>'+nLines+'</b>' : "");
 }
 
 // ── вторичные пики ──
@@ -1462,7 +1472,24 @@ var RU2EN = {
   "полный набор (все линии, для фита)":"full set (all lines, for fitting)",
   "Дописать набор в NuclideDefinition.xml…":"Append set to NuclideDefinition.xml…",
   "сохранить копию оригинала":"save a backup of the original",
-  "Предпросмотр":"Preview","◑ тема":"◑ theme"
+  "Предпросмотр":"Preview",
+  // подписи, добавленные при слиянии панелей и шагов 25.07
+  "Конструктор ROI и наборов нуклидов —":"ROI and nuclide set builder —",
+  "1 · Изотопы":"1 · Nuclides",
+  "Выбрано:":"Selected:","очистить всё":"clear all",
+  "Адаптация под разрешение детектора (IDWin)":"Detector-resolution adaptation (IDWin)",
+  "% на 662 кэВ":"% at 662 keV","критерий":"criterion",
+  "FWHM(E) = R·√(662·E)/100 · сцинтиллятор":"FWHM(E) = R·√(662·E)/100 · scintillator",
+  "Фильтры и выбор":"Filters and selection",
+  "энергия, кэВ":"energy, keV","топ-N по I на нуклид":"top-N by I per nuclide",
+  "равновесие ряда: интенсивности на один распад":"series equilibrium: intensities per one decay of the",
+  "Tl-208 ×0,3594 · Po-212 ×0,6406 · остальные члены ряда ×1":
+    "Tl-208 ×0.3594 · Po-212 ×0.6406 · other series members ×1",
+  "сортировка — клик по заголовку таблицы":"sorting — click a table header",
+  "для γ-линий с I ≥, %":"for γ lines with I ≥, %","формулы":"formulas",
+  "± окно":"± window","режим":"mode","ширина зоны":"zone width","% от E":"% of E",
+  "цвета":"colors","имя ROI-конфигурации":"ROI configuration name",
+  "имя набора (NuclideSet)":"set name (NuclideSet)","якорная линия":"anchor line"
 };
 var PARA_EN = {
   sub0:'ROI configurations and nuclide libraries from IAEA nuclear data',
@@ -1470,13 +1497,41 @@ var PARA_EN = {
   chainHint:'Chain members with no γ/X lines above the database threshold are greyed out.',
   searchHint:'Typing narrows the list: match by name or by family code. Click a row to add the nuclide.',
   xrfHint:'Kα/Kβ (+L for heavy elements). Intensities are relative (Kα1=100) — markers only.',
-  resHint:'<b>R</b> — detector resolution (FWHM at 662 keV): NaI(Tl) 6.5–8 %, CsI(Tl) 8–10 %, SrI₂(Eu) 3–3.5 %, LaBr₃ 2.7–3.3 %. Peaks broaden as √E: FWHM(E) = R·√(662·E)/100 — a <b>scintillator</b> model (LaBr₃/NaI/SrI₂/CsI); for HPGe (R ~0.15 %) it underestimates the width at low energies — a √(a+bE) law would be needed (not implemented here). <b>Criterion</b> — how close lines have to be to count as inseparable. <b>Sparrow limit</b> (ΔE &lt; 0.85·FWHM, i.e. 2σ) is the physical resolvability limit of two peaks: closer than that a doublet looks like a single peak, so ROI markers are merged. <b>Anchored set</b> (ΔE &lt; 0.25·FWHM) is for sets exported into the BecqMoni library: pairs between 0.25 and 0.85 FWHM are resolved there by the library fit around the anchor line (amplitudes tied by tabulated intensities), wider ones by deconvolution — merging them only impoverishes the set. <b>Manual</b> — the previous behaviour (2–3×FWHM is a coarse identification window). <span id="mergeHint"></span>',
+  resHint:'<b>R</b> — detector resolution (FWHM at 662 keV): NaI(Tl) 6.5–8 %, CsI(Tl) 8–10 %, SrI₂(Eu) 3–3.5 %, LaBr₃ 2.7–3.3 %. Peaks broaden as √E: FWHM(E) = R·√(662·E)/100 — a <b>scintillator</b> model (LaBr₃/NaI/SrI₂/CsI); for HPGe (R ~0.15 %) it underestimates the width at low energies — a √(a+bE) law would be needed (not implemented here). <b>Criterion</b> — how close lines have to be to count as inseparable. <b>Sparrow limit</b> (ΔE &lt; 0.85·FWHM, i.e. 2σ) is the physical resolvability limit of two peaks: closer than that a doublet looks like a single peak, so ROI markers are merged. <b>Anchored set</b> (ΔE &lt; 0.25·FWHM) is for sets exported into the BecqMoni library: pairs between 0.25 and 0.85 FWHM are resolved there by the library fit around the anchor line (amplitudes tied by tabulated intensities), wider ones by deconvolution — merging them only impoverishes the set. <b>Manual</b> — the previous behaviour (2–3×FWHM is a coarse identification window).',
   eqHint:'Unchecked: I is “per 100 decays of the emitting nuclide”, as in the IAEA database and BecqMoni “Intensities” files: the Tl-208 2614 keV line has I = 99.75 %. But in the equilibrium Th-232 series only 35.94 % of decays pass through Tl-208 (Bi-212 branching: β 64 % / α 36 %), so <b>per one Th-232 decay</b> this line yields 99.75 × 0.3594 ≈ 35.85 %. The checkbox applies this factor to members behind branch points (Tl-208 ×0.3594, Po-212 ×0.6406; in the U-235 series: Th-227 ×0.9862, Fr-223 ×0.0138, Tl-207 ×0.99724, Po-211 ×0.00276); all other members — ×1. Enable when the ROI set describes an equilibrium series as a whole; disable for handbook values.',
   secHint:'BS = E/(1+2E/511); CE = E−BS; SE = E−511 (E&gt;1122); DE = E−1022 (E&gt;1222); I-escape for E&lt;200 keV. <b>SUM</b> = E1+E2 — true-coincidence summing of cascade lines of one nuclide (close geometry: Co-60 → 2505, Y-88 → 2734); <b>PU</b> = 2×E — pulse pile-up of one strong line at high count rate (Cs-137 → 1324). Marker intensity: 10 % of the parent line (for SUM — of the weaker of the pair). Formulas: Knoll ch. 10–12, 17.',
   expHint:'<b>ROI configuration</b> goes into <code>%APPDATA%\\BecqMoni\\config\\ROI\\</code> (usually <code>C:\\Users\\&lt;name&gt;\\AppData\\Roaming\\BecqMoni\\config\\ROI\\</code>) and appears in the BecqMoni ROI list. <b>Nuclide library</b> — the same line selection is appended to your <code>NuclideDefinition.xml</code> as a named <b>NuclideSet</b>: pick your file (<code>%APPDATA%\\BecqMoni\\config\\NuclideDefinition.xml</code>), a copy with the added entries and set is downloaded — your existing nuclides and sets are preserved. With “save a backup of the original” ticked, the untouched file is downloaded alongside it (<code>…backup-YYYYMMDD-HHMM.xml</code>). Replace the file with BecqMoni closed. The <b>anchor line</b> gets <code>IsAnchor=true</code>: once BecqMoni finds it in a spectrum, the remaining lines of the set are placed at their tabulated energies and their amplitudes are fitted (library fit) — without an anchor that machinery never starts. <b>Full set</b> exports every line of the selected nuclides, bypassing checkboxes, filters and merging: in the BecqMoni author’s runs the gain comes precisely from the complete decay chain, while a set of strong lines only adds nothing to the fit. Weights of tied lines come from <code>Intencity</code>, so keep “Series equilibrium” on for chains, and add nuclides as a chain or as a single parent — the parent in brackets is what marks the chain for BecqMoni.',
   wHint:'FWHM(E) = R₆₆₂·√(662·E)/100; zone = E ± k·FWHM/2. Limits are rounded outward to whole keV.',
   footerText:'Data: IAEA Live Chart of Nuclides API snapshot (ENSDF) — <code>data/nuclides.js</code>, updated by <code>update_nuclides.py</code> (the API sends no CORS headers, so updates run via the script; the page is fully offline). XRF: NIST/Bearden. Secondary peaks: computed (Knoll, Gilmore &amp; Joss). Bq/cps coefficients are left at 0 — set them in BecqMoni from your efficiency curve. <a href="https://github.com/VibeEngineering-LLC/becqmoni-roi-wizard" target="_blank" rel="noopener">Sources on GitHub</a> · VibeEngineering · 2026 · unofficial tool, not part of <a href="https://github.com/Am6er/BecqMoni" target="_blank" rel="noopener">BecqMoni</a>.'
 };
+// подсказки (title) — тот же приём, что и для абзацев: EN в словаре,
+// RU снимается с разметки при старте. Ключ — id либо CSS-селектор
+var TITLE_EN = {
+  nucAdd:'Only the selected nuclide, its own lines',
+  nucAddF:'All daughter lines under the selected nuclide’s name — one nuclide in the list',
+  nucAddC:'Daughters as separate nuclides, parent in brackets: “Tc-99m (Mo-99)”',
+  famInfoBtn:'What the family codes mean',
+  mR662:'Detector resolution (FWHM) at 662 keV, %. NaI ~7–8, LaBr3 ~3, HPGe ~0.2',
+  mMode:'The threshold below which lines count as inseparable',
+  mK:'ΔE threshold in units of FWHM(E)',
+  mergeBtn:'Merge the lines of each nuclide (γ, X, XRF — regardless of selection) that are closer than the threshold: E — intensity-weighted centroid, I — sum',
+  fMinI:'Intensity threshold for ROI markers; 3 % is a working value for a scintillator with R ≈ 6 %',
+  anchorSel:'The line with IsAnchor=true: once BecqMoni finds it, the remaining set lines are placed at their tabulated positions and their amplitudes fitted',
+  btnNucXml:'Pick your own NuclideDefinition.xml — the set is appended to it, existing nuclides and sets are kept',
+  'th[data-k="I"]':'Per 100 decays of the nuclide; for XRF — nominal (Kα1=100)',
+  'th[data-k="rel"]':'Relative to the strongest line of this nuclide/element — the relative filter works on it'
+};
+var TITLE_RU = {};
+Object.keys(TITLE_EN).forEach(function(k){
+  var e = /^[a-zA-Z][\w-]*$/.test(k) ? $(k) : document.querySelector(k);
+  if (e) TITLE_RU[k] = e.title;
+});
+function applyTitles(l){
+  Object.keys(TITLE_EN).forEach(function(k){
+    var e = /^[a-zA-Z][\w-]*$/.test(k) ? $(k) : document.querySelector(k);
+    if (e) e.title = l==="en" ? TITLE_EN[k] : (TITLE_RU[k]||e.title);
+  });
+}
 var PARA_RU = {};
 Object.keys(PARA_EN).forEach(function(id){ var el = $(id); if (el) PARA_RU[id] = el.innerHTML; });
 var i18nNodes = [];
@@ -1505,6 +1560,7 @@ function setLang(l){
   Object.keys(PARA_EN).forEach(function(id){
     var el = $(id); if (el) el.innerHTML = l==="en" ? PARA_EN[id] : PARA_RU[id];
   });
+  applyTitles(l);
   updDbInfo(); updMergeHint(); buildPresets();
   buildSelectors(); rebuildLines(); renderTable();
   if ($("nearOut").innerHTML) searchNear();
