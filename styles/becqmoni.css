@@ -65,7 +65,7 @@ input[type=checkbox]{width:13px; height:13px; margin:0 3px 0 0; vertical-align:-
 .gbox + .gbox{margin-top:5px}
 .cols3{gap:8px}
 .cols2{gap:8px}
-.infoline{padding:3px 7px; margin:0 0 6px; font-size:11.5px; background:#eaf1f8; border-color:#c3d3e4}
+.infoline{padding:3px 7px; margin:0 0 4px; font-size:11.5px; background:#eaf1f8; border-color:#c3d3e4}
 
 /* «?» в строке контролов — кнопка-подсказка; свёрнутые тексты — обычные ссылки */
 .line > details.doc > summary{display:inline-flex; align-items:center; justify-content:center;
@@ -107,9 +107,10 @@ button.exp{height:19px; min-width:24px; border-radius:0; font-size:11px}
 .line:has(#fMinI){display:grid; align-items:center;
   grid-template-columns:auto 50px minmax(0,1fr); column-gap:5px}
 .line:has(#fMinI) input[type=number]{width:100%}
-/* строка «энергия — T½»: фиксированные колонки, чтобы «∞ лет» не уезжало на вторую строку */
+/* строка «энергия — T½»: фиксированные колонки, чтобы «∞ лет» не уезжало на вторую строку.
+   Колонки разделителей: 14 px под «—» (тире шире 10 px и обрезалось), 8 px под «·» */
 .line:has(#fEmin){display:grid; align-items:center;
-  grid-template-columns:auto 56px 10px 56px 8px auto 42px auto 10px 42px auto; column-gap:4px}
+  grid-template-columns:auto 56px 14px 56px 8px auto 42px auto 14px 42px auto; column-gap:4px}
 .line:has(#fEmin) input[type=number],
 .line:has(#fEmin) select{width:100%; min-width:0}
 /* длинная подпись «равновесие ряда» держит «?» на той же строке */
@@ -179,7 +180,9 @@ pre{border-radius:0; font-size:11.5px; padding:5px 7px; max-height:260px}
   .cols3,.cols2{grid-template-columns:1fr}
   .tabs button{padding:4px 9px}
   .menubar .sub{display:none}          /* пресеты и сводка базы уходят в меню «Данные» */
-  #mMode,#iMode,#roiMode{max-width:100%; flex:1 1 140px; min-width:0}
+  #iMode,#roiMode{max-width:100%; flex:1 1 140px; min-width:0}
+  /* критерий слияния — самая длинная подпись; в панели отдаём ему всю строку, иначе режется */
+  #mMode{max-width:100%; flex:1 1 100%; min-width:0}
   .line{gap:3px 6px}
   .line .hint{display:none}            /* формулы — под «?», в узкой панели их нет */
   .tabbody[data-body="2"] .tblscroll{min-height:180px}

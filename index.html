@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ROI-мастер для BecqMoni — гамма, ХРИ, вторичные пики</title>
 <link rel="stylesheet" href="styles/host.css?v=20260725e" id="themeCss">
-<script>(function(){var t=new URLSearchParams(location.search).get("style")||localStorage.getItem("roiStyle");if(t&&/^[\w.-]+$/.test(t))document.write('<link rel="stylesheet" href="styles/'+t+'.css">');})();</script>
+<!-- тема поверх host.css; по умолчанию becqmoni, «?style=none» — голый host.css -->
+<script>(function(){var t=new URLSearchParams(location.search).get("style")||localStorage.getItem("roiStyle")||"becqmoni";if(t&&t!=="none"&&/^[\w.-]+$/.test(t))document.write('<link rel="stylesheet" href="styles/'+t+'.css">');})();</script>
 </head>
 <body>
 <div class="app">
@@ -43,7 +44,7 @@
     </div>
     <div class="gbox"><span class="lg">Группа</span>
       <div class="row" style="position:relative">
-        <select id="famSel" style="flex:1; min-width:0"></select>
+        <select id="famSel" style="flex:1 1 260px; min-width:0"></select>
         <span id="famCtl" style="display:flex; gap:5px"></span>
         <button id="famInfoBtn" title="Что означают коды семейств">i</button>
         <p class="hint infoPop" id="famInfoBox" style="display:none"></p>
@@ -71,7 +72,7 @@
       <input type="number" id="mR662" value="7.5" min="0.1" step="0.1" style="width:62px"
         title="Разрешение детектора (FWHM) на 662 кэВ, %. NaI ~7–8, LaBr3 ~3, HPGe ~0.2">
       <span>% на 662 кэВ</span><span class="sep">·</span><label for="mMode">критерий</label>
-      <select id="mMode" style="width:auto; max-width:240px" title="Порог, ближе которого линии считаются нераздельными">
+      <select id="mMode" style="width:auto" title="Порог, ближе которого линии считаются нераздельными">
         <option value="sparrow" selected>предел Sparrow — маркеры ROI</option>
         <option value="anchor">якорный набор — библиотечный фит</option>
         <option value="manual">вручную</option>
