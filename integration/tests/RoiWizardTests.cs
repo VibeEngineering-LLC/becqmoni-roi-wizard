@@ -249,7 +249,7 @@ namespace BecquerelMonitor.RoiWizard.Tests
             List<SpectralLine> xrfLines = new LineSetBuilder(catalog).Reset().Build(onlyXrf, null);
             Check("на одних ХРИ якоря нет", AnchorPicker.Pick(xrfLines, r) == null);
             Check("проверка набора ловит отсутствие якоря",
-                  HasError(SetChecker.Check(xrfLines, true, null, r), "якорной линии"));
+                  HasError(SetChecker.Check(xrfLines, true, null, r), IssueKind.NoAnchor));
         }
 
         // ── 5. Набор: ровно один IsAnchor, ненулевые интенсивности, цепочка в скобках ──
@@ -298,17 +298,17 @@ namespace BecquerelMonitor.RoiWizard.Tests
             // Совпавшие энергии — предупреждение, а не запрет: пара «рентген распада +
             // ХРИ того же элемента» физически одна линия, и решение за оператором
             Check("совпадение энергий не блокирует набор",
-                  !HasError(SetChecker.Check(pair, true, null, null), "равные энергии"));
+                  !HasError(SetChecker.Check(pair, true, null, null), IssueKind.EqualEnergies));
             Check("но о нём сообщается",
-                  HasIssue(SetChecker.Check(pair, true, null, null), "равные энергии"));
+                  HasIssue(SetChecker.Check(pair, true, null, null), IssueKind.EqualEnergies));
             Check("для ROI — тоже предупреждение",
-                  !HasError(SetChecker.Check(pair, false, null, null), "равные энергии"));
+                  !HasError(SetChecker.Check(pair, false, null, null), IssueKind.EqualEnergies));
 
             // а нулевая интенсивность набор по-прежнему останавливает: такая линия
             // выпадает из связки по цепочке
             List<SpectralLine> zero = new List<SpectralLine> { Gamma("A", 100.0, 0.0) };
             Check("нулевой выход — ошибка для набора",
-                  HasError(SetChecker.Check(zero, true, null, null), "нулевой выход"));
+                  HasError(SetChecker.Check(zero, true, null, null), IssueKind.ZeroYield));
         }
 
         // ── 6. Вторичные пики: формулы и поправки ──
@@ -438,9 +438,9 @@ namespace BecquerelMonitor.RoiWizard.Tests
             Check("ручной якорь уважается экспортом", forced != null && definitions.Exists(
                 delegate(NuclideDefinition d) { return d.IsAnchor && d.Name == "XRF Pb Ka1"; }));
             Check("ХРИ ручным якорем — ошибка проверки",
-                  HasError(SetChecker.Check(lines, true, null, resolution, xrf), "не линия распада"));
+                  HasError(SetChecker.Check(lines, true, null, resolution, xrf), IssueKind.AnchorIsXrf));
             Check("γ-линия ручным якорем ошибкой не считается",
-                  !HasError(SetChecker.Check(lines, true, null, resolution, ba), "не линия распада"));
+                  !HasError(SetChecker.Check(lines, true, null, resolution, ba), IssueKind.AnchorIsXrf));
         }
 
         // ── 8. Профиль «полный набор» ──
@@ -691,11 +691,13 @@ namespace BecquerelMonitor.RoiWizard.Tests
             };
         }
 
-        static bool HasError(List<SetIssue> issues, string fragment)
+        // Замечание сверяется по коду, а не по обрывку фразы: текст зависит от языка
+        // интерфейса и от формулировки, код — нет.
+        static bool HasError(List<SetIssue> issues, IssueKind kind)
         {
             foreach (SetIssue issue in issues)
             {
-                if (issue.Level == IssueLevel.Error && issue.Text.IndexOf(fragment, StringComparison.Ordinal) >= 0)
+                if (issue.Level == IssueLevel.Error && issue.Kind == kind)
                 {
                     return true;
                 }
@@ -704,11 +706,11 @@ namespace BecquerelMonitor.RoiWizard.Tests
         }
 
         // замечание любого уровня — чтобы отличать «не блокирует» от «промолчали»
-        static bool HasIssue(List<SetIssue> issues, string fragment)
+        static bool HasIssue(List<SetIssue> issues, IssueKind kind)
         {
             foreach (SetIssue issue in issues)
             {
-                if (issue.Text.IndexOf(fragment, StringComparison.Ordinal) >= 0)
+                if (issue.Kind == kind)
                 {
                     return true;
                 }

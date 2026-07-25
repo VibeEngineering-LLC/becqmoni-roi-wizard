@@ -19,6 +19,7 @@ set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 if not exist "%CSC%" set CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe
 
 "%CSC%" -nologo -target:exe -out:"%~dp0RoiWizardTests.exe" -langversion:5 ^
+  "%CORE%\RoiWizardStrings.Designer.cs" ^
   "%CORE%\NuclideCatalog.cs" ^
   "%CORE%\SpectralLine.cs" ^
   "%CORE%\LineSetBuilder.cs" ^

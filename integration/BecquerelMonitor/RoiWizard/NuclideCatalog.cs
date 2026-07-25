@@ -85,8 +85,8 @@ namespace BecquerelMonitor.RoiWizard
                 if (stream == null)
                 {
                     throw new FileNotFoundException(
-                        "Ресурс " + ResourceName + " не найден: добавьте RoiWizard\\nuclides.xml " +
-                        "в проект как EmbeddedResource.");
+                        "Resource " + ResourceName + " not found: add RoiWizard\\nuclides.xml " +
+                        "to the project as an EmbeddedResource.");
                 }
                 return Load(stream);
             }

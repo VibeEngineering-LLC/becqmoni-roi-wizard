@@ -10,10 +10,29 @@ namespace BecquerelMonitor.RoiWizard
         Error
     }
 
+    // Что именно не так. Ядро не собирает фразу: текст зависит от языка интерфейса,
+    // а язык — дело формы. Здесь только код замечания и подстановки к нему.
+    public enum IssueKind
+    {
+        EqualEnergies,
+        ZeroYield,
+        AnchorIsXrf,
+        AnchorIsSecondary,
+        NoAnchor,
+        AnchorIsXray,
+        ZonesOverlap
+    }
+
     public class SetIssue
     {
         public IssueLevel Level { get; set; }
-        public string Text { get; set; }
+        public IssueKind Kind { get; set; }
+        public object[] Args { get; set; }
+
+        public SetIssue()
+        {
+            this.Args = new object[0];
+        }
     }
 
     // Проверки перед сохранением. Для ROI всё совещательное, для набора совпавшие энергии
@@ -93,11 +112,10 @@ namespace BecquerelMonitor.RoiWizard
                     issues.Add(new SetIssue
                     {
                         Level = IssueLevel.Warning,
-                        Text = string.Format(CultureInfo.CurrentCulture,
-                            "равные энергии: «{0}» и «{1}» ({2} / {3} кэВ) — подгонка амплитуд " +
-                            "на этой позиции вырождается",
+                        Kind = IssueKind.EqualEnergies,
+                        Args = new object[] {
                             Name(sorted[i - 1], forLibrary), Name(sorted[i], forLibrary),
-                            sorted[i - 1].Energy, sorted[i].Energy)
+                            sorted[i - 1].Energy, sorted[i].Energy }
                     });
                 }
             }
@@ -108,8 +126,8 @@ namespace BecquerelMonitor.RoiWizard
                     issues.Add(new SetIssue
                     {
                         Level = level,
-                        Text = string.Format(CultureInfo.CurrentCulture, "нулевой выход: «{0}» ({1} кэВ)",
-                            Name(line, forLibrary), line.Energy)
+                        Kind = IssueKind.ZeroYield,
+                        Args = new object[] { Name(line, forLibrary), line.Energy }
                     });
                 }
             }
@@ -133,13 +151,10 @@ namespace BecquerelMonitor.RoiWizard
                         issues.Add(new SetIssue
                         {
                             Level = IssueLevel.Error,
-                            Text = string.Format(CultureInfo.CurrentCulture,
-                                "якорем выбрана линия «{0}» ({1} кэВ): это {2}, а не линия распада. " +
-                                "Фит сел бы на опору, положение или интенсивность которой условны",
-                                chosen.LibraryName, chosen.Energy,
-                                chosen.Type == LineType.Xrf
-                                    ? "характеристический рентген материала"
-                                    : "расчётный вторичный маркер")
+                            Kind = chosen.Type == LineType.Xrf
+                                ? IssueKind.AnchorIsXrf
+                                : IssueKind.AnchorIsSecondary,
+                            Args = new object[] { chosen.LibraryName, chosen.Energy }
                         });
                     }
                 }
@@ -148,9 +163,7 @@ namespace BecquerelMonitor.RoiWizard
                     issues.Add(new SetIssue
                     {
                         Level = IssueLevel.Error,
-                        Text = "нет якорной линии: в наборе нет ни одной линии распада " +
-                               "(ХРИ и вторичные маркеры якорем быть не могут) — " +
-                               "библиотечный фит без якоря не запускается"
+                        Kind = IssueKind.NoAnchor
                     });
                 }
                 else if (!rejected && !HasGamma(anchors))
@@ -158,9 +171,8 @@ namespace BecquerelMonitor.RoiWizard
                     issues.Add(new SetIssue
                     {
                         Level = IssueLevel.Warning,
-                        Text = string.Format(CultureInfo.CurrentCulture,
-                            "якорь — рентгеновская линия «{0}» ({1} кэВ): для опоры фита надёжнее γ-линия",
-                            anchors[0].LibraryName, anchors[0].Energy)
+                        Kind = IssueKind.AnchorIsXray,
+                        Args = new object[] { anchors[0].LibraryName, anchors[0].Energy }
                     });
                 }
             }
@@ -176,9 +188,10 @@ namespace BecquerelMonitor.RoiWizard
                         issues.Add(new SetIssue
                         {
                             Level = IssueLevel.Warning,
-                            Text = string.Format(CultureInfo.CurrentCulture,
-                                "перекрытие зон: «{0}» [{1}–{2}] и «{3}» [{4}–{5}]",
-                                sorted[i - 1].Label, lowerA, upperA, sorted[i].Label, lowerB, upperB)
+                            Kind = IssueKind.ZonesOverlap,
+                            Args = new object[] {
+                                sorted[i - 1].Label, lowerA, upperA,
+                                sorted[i].Label, lowerB, upperB }
                         });
                     }
                 }

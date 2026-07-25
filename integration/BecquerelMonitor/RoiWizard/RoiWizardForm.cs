@@ -59,11 +59,6 @@ namespace BecquerelMonitor.RoiWizard
 
             this.buttonFromSpectrum.Enabled = resolutionProvider != null;
             this.SyncSetControls();
-            if (this.russian)
-            {
-                this.ApplyRussian();
-            }
-            // после ApplyRussian: списки и подсказки собираются из русских строк
             this.FillXrf();
             this.FillPresets();
             this.SetFold(this.groupSecondary, false);
@@ -86,32 +81,34 @@ namespace BecquerelMonitor.RoiWizard
         void FillCombos()
         {
             this.comboCriterion.Items.AddRange(new object[] {
-                "Sparrow limit — ROI markers (0.85·FWHM)",
-                "anchored set — library fit (0.25·FWHM)",
-                "manual"
+                RoiWizardStrings.criterionSparrow,
+                RoiWizardStrings.criterionAnchored,
+                RoiWizardStrings.criterionManual
             });
             this.comboCriterion.SelectedIndex = 0;
 
             this.comboIntensityMode.Items.AddRange(new object[] {
-                "relative (within nuclide, max = 100)",
-                "absolute (per decay)"
+                RoiWizardStrings.intensityRelative,
+                RoiWizardStrings.intensityAbsolute
             });
             this.comboIntensityMode.SelectedIndex = 0;
 
             this.comboStyle.Items.AddRange(new object[] {
-                "marker lines (height ∝ I, no zones)",
-                "zones (limits around the peak)",
-                "zones + intensity markers"
+                RoiWizardStrings.roiStyleMarkers,
+                RoiWizardStrings.roiStyleZones,
+                RoiWizardStrings.roiStyleBoth
             });
             this.comboStyle.SelectedIndex = 0;
 
             this.comboWidthMode.Items.AddRange(new object[] {
-                "% of energy (BecqMoni style)",
-                "k × FWHM (scintillator)"
+                RoiWizardStrings.widthModePercent,
+                RoiWizardStrings.widthModeFwhm
             });
             this.comboWidthMode.SelectedIndex = 0;
 
-            object[] units = { "s", "h", "d", "y" };
+            object[] units = {
+                RoiWizardStrings.unitSeconds, RoiWizardStrings.unitHours,
+                RoiWizardStrings.unitDays, RoiWizardStrings.unitYears };
             this.comboMinHalfLifeUnit.Items.AddRange(units);
             this.comboMinHalfLifeUnit.SelectedIndex = 2;      // сутки, как в вебе
             this.comboMaxHalfLifeUnit.Items.AddRange((object[])units.Clone());
@@ -180,13 +177,13 @@ namespace BecquerelMonitor.RoiWizard
                 }
                 Preset preset = this.presets[i];
                 LinkLabel link = new LinkLabel();
-                link.Text = this.russian ? preset.TitleRu : preset.Title;
+                link.Text = preset.Title;
                 link.AutoSize = true;
                 link.LinkColor = WizardTheme.Accent;
                 link.ActiveLinkColor = WizardTheme.AccentInk;
                 link.LinkBehavior = LinkBehavior.HoverUnderline;
                 link.Margin = new Padding(0, 4, 0, 2);
-                this.tips.SetToolTip(link, this.russian ? preset.HintRu : preset.Hint);
+                this.tips.SetToolTip(link, preset.Hint);
                 Preset captured = preset;
                 link.LinkClicked += delegate { this.ApplyPreset(captured); };
                 this.panelPresets.Controls.Add(link);
@@ -228,21 +225,17 @@ namespace BecquerelMonitor.RoiWizard
         sealed class Preset
         {
             public readonly string Title;
-            public readonly string TitleRu;
             public readonly string Hint;
-            public readonly string HintRu;
             public readonly string[] Chains;
             public readonly string[] Nuclides;
             public readonly string[] Families;
             public readonly string[] Xrf;
 
-            public Preset(string title, string titleRu, string hint, string hintRu,
+            public Preset(string title, string hint,
                           string[] chains, string[] nuclides, string[] families, string[] xrf)
             {
                 this.Title = title;
-                this.TitleRu = titleRu;
                 this.Hint = hint;
-                this.HintRu = hintRu;
                 this.Chains = chains;
                 this.Nuclides = nuclides;
                 this.Families = families;
@@ -253,24 +246,20 @@ namespace BecquerelMonitor.RoiWizard
         static readonly string[] None = new string[0];
 
         readonly Preset[] presets = {
-            new Preset("NORM background", "ЕРН-фон",
-                       "Th-232 + U-238 as chains + K-40", "Th-232 + U-238 цепочками + K-40",
+            new Preset(RoiWizardStrings.preset1_Title, RoiWizardStrings.preset1_Hint,
                        new string[] { "Th-232", "U-238" }, new string[] { "K-40" }, None, None),
-            new Preset("Cs-137 / Co-60 check", "Поверка Cs-137 / Co-60",
-                       "Reference check sources", "Контрольные источники",
+            new Preset(RoiWizardStrings.preset2_Title, RoiWizardStrings.preset2_Hint,
                        None, new string[] { "Cs-137", "Co-60" }, None, None),
-            new Preset("Calibration set", "ОСГИ / калибровка",
-                       "Am-241, Ba-133, Eu-152, Cs-137, Co-60", "Am-241, Ba-133, Eu-152, Cs-137, Co-60",
+            new Preset(RoiWizardStrings.preset3_Title, RoiWizardStrings.preset3_Hint,
                        None, new string[] { "Am-241", "Ba-133", "Eu-152", "Cs-137", "Co-60" }, None, None),
-            new Preset("Medical", "Медицинские", "MED family", "Семейство MED",
+            new Preset(RoiWizardStrings.preset4_Title, RoiWizardStrings.preset4_Hint,
                        None, None, new string[] { "MED" }, None),
-            new Preset("Detector and shield XRF", "ХРИ детектора и защиты",
-                       "Pb, W, La, Ba, I", "Pb, W, La, Ba, I",
+            new Preset(RoiWizardStrings.preset5_Title, RoiWizardStrings.preset5_Hint,
                        None, None, None, new string[] { "Pb", "W", "La", "Ba", "I" })
         };
 
         readonly ToolTip tips = new ToolTip();
-        string presetsCaption = "Presets:";
+        string presetsCaption { get { return RoiWizardStrings.presetsCaption; } }
 
         // Словарик кодов: пояснение выбранного семейства и чем задана классификация.
         // Всплывает поверх списка и закрывается щелчком по себе или Esc — как .infoPop.
@@ -1039,8 +1028,8 @@ namespace BecquerelMonitor.RoiWizard
             return chip;
         }
 
-        string xrfChipPrefix = "XRF ";
-        string emptySelectionHint = "empty — start with a group above";
+        string xrfChipPrefix { get { return RoiWizardStrings.xrfChipPrefix; } }
+        string emptySelectionHint { get { return RoiWizardStrings.emptySelectionHint; } }
 
         void RefreshLines()
         {
@@ -1108,8 +1097,8 @@ namespace BecquerelMonitor.RoiWizard
             {
                 case LineType.Gamma: return "γ";
                 case LineType.Xray: return "X";
-                case LineType.Xrf: return this.russian ? "ХРИ" : "XRF";
-                default: return this.russian ? "втор" : "sec";
+                case LineType.Xrf: return RoiWizardStrings.lineTypeXrf;
+                default: return RoiWizardStrings.lineTypeSecondary;
             }
         }
 
@@ -1219,7 +1208,7 @@ namespace BecquerelMonitor.RoiWizard
                     ? this.selection.XrfElements.Contains(hit.XrfSymbol)
                     : this.selection.Nuclides.ContainsKey(hit.Nuclide);
                 this.listNear.Items.Add(string.Format(CultureInfo.CurrentCulture,
-                    "{0}{1:0.0}   {2,-14} {3,9:0.00} кэВ   I {4,7:0.###} %   {5,-8} {6}{7}",
+                    RoiWizardStrings.nearHitFormat,
                     delta >= 0 ? "+" : "", delta, hit.Nuclide, hit.Energy, hit.Intensity,
                     hit.Type, hit.HalfLife, added ? "   ✓" : ""));
             }
@@ -1358,7 +1347,7 @@ namespace BecquerelMonitor.RoiWizard
             }
             else
             {
-                MessageBox.Show(this, "The resolution could not be taken from the active spectrum.",
+                MessageBox.Show(this, RoiWizardStrings.noResolutionFromSpectrum,
                     this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -1394,7 +1383,8 @@ namespace BecquerelMonitor.RoiWizard
             this.anchorCandidates.Clear();
             SpectralLine automatic = AnchorPicker.Pick(this.SelectedLines(), this.Resolution);
             this.comboAnchor.Items.Add(automatic != null
-                ? "auto — " + automatic.Label + " " + automatic.Energy.ToString("0.0", CultureInfo.CurrentCulture)
+                ? string.Format(CultureInfo.CurrentCulture, RoiWizardStrings.anchorAuto,
+                    automatic.Label, automatic.Energy.ToString("0.0", CultureInfo.CurrentCulture))
                 : "auto");
             foreach (SpectralLine line in this.SelectedLines())
             {
@@ -1412,14 +1402,13 @@ namespace BecquerelMonitor.RoiWizard
         readonly List<string> groupMembers = new List<string>();
         readonly bool russian =
             Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName == "ru";
-        string mergeInfoFormat =
-            "threshold {0:0.##}·FWHM: lines merge closer than {1:0.#} keV at 100, {2:0.#} at 662, {3:0.#} at 1500";
-        string statusFormat = "lines: {0} of {1} · nuclides: {2}";
-        string secondaryFormat = "secondary markers added: {0}";
-        string nearEmptyFormat = "nothing found within {0} ± {1} keV";
+        string mergeInfoFormat { get { return RoiWizardStrings.mergeInfoFormat; } }
+        string statusFormat { get { return RoiWizardStrings.statusFormat; } }
+        string secondaryFormat { get { return RoiWizardStrings.secondaryFormat; } }
+        string nearEmptyFormat { get { return RoiWizardStrings.nearEmptyFormat; } }
         bool suppressGroupCheck;
-        string hintPicked = "Applies to the ticked nuclides ({0}).";
-        string hintNone = "Tick a nuclide - the buttons apply to it.";
+        string hintPicked { get { return RoiWizardStrings.hintPicked; } }
+        string hintNone { get { return RoiWizardStrings.hintNone; } }
 
         void SyncSetControls()
         {
@@ -1450,6 +1439,26 @@ namespace BecquerelMonitor.RoiWizard
             return index - 1 < this.anchorCandidates.Count ? this.anchorCandidates[index - 1] : null;
         }
 
+        // Ядро отдаёт код замечания и подстановки, фразу собирает форма — иначе
+        // тексты проверок пришлось бы держать в ядре и они не переводились бы.
+        static string Describe(SetIssue issue)
+        {
+            string format;
+            switch (issue.Kind)
+            {
+                case IssueKind.EqualEnergies: format = RoiWizardStrings.issueEqualEnergies; break;
+                case IssueKind.ZeroYield: format = RoiWizardStrings.issueZeroYield; break;
+                case IssueKind.AnchorIsXrf: format = RoiWizardStrings.issueAnchorIsXrf; break;
+                case IssueKind.AnchorIsSecondary: format = RoiWizardStrings.issueAnchorIsSecondary; break;
+                case IssueKind.NoAnchor: format = RoiWizardStrings.issueNoAnchor; break;
+                case IssueKind.AnchorIsXray: format = RoiWizardStrings.issueAnchorIsXray; break;
+                default: format = RoiWizardStrings.issueZonesOverlap; break;
+            }
+            return issue.Args == null || issue.Args.Length == 0
+                ? format
+                : string.Format(CultureInfo.CurrentCulture, format, issue.Args);
+        }
+
         void RunChecks()
         {
             this.ApplyExporterSettings();
@@ -1457,7 +1466,7 @@ namespace BecquerelMonitor.RoiWizard
             this.listIssues.Items.Clear();
             foreach (SetIssue issue in SetChecker.Check(this.lines, false, this.zones))
             {
-                this.listIssues.Items.Add("ROI · " + issue.Text);
+                this.listIssues.Items.Add(RoiWizardStrings.issuePrefixRoi + " · " + Describe(issue));
             }
             // проверяется то, что реально уйдёт в библиотеку: при «полном наборе» это не
             // содержимое таблицы, а все линии источников
@@ -1473,12 +1482,12 @@ namespace BecquerelMonitor.RoiWizard
             {
                 if (issue.Level == IssueLevel.Error)
                 {
-                    this.listIssues.Items.Add("SET · " + issue.Text);
+                    this.listIssues.Items.Add(RoiWizardStrings.issuePrefixSet + " · " + Describe(issue));
                 }
             }
             if (this.listIssues.Items.Count == 0)
             {
-                this.listIssues.Items.Add("no issues");
+                this.listIssues.Items.Add(RoiWizardStrings.issueNone);
             }
             this.listIssues.EndUpdate();
         }
@@ -1514,14 +1523,14 @@ namespace BecquerelMonitor.RoiWizard
             }
         }
 
-        string previewEmpty = "no lines selected";
+        string previewEmpty { get { return RoiWizardStrings.previewEmpty; } }
 
         void CreateRoiConfig()
         {
             List<SpectralLine> selected = this.SelectedLines();
             if (selected.Count == 0)
             {
-                MessageBox.Show(this, "No lines selected.", this.Text,
+                MessageBox.Show(this, RoiWizardStrings.noLinesSelected, this.Text,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -1575,7 +1584,7 @@ namespace BecquerelMonitor.RoiWizard
             List<SpectralLine> library = this.LibraryLines();
             if (Count(library) == 0)
             {
-                MessageBox.Show(this, "No lines selected.", this.Text,
+                MessageBox.Show(this, RoiWizardStrings.noLinesSelected, this.Text,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -1646,7 +1655,7 @@ namespace BecquerelMonitor.RoiWizard
                 {
                     return MessageBox.Show(this,
                         string.Format(CultureInfo.CurrentCulture,
-                            "Конфигурация «{0}» уже есть — её файл будет перезаписан. Продолжить?", name),
+                            RoiWizardStrings.confirmRoiOverwrite, name),
                         this.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
                 }
             }
@@ -1661,7 +1670,7 @@ namespace BecquerelMonitor.RoiWizard
                 {
                     return MessageBox.Show(this,
                         string.Format(CultureInfo.CurrentCulture,
-                            "Набор «{0}» в библиотеке уже есть. Добавить ещё один с тем же именем?", name),
+                            RoiWizardStrings.confirmSetDuplicate, name),
                         this.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
                 }
             }
@@ -1672,12 +1681,12 @@ namespace BecquerelMonitor.RoiWizard
         {
             StringBuilder text = new StringBuilder();
             text.AppendLine(blocking
-                ? "The set cannot be saved — the data check found errors:"
-                : "The data check found issues:");
+                ? RoiWizardStrings.confirmErrorsHead
+                : RoiWizardStrings.confirmIssuesHead);
             text.AppendLine();
             for (int i = 0; i < issues.Count && i < 8; i++)
             {
-                text.AppendLine("• " + issues[i].Text);
+                text.AppendLine("• " + Describe(issues[i]));
             }
             if (issues.Count > 8)
             {
@@ -1686,13 +1695,12 @@ namespace BecquerelMonitor.RoiWizard
             if (blocking)
             {
                 text.AppendLine();
-                text.AppendLine("Two lines at the same energy make the amplitude fit degenerate, " +
-                                "and zero intensity drops a line out of the chain coupling.");
+                text.AppendLine(RoiWizardStrings.confirmErrorsTail);
                 MessageBox.Show(this, text.ToString(), this.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
             text.AppendLine();
-            text.Append("Save anyway?");
+            text.Append(RoiWizardStrings.confirmSaveAnyway);
             return MessageBox.Show(this, text.ToString(), this.Text,
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
@@ -1923,9 +1931,17 @@ namespace BecquerelMonitor.RoiWizard
                 : this.stepForward;
         }
 
-        string[] stepNames = { "Nuclides", "Lines", "Styling and export" };
-        string stepBack = "◂ Back";
-        string stepForward = "Next ▸";
+        string[] stepNames
+        {
+            get
+            {
+                return new string[] {
+                    RoiWizardStrings.stepNuclides, RoiWizardStrings.stepLines,
+                    RoiWizardStrings.stepExport };
+            }
+        }
+        string stepBack { get { return RoiWizardStrings.stepBack; } }
+        string stepForward { get { return RoiWizardStrings.stepForward; } }
 
         void UpdateStatus()
         {
@@ -1943,152 +1959,5 @@ namespace BecquerelMonitor.RoiWizard
                 selected, this.lines.Count, nuclides.Count);
         }
 
-        // ─── русские подписи ────────────────────────────────────────────────
-        // Штатный механизм WinForms (Localizable = true + RoiWizardForm.ru.resx) не
-        // используется намеренно: разметка собрана руками, а держать координаты
-        // контролов в ресурсах ради двух языков дороже, чем словарь подписей.
-        void ApplyRussian()
-        {
-            this.Text = "Конструктор ROI и наборов нуклидов";
-            this.tabSources.Text = "1 · Изотопы";
-            this.tabLines.Text = "2 · Линии";
-            this.tabExport.Text = "3 · Оформление и экспорт";
-
-            this.groupSearch.Text = "Поиск изотопа";
-            this.buttonAddSingle.Text = "Добавить";
-            this.buttonAddFamily.Text = "+ семейство";
-            this.buttonAddChain.Text = "+ цепочка";
-            this.columnCatalogName.Text = "Нуклид";
-            this.columnCatalogFamilies.Text = "Семейства";
-            this.columnCatalogLines.Text = "Линий";
-
-            this.groupGroup.Text = "Группа";
-            this.buttonGroupAll.Text = "добавить все";
-            this.buttonGroupFamily.Text = "+ линии семейства";
-            this.buttonGroupChain.Text = "+ цепочкой";
-            this.groupXrf.Text = "ХРИ — элементы";
-            this.labelXrf.Text = "Материалы защиты и детектора:";
-            this.hintPicked = "Применяется к отмеченным ({0}).";
-            this.mergeInfoFormat = "порог {0:0.##}·FWHM: сливаются линии ближе {1:0.#} кэВ на 100, " +
-                                   "{2:0.#} на 662, {3:0.#} на 1500";
-            this.statusFormat = "линий: {0} из {1} · нуклидов: {2}";
-            this.hintNone = "Отметьте нуклид — кнопки применятся к нему.";
-
-            this.buttonHelp.Text = "Справка";
-            this.stepNames = new string[] { "Изотопы", "Линии", "Оформление и экспорт" };
-            this.stepBack = "◂ Назад";
-            this.stepForward = "Вперёд ▸";
-            this.buttonPreview.Text = "Предпросмотр";
-            this.previewEmpty = "линии не выбраны";
-            this.presetsCaption = "Пресеты:";
-            this.labelSearchHint.Text = "Ввод сужает список: по имени или по коду семейства.";
-            this.labelXrfHint.Text = "Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1 = 100) — только маркеры.";
-            this.groupSelected.Text = "Выбрано";
-            this.buttonClear.Text = "очистить всё";
-            this.xrfChipPrefix = "ХРИ ";
-            this.emptySelectionHint = "пусто — начните с группы выше";
-
-            this.groupResolution.Text = "Адаптация под разрешение детектора";
-            this.labelResolution.Text = "R, % на 662 кэВ";
-            this.buttonFromSpectrum.Text = "из спектра";
-            this.labelCriterion.Text = "критерий";
-            this.buttonMerge.Text = "Объединить близкие";
-            this.buttonUnmerge.Text = "Вернуть исходные";
-            this.comboCriterion.Items.Clear();
-            this.comboCriterion.Items.AddRange(new object[] {
-                "предел Sparrow — маркеры ROI (0,85·FWHM)",
-                "якорный набор — библиотечный фит (0,25·FWHM)",
-                "вручную"
-            });
-            this.comboCriterion.SelectedIndex = 0;
-
-            this.groupFilters.Text = "Фильтры и выбор";
-            this.checkIntensity.Text = "интенсивность ≥, %";
-            this.checkEnergy.Text = "энергия, кэВ";
-            this.checkEquilibrium.Text = "равновесие ряда (интенсивности на распад родителя)";
-            this.checkHalfLife.Text = "T½";
-            this.checkHideUnselected.Text = "скрыть невыбранные";
-            this.groupSecondary.Text = "Вторичные пики (расчёт по выбранным γ-линиям)";
-            this.labelColors.Text = "Цвета";
-            this.groupNear.Text = "Поиск близких линий (по всей базе — кто ещё светит рядом)";
-            this.labelNearEnergy.Text = "энергия, кэВ";
-            this.labelNearWindow.Text = "± окно";
-            this.labelNearIntensity.Text = "I ≥, %";
-            this.labelNearHalfLife.Text = "T½ ≥";
-            this.buttonNearSearch.Text = "Искать";
-            this.buttonNearAdd.Text = "+ добавить";
-            this.comboNearHalfLifeUnit.Items.Clear();
-            this.comboNearHalfLifeUnit.Items.AddRange(new object[] { "сек", "ч", "сут", "лет" });
-            this.comboNearHalfLifeUnit.SelectedIndex = 2;
-            this.nearEmptyFormat = "в окне {0} ± {1} кэВ ничего не найдено";
-            this.buttonColorByChain.Text = "по цепочке";
-            this.buttonColorByNuclide.Text = "по нуклиду";
-            this.labelSecondaryMin.Text = "для γ-линий с I ≥, %";
-            this.checkSecBackscatter.Text = "рассеяние назад (BS)";
-            this.checkSecComptonEdge.Text = "комптон-край (CE)";
-            this.checkSecSingleEscape.Text = "вылет 511 (SE)";
-            this.checkSecDoubleEscape.Text = "вылет 1022 (DE)";
-            this.checkSecIodine.Text = "вылет I-K (NaI, −28.6)";
-            this.checkSecAnnihilation.Text = "аннигиляция 511";
-            this.checkSecSum.Text = "суммирование каскадное (E1+E2)";
-            this.checkSecPileUp.Text = "наложение 2×E";
-            this.buttonGenerateSecondary.Text = "Сгенерировать";
-            this.secondaryFormat = "добавлено вторичных маркеров: {0}";
-            this.labelTypes.Text = "Тип линий";
-            this.checkTypeXray.Text = "X (распад)";
-            this.checkTypeXrf.Text = "ХРИ";
-            this.checkTypeSecondary.Text = "вторичные";
-            this.buttonSelectAll.Text = "✓ выбрать все видимые";
-            this.buttonSelectNone.Text = "✗ снять все видимые";
-            this.columnLineRelative.Text = "I отн., %";
-            this.columnLineHalfLife.Text = "T½";
-            this.comboMinHalfLifeUnit.Items.Clear();
-            this.comboMinHalfLifeUnit.Items.AddRange(new object[] { "сек", "ч", "сут", "лет" });
-            this.comboMinHalfLifeUnit.SelectedIndex = 2;
-            this.comboMaxHalfLifeUnit.Items.Clear();
-            this.comboMaxHalfLifeUnit.Items.AddRange(new object[] { "сек", "ч", "сут", "лет" });
-            this.comboMaxHalfLifeUnit.SelectedIndex = 3;
-            this.labelTopN.Text = "топ-N по I на нуклид";
-            this.buttonSelectTop.Text = "Выбрать топ-N";
-            this.comboIntensityMode.Items.Clear();
-            this.comboIntensityMode.Items.AddRange(new object[] {
-                "относительная (внутри изотопа, макс = 100)",
-                "абсолютная (на распад)"
-            });
-            this.comboIntensityMode.SelectedIndex = 0;
-
-            this.columnLineName.Text = "Нуклид";
-            this.columnLineEnergy.Text = "E, кэВ";
-            this.columnLineIntensity.Text = "I, %";
-            this.columnLineType.Text = "Тип";
-
-            this.groupStyle.Text = "Оформление ROI";
-            this.labelStyle.Text = "режим";
-            this.labelWidth.Text = "ширина зоны";
-            this.comboStyle.Items.Clear();
-            this.comboStyle.Items.AddRange(new object[] {
-                "линии-маркеры (высота ∝ I, без зон)",
-                "зоны (границы вокруг пика)",
-                "зоны + маркеры интенсивности"
-            });
-            this.comboStyle.SelectedIndex = 0;
-            this.comboWidthMode.Items.Clear();
-            this.comboWidthMode.Items.AddRange(new object[] {
-                "% от энергии (как в BecqMoni)",
-                "k × FWHM (сцинтиллятор)"
-            });
-            this.comboWidthMode.SelectedIndex = 0;
-
-            this.groupExport.Text = "Экспорт";
-            this.labelConfigName.Text = "имя ROI-конфигурации";
-            this.buttonCreateRoi.Text = "Создать ROI-конфигурацию";
-            this.labelSetName.Text = "имя набора (NuclideSet)";
-            this.labelAnchor.Text = "якорная линия";
-            this.buttonCreateSet.Text = "Добавить набор в библиотеку";
-            this.checkFullSet.Text = "полный набор (все линии, для фита)";
-            this.labelAnchorCount.Text = "якорей";
-            this.labelIssues.Text = "Проверка данных:";
-            this.textSetName.Text = "Набор IAEA";
-        }
     }
 }

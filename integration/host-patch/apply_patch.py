@@ -33,6 +33,10 @@ CSPROJ_ENTRIES = """    <Compile Include="RoiWizard\\NuclideCatalog.cs" />
     <Compile Include="RoiWizard\\SetExporter.cs" />
     <Compile Include="RoiWizard\\WizardTheme.cs" />
     <Compile Include="RoiWizard\\CatalogCellRenderers.cs" />
+    <Compile Include="RoiWizard\\RoiWizardStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>RoiWizardStrings.resx</DependentUpon>
+    </Compile>
     <Compile Include="RoiWizard\\HelpForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -209,7 +213,8 @@ def patch_csproj(root):
         text = text[:end] + "\n".join(missing) + "\n" + text[end:]
         steps.append("вставлено записей Compile: %d" % len(missing))
 
-    for resource in ["RoiWizard\\nuclides.xml", "RoiWizard\\help.xml"]:
+    for resource in ["RoiWizard\\nuclides.xml", "RoiWizard\\help.xml",
+                     "RoiWizard\\RoiWizardStrings.resx", "RoiWizard\\RoiWizardStrings.ru.resx"]:
         if resource in text:
             steps.append("уже есть: EmbeddedResource %s" % resource)
             continue
@@ -232,7 +237,7 @@ def copy_module(root):
         os.makedirs(target)
     copied = 0
     for name in sorted(os.listdir(MODULE)):
-        if not (name.endswith(".cs") or name.endswith(".xml")):
+        if not (name.endswith(".cs") or name.endswith(".xml") or name.endswith(".resx")):
             continue
         shutil.copy2(os.path.join(MODULE, name), os.path.join(target, name))
         copied += 1

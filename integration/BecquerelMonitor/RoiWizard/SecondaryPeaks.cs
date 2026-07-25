@@ -62,10 +62,23 @@ namespace BecquerelMonitor.RoiWizard
             return energy - BackscatterEnergy(energy);
         }
 
+        // Подпись маркера аннигиляции приходит снаружи: она попадает в набор и видна
+        // оператору, а язык интерфейса ядру знать неоткуда.
+        public const string DefaultAnnihilationLabel = "Annihilation 511";
+
         public static List<SpectralLine> Generate(IEnumerable<SpectralLine> lines,
                                                   ResolutionModel resolution,
                                                   SecondaryKind kinds,
                                                   double minParentIntensity)
+        {
+            return Generate(lines, resolution, kinds, minParentIntensity, DefaultAnnihilationLabel);
+        }
+
+        public static List<SpectralLine> Generate(IEnumerable<SpectralLine> lines,
+                                                  ResolutionModel resolution,
+                                                  SecondaryKind kinds,
+                                                  double minParentIntensity,
+                                                  string annihilationLabel)
         {
             List<SpectralLine> result = new List<SpectralLine>();
             List<SpectralLine> parents = new List<SpectralLine>();
@@ -119,7 +132,7 @@ namespace BecquerelMonitor.RoiWizard
             }
             if (wantAnnihilation)
             {
-                AddAnnihilation(result, lines);
+                AddAnnihilation(result, lines, annihilationLabel);
             }
             return result;
         }
@@ -168,7 +181,8 @@ namespace BecquerelMonitor.RoiWizard
 
         // 511 кэВ появляется и от образования пар в окружающих материалах, а не только
         // от позитронного источника — Knoll предупреждает не путать эти случаи
-        static void AddAnnihilation(List<SpectralLine> result, IEnumerable<SpectralLine> lines)
+        static void AddAnnihilation(List<SpectralLine> result, IEnumerable<SpectralLine> lines,
+                                    string label)
         {
             foreach (SpectralLine line in lines)
             {
@@ -181,7 +195,7 @@ namespace BecquerelMonitor.RoiWizard
             {
                 Key = "sec|ann|511",
                 Nuclide = "—",
-                Label = "Аннигиляция 511",
+                Label = string.IsNullOrEmpty(label) ? DefaultAnnihilationLabel : label,
                 Energy = 511.0,
                 Intensity = 5.0,
                 Type = LineType.Secondary,
@@ -210,12 +224,5 @@ namespace BecquerelMonitor.RoiWizard
             });
         }
 
-        public static string DescribeCorrections()
-        {
-            return string.Format(CultureInfo.InvariantCulture,
-                "комптон-край −{0}·FWHM, обратное рассеяние +{1} кэВ; доли BS {2:P0}, CE {3:P0}, SE {4:P0}",
-                ComptonEdgeFwhmFactor, BackscatterShiftKeV,
-                BackscatterFraction, ComptonEdgeFraction, EscapeFraction);
-        }
-    }
+   }
 }

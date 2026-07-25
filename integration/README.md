@@ -27,17 +27,21 @@ BecquerelMonitor/RoiWizard/
   WizardTheme.cs        палитра и шрифт из styles/becqmoni.css, обход дерева контролов
   CatalogCellRenderers.cs  свои ячейки XPTable: бейджи семейств и типов, счётчики γ/X,
                         микро-бар интенсивности (штатная ячейка знает один цвет)
-  RoiWizardForm.cs           окно инструмента: три вкладки, обработчики, русские подписи
+  RoiWizardForm.cs           окно инструмента: три вкладки, обработчики, раскладка
   RoiWizardForm.Designer.cs  разметка формы (XPTable, как в NuclideSetForm)
   HelpForm.cs           окно справки: разбор того же подмножества разметки, что на странице
+  RoiWizardStrings.Designer.cs  доступ к таблице строк (генерируется tools/gen_strings.py)
   nuclides.xml          сам снимок (121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ; 101 КБ)
   help.xml              текст справки на двух языках, выгружен из index.html
+  RoiWizardStrings.resx        подписи интерфейса, нейтральная (английская) таблица
+  RoiWizardStrings.ru.resx     русский перевод; MSBuild собирает из него сателлит
 host-patch/
   apply_patch.py        встраивание в дерево BecqMoni: файлы, .csproj, пункт меню, ресурсы
   README.md             то же самое построчно, если применять руками
 tools/
   export_catalog.py     пересборка nuclides.xml из data/nuclides.js и data/xrf.js
   export_help.py        пересборка help.xml из index.html (оба языка)
+  gen_strings.py        таблица подписей: .resx, .ru.resx и доступ к ним
 tests/
   RoiWizardTests.cs     тесты инвариантов, run_tests.cmd — сборка и прогон
   HostStubs.cs          заглушки типов BecqMoni: только для тестовой сборки,
@@ -70,6 +74,15 @@ python integration\host-patch\apply_patch.py <путь к дереву BecqMoni>
 <Compile Include="RoiWizard\ZoneCalculator.cs" />
 <Compile Include="RoiWizard\SetChecker.cs" />
 <Compile Include="RoiWizard\SetExporter.cs" />
+<Compile Include="RoiWizard\WizardTheme.cs" />
+<Compile Include="RoiWizard\CatalogCellRenderers.cs" />
+<Compile Include="RoiWizard\RoiWizardStrings.Designer.cs">
+  <AutoGen>True</AutoGen>
+  <DependentUpon>RoiWizardStrings.resx</DependentUpon>
+</Compile>
+<Compile Include="RoiWizard\HelpForm.cs">
+  <SubType>Form</SubType>
+</Compile>
 <Compile Include="RoiWizard\RoiWizardForm.cs">
   <SubType>Form</SubType>
 </Compile>
@@ -77,6 +90,9 @@ python integration\host-patch\apply_patch.py <путь к дереву BecqMoni>
   <DependentUpon>RoiWizardForm.cs</DependentUpon>
 </Compile>
 <EmbeddedResource Include="RoiWizard\nuclides.xml" />
+<EmbeddedResource Include="RoiWizard\help.xml" />
+<EmbeddedResource Include="RoiWizard\RoiWizardStrings.resx" />
+<EmbeddedResource Include="RoiWizard\RoiWizardStrings.ru.resx" />
 ```
 
 Имя ресурса должно получиться `BecquerelMonitor.RoiWizard.nuclides.xml` — это значение
@@ -119,8 +135,10 @@ lines.AddRange(SecondaryPeaks.Generate(lines, resolution,
 
 // 5. проверки и выгрузка
 var exporter = new SetExporter(resolution).Reset();
+// ядро отдаёт код замечания и подстановки, фразу собирает вызывающий: тексты
+// проверок переводятся, и в ядре им делать нечего
 foreach (var issue in SetChecker.Check(lines, false, exporter))       // false = проверка для ROI
-    Console.WriteLine(issue.Level + ": " + issue.Text);
+    Console.WriteLine(issue.Level + ": " + issue.Kind);
 
 ROIConfigData built = exporter.BuildRoiConfig(lines, "Th-232 chain", line => Color.OrangeRed);
 

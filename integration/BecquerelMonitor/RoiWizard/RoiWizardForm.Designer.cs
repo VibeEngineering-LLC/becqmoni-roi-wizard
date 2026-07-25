@@ -199,18 +199,18 @@ namespace BecquerelMonitor.RoiWizard
             this.tabSources.Size = new System.Drawing.Size(1172, 572);
             this.tabLines.Size = new System.Drawing.Size(1172, 572);
             this.tabExport.Size = new System.Drawing.Size(1172, 572);
-            this.tabSources.Text = "1 · Nuclides";
+            this.tabSources.Text = RoiWizardStrings.tabSources_Text;
             this.tabSources.Padding = new System.Windows.Forms.Padding(6);
             this.tabSources.UseVisualStyleBackColor = true;
-            this.tabLines.Text = "2 · Lines";
+            this.tabLines.Text = RoiWizardStrings.tabLines_Text;
             this.tabLines.Padding = new System.Windows.Forms.Padding(6);
             this.tabLines.UseVisualStyleBackColor = true;
-            this.tabExport.Text = "3 · Styling and export";
+            this.tabExport.Text = RoiWizardStrings.tabExport_Text;
             this.tabExport.Padding = new System.Windows.Forms.Padding(6);
             this.tabExport.UseVisualStyleBackColor = true;
 
             // ─── шаг 1 ─────────────────────────────────────────────────────
-            this.groupSearch.Text = "Nuclide search";
+            this.groupSearch.Text = RoiWizardStrings.groupSearch_Text;
             this.groupSearch.Location = new System.Drawing.Point(8, 6);
             this.groupSearch.Size = new System.Drawing.Size(376, 340);
             this.groupSearch.Anchor = System.Windows.Forms.AnchorStyles.Top |
@@ -220,13 +220,13 @@ namespace BecquerelMonitor.RoiWizard
             this.textSearch.Size = new System.Drawing.Size(360, 21);
             this.textSearch.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.buttonAddSingle.Text = "Add";
+            this.buttonAddSingle.Text = RoiWizardStrings.buttonAddSingle_Text;
             this.buttonAddSingle.Location = new System.Drawing.Point(8, 48);
             this.buttonAddSingle.Size = new System.Drawing.Size(104, 25);
-            this.buttonAddFamily.Text = "+ family";
+            this.buttonAddFamily.Text = RoiWizardStrings.buttonAddFamily_Text;
             this.buttonAddFamily.Location = new System.Drawing.Point(118, 48);
             this.buttonAddFamily.Size = new System.Drawing.Size(122, 25);
-            this.buttonAddChain.Text = "+ chain";
+            this.buttonAddChain.Text = RoiWizardStrings.buttonAddChain_Text;
             this.buttonAddChain.Location = new System.Drawing.Point(246, 48);
             this.buttonAddChain.Size = new System.Drawing.Size(122, 25);
 
@@ -245,10 +245,10 @@ namespace BecquerelMonitor.RoiWizard
             // приглушённый хвост «T½ γN XN». Высота 18 px — line-height 16 плюс padding.
             this.tableModelCatalog.RowHeight = 18;
             this.columnCatalogName.Editable = false;   // таблицы только для чтения: правки идут через контролы
-            this.columnCatalogName.Text = "Nuclide";
+            this.columnCatalogName.Text = RoiWizardStrings.columnCatalogName_Text;
             this.columnCatalogName.Width = 72;
             this.columnCatalogFamilies.Editable = false;
-            this.columnCatalogFamilies.Text = "Families";
+            this.columnCatalogFamilies.Text = RoiWizardStrings.columnCatalogFamilies_Text;
             this.columnCatalogFamilies.Width = 132;
             this.columnCatalogFamilies.Renderer = new FamilyBadgeCellRenderer();
             this.columnCatalogHalfLife.Alignment = XPTable.Models.ColumnAlignment.Right;
@@ -257,7 +257,7 @@ namespace BecquerelMonitor.RoiWizard
             this.columnCatalogHalfLife.Width = 78;
             this.columnCatalogHalfLife.Renderer = new HintCellRenderer();
             this.columnCatalogLines.Editable = false;
-            this.columnCatalogLines.Text = "Lines";
+            this.columnCatalogLines.Text = RoiWizardStrings.columnCatalogLines_Text;
             this.columnCatalogLines.Width = 56;
             this.columnCatalogLines.Renderer = new LineCountCellRenderer();
             this.columnModelCatalog.Columns.AddRange(new XPTable.Models.Column[] {
@@ -268,7 +268,7 @@ namespace BecquerelMonitor.RoiWizard
             this.groupSearch.Controls.Add(this.buttonAddSingle);
             this.groupSearch.Controls.Add(this.buttonAddFamily);
             this.groupSearch.Controls.Add(this.buttonAddChain);
-            this.labelSearchHint.Text = "Typing narrows the list: by name or by family code.";
+            this.labelSearchHint.Text = RoiWizardStrings.labelSearchHint_Text;
             this.labelSearchHint.Location = new System.Drawing.Point(8, 274);
             this.labelSearchHint.Size = new System.Drawing.Size(360, 16);
             this.labelSearchHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
@@ -284,7 +284,7 @@ namespace BecquerelMonitor.RoiWizard
             this.groupSearch.Controls.Add(this.labelSearchHint);
             this.groupSearch.Controls.Add(this.panelPresets);
 
-            this.groupGroup.Text = "Group";
+            this.groupGroup.Text = RoiWizardStrings.groupGroup_Text;
             this.groupGroup.Location = new System.Drawing.Point(392, 6);
             this.groupGroup.Size = new System.Drawing.Size(376, 340);
             this.groupGroup.Anchor = System.Windows.Forms.AnchorStyles.Top |
@@ -309,13 +309,13 @@ namespace BecquerelMonitor.RoiWizard
             this.labelFamilyInfo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelFamilyInfo.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.buttonGroupAll.Text = "add all";
+            this.buttonGroupAll.Text = RoiWizardStrings.buttonGroupAll_Text;
             this.buttonGroupAll.Location = new System.Drawing.Point(8, 50);
             this.buttonGroupAll.Size = new System.Drawing.Size(104, 25);
-            this.buttonGroupFamily.Text = "+ family lines";
+            this.buttonGroupFamily.Text = RoiWizardStrings.buttonGroupFamily_Text;
             this.buttonGroupFamily.Location = new System.Drawing.Point(118, 50);
             this.buttonGroupFamily.Size = new System.Drawing.Size(140, 25);
-            this.buttonGroupChain.Text = "+ chain";
+            this.buttonGroupChain.Text = RoiWizardStrings.buttonGroupChain_Text;
             this.buttonGroupChain.Location = new System.Drawing.Point(264, 50);
             this.buttonGroupChain.Size = new System.Drawing.Size(104, 25);
             this.checkedGroup.Location = new System.Drawing.Point(8, 82);
@@ -330,19 +330,19 @@ namespace BecquerelMonitor.RoiWizard
             this.labelGroupHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
 
-            this.groupXrf.Text = "XRF elements";
+            this.groupXrf.Text = RoiWizardStrings.groupXrf_Text;
             this.groupXrf.Location = new System.Drawing.Point(776, 6);
             this.groupXrf.Size = new System.Drawing.Size(396, 340);
             this.groupXrf.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
-            this.labelXrf.Text = "Shielding and detector materials:";
+            this.labelXrf.Text = RoiWizardStrings.labelXrf_Text;
             this.labelXrf.Location = new System.Drawing.Point(8, 20);
             this.labelXrf.AutoSize = true;
             this.checkedXrf.Location = new System.Drawing.Point(8, 44);
             this.checkedXrf.Size = new System.Drawing.Size(380, 258);
             this.checkedXrf.HorizontalScrollbar = true;
-            this.labelXrfHint.Text = "Ka/Kb (+L for heavy). Nominal intensities (Ka1 = 100) — markers only.";
+            this.labelXrfHint.Text = RoiWizardStrings.labelXrfHint_Text;
             this.labelXrfHint.Location = new System.Drawing.Point(8, 306);
             this.labelXrfHint.Size = new System.Drawing.Size(380, 28);
             this.labelXrfHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
@@ -363,7 +363,7 @@ namespace BecquerelMonitor.RoiWizard
             this.groupXrf.Controls.Add(this.checkedXrf);
             this.groupXrf.Controls.Add(this.labelXrfHint);
 
-            this.groupSelected.Text = "Selected";
+            this.groupSelected.Text = RoiWizardStrings.groupSelected_Text;
             this.groupSelected.Location = new System.Drawing.Point(8, 352);
             this.groupSelected.Size = new System.Drawing.Size(1156, 72);
             this.groupSelected.Anchor = System.Windows.Forms.AnchorStyles.Bottom |
@@ -374,7 +374,7 @@ namespace BecquerelMonitor.RoiWizard
             this.panelSelected.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
-            this.buttonClear.Text = "clear all";
+            this.buttonClear.Text = RoiWizardStrings.buttonClear_Text;
             this.buttonClear.Location = new System.Drawing.Point(1054, 18);
             this.buttonClear.Size = new System.Drawing.Size(94, 25);
             this.buttonClear.Anchor = System.Windows.Forms.AnchorStyles.Top |
@@ -388,12 +388,12 @@ namespace BecquerelMonitor.RoiWizard
             this.tabSources.Controls.Add(this.groupSelected);
 
             // ─── шаг 2 ─────────────────────────────────────────────────────
-            this.groupResolution.Text = "Detector-resolution adaptation";
+            this.groupResolution.Text = RoiWizardStrings.groupResolution_Text;
             this.groupResolution.Location = new System.Drawing.Point(8, 6);
             this.groupResolution.Size = new System.Drawing.Size(1156, 80);
             this.groupResolution.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.labelResolution.Text = "R, % at 662 keV";
+            this.labelResolution.Text = RoiWizardStrings.labelResolution_Text;
             this.labelResolution.Location = new System.Drawing.Point(8, 23);
             this.labelResolution.AutoSize = true;
             this.numResolution.Location = new System.Drawing.Point(102, 20);
@@ -403,10 +403,10 @@ namespace BecquerelMonitor.RoiWizard
             this.numResolution.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
             this.numResolution.Maximum = new decimal(new int[] { 30, 0, 0, 0 });
             this.numResolution.Value = new decimal(new int[] { 75, 0, 0, 65536 });
-            this.buttonFromSpectrum.Text = "from spectrum";
+            this.buttonFromSpectrum.Text = RoiWizardStrings.buttonFromSpectrum_Text;
             this.buttonFromSpectrum.Location = new System.Drawing.Point(164, 19);
             this.buttonFromSpectrum.Size = new System.Drawing.Size(104, 23);
-            this.labelCriterion.Text = "criterion";
+            this.labelCriterion.Text = RoiWizardStrings.labelCriterion_Text;
             this.labelCriterion.Location = new System.Drawing.Point(276, 23);
             this.labelCriterion.AutoSize = true;
             this.comboCriterion.Location = new System.Drawing.Point(358, 20);
@@ -419,13 +419,13 @@ namespace BecquerelMonitor.RoiWizard
             this.numFactor.Minimum = new decimal(new int[] { 5, 0, 0, 131072 });
             this.numFactor.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
             this.numFactor.Value = new decimal(new int[] { 85, 0, 0, 131072 });
-            this.labelFactor.Text = "× FWHM";
+            this.labelFactor.Text = RoiWizardStrings.labelFactor_Text;
             this.labelFactor.Location = new System.Drawing.Point(728, 23);
             this.labelFactor.AutoSize = true;
-            this.buttonMerge.Text = "Merge close lines";
+            this.buttonMerge.Text = RoiWizardStrings.buttonMerge_Text;
             this.buttonMerge.Location = new System.Drawing.Point(838, 19);
             this.buttonMerge.Size = new System.Drawing.Size(150, 25);
-            this.buttonUnmerge.Text = "Restore originals";
+            this.buttonUnmerge.Text = RoiWizardStrings.buttonUnmerge_Text;
             this.buttonUnmerge.Location = new System.Drawing.Point(996, 19);
             this.buttonUnmerge.Size = new System.Drawing.Size(158, 25);
             this.groupResolution.Controls.Add(this.labelResolution);
@@ -444,12 +444,12 @@ namespace BecquerelMonitor.RoiWizard
             this.labelMergeInfo.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
 
-            this.groupFilters.Text = "Filters and selection";
+            this.groupFilters.Text = RoiWizardStrings.groupFilters_Text;
             this.groupFilters.Location = new System.Drawing.Point(8, 92);
             this.groupFilters.Size = new System.Drawing.Size(1156, 106);
             this.groupFilters.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.checkIntensity.Text = "intensity ≥, %";
+            this.checkIntensity.Text = RoiWizardStrings.checkIntensity_Text;
             this.checkIntensity.Location = new System.Drawing.Point(8, 21);
             this.checkIntensity.Size = new System.Drawing.Size(124, 20);
             this.numMinIntensity.Location = new System.Drawing.Point(136, 20);
@@ -460,7 +460,7 @@ namespace BecquerelMonitor.RoiWizard
             this.comboIntensityMode.Location = new System.Drawing.Point(196, 20);
             this.comboIntensityMode.Size = new System.Drawing.Size(292, 23);
             this.comboIntensityMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.checkEnergy.Text = "energy, keV";
+            this.checkEnergy.Text = RoiWizardStrings.checkEnergy_Text;
             this.checkEnergy.Location = new System.Drawing.Point(500, 21);
             this.checkEnergy.Size = new System.Drawing.Size(92, 20);
             this.numMinEnergy.Location = new System.Drawing.Point(596, 20);
@@ -472,7 +472,7 @@ namespace BecquerelMonitor.RoiWizard
             this.numMaxEnergy.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
             this.numMaxEnergy.Value = new decimal(new int[] { 3000, 0, 0, 0 });
             // фильтр по периоду полураспада — как в вебе: два поля со своими единицами
-            this.checkHalfLife.Text = "T½";
+            this.checkHalfLife.Text = RoiWizardStrings.checkHalfLife_Text;
             this.checkHalfLife.Location = new System.Drawing.Point(738, 21);
             this.checkHalfLife.Size = new System.Drawing.Size(40, 20);
             this.numMinHalfLife.Location = new System.Drawing.Point(782, 20);
@@ -491,27 +491,27 @@ namespace BecquerelMonitor.RoiWizard
             this.comboMaxHalfLifeUnit.Size = new System.Drawing.Size(56, 21);
             this.comboMaxHalfLifeUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 
-            this.checkHideUnselected.Text = "hide unselected";
+            this.checkHideUnselected.Text = RoiWizardStrings.checkHideUnselected_Text;
             this.checkHideUnselected.Location = new System.Drawing.Point(626, 48);
             this.checkHideUnselected.Size = new System.Drawing.Size(180, 20);
 
-            this.checkEquilibrium.Text = "series equilibrium (intensities per one decay of the parent)";
-            this.labelTypes.Text = "line types";
+            this.checkEquilibrium.Text = RoiWizardStrings.checkEquilibrium_Text;
+            this.labelTypes.Text = RoiWizardStrings.labelTypes_Text;
             this.labelTypes.Location = new System.Drawing.Point(8, 75);
             this.labelTypes.Size = new System.Drawing.Size(66, 16);
             this.checkTypeGamma.Text = "γ";
             this.checkTypeGamma.Location = new System.Drawing.Point(78, 73);
             this.checkTypeGamma.Size = new System.Drawing.Size(40, 20);
             this.checkTypeGamma.Checked = true;
-            this.checkTypeXray.Text = "X (decay)";
+            this.checkTypeXray.Text = RoiWizardStrings.checkTypeXray_Text;
             this.checkTypeXray.Location = new System.Drawing.Point(120, 73);
             this.checkTypeXray.Size = new System.Drawing.Size(90, 20);
             this.checkTypeXray.Checked = true;
-            this.checkTypeXrf.Text = "XRF";
+            this.checkTypeXrf.Text = RoiWizardStrings.checkTypeXrf_Text;
             this.checkTypeXrf.Location = new System.Drawing.Point(212, 73);
             this.checkTypeXrf.Size = new System.Drawing.Size(60, 20);
             this.checkTypeXrf.Checked = true;
-            this.checkTypeSecondary.Text = "secondary";
+            this.checkTypeSecondary.Text = RoiWizardStrings.checkTypeSecondary_Text;
             this.checkTypeSecondary.Location = new System.Drawing.Point(274, 73);
             this.checkTypeSecondary.Size = new System.Drawing.Size(96, 20);
             this.checkTypeSecondary.Checked = true;
@@ -519,31 +519,31 @@ namespace BecquerelMonitor.RoiWizard
             this.checkEquilibrium.Location = new System.Drawing.Point(402, 73);
             this.checkEquilibrium.Size = new System.Drawing.Size(560, 20);
             this.checkEquilibrium.Checked = true;
-            this.buttonSelectAll.Text = "✓ select all visible";
+            this.buttonSelectAll.Text = RoiWizardStrings.buttonSelectAll_Text;
             this.buttonSelectAll.Location = new System.Drawing.Point(8, 46);
             this.buttonSelectAll.Size = new System.Drawing.Size(140, 25);
-            this.buttonSelectNone.Text = "✗ deselect all visible";
+            this.buttonSelectNone.Text = RoiWizardStrings.buttonSelectNone_Text;
             this.buttonSelectNone.Location = new System.Drawing.Point(152, 46);
             this.buttonSelectNone.Size = new System.Drawing.Size(130, 25);
-            this.labelTopN.Text = "top-N by I per nuclide";
+            this.labelTopN.Text = RoiWizardStrings.labelTopN_Text;
             this.labelTopN.Location = new System.Drawing.Point(292, 50);
             this.labelTopN.Size = new System.Drawing.Size(136, 18);
             this.numTopN.Location = new System.Drawing.Point(432, 47);
             this.numTopN.Size = new System.Drawing.Size(48, 21);
             this.numTopN.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             this.numTopN.Value = new decimal(new int[] { 5, 0, 0, 0 });
-            this.buttonSelectTop.Text = "Select top-N";
+            this.buttonSelectTop.Text = RoiWizardStrings.buttonSelectTop_Text;
             this.buttonSelectTop.Location = new System.Drawing.Point(488, 46);
             this.buttonSelectTop.Size = new System.Drawing.Size(126, 25);
             // Панель вторичных пиков повторяет блок веб-версии: порог по родительской
             // линии, восемь видов особенностей и кнопка расчёта. Расчёт по кнопке, а не
             // автоматически: маркеры добавляются к текущему набору линий.
-            this.groupSecondary.Text = "Secondary peaks (computed from selected γ lines)";
+            this.groupSecondary.Text = RoiWizardStrings.groupSecondary_Text;
             this.groupSecondary.Location = new System.Drawing.Point(8, 204);
             this.groupSecondary.Size = new System.Drawing.Size(1156, 78);
             this.groupSecondary.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.labelSecondaryMin.Text = "for γ lines with I ≥, %";
+            this.labelSecondaryMin.Text = RoiWizardStrings.labelSecondaryMin_Text;
             this.labelSecondaryMin.Location = new System.Drawing.Point(8, 26);
             this.labelSecondaryMin.Size = new System.Drawing.Size(140, 18);
             this.numSecondaryMin.Location = new System.Drawing.Point(152, 23);
@@ -551,34 +551,34 @@ namespace BecquerelMonitor.RoiWizard
             this.numSecondaryMin.DecimalPlaces = 1;
             this.numSecondaryMin.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
             this.numSecondaryMin.Value = new decimal(new int[] { 10, 0, 0, 0 });
-            this.checkSecBackscatter.Text = "backscatter (BS)";
+            this.checkSecBackscatter.Text = RoiWizardStrings.checkSecBackscatter_Text;
             this.checkSecBackscatter.Location = new System.Drawing.Point(224, 24);
             this.checkSecBackscatter.Size = new System.Drawing.Size(150, 20);
             this.checkSecBackscatter.Checked = true;
-            this.checkSecComptonEdge.Text = "Compton edge (CE)";
+            this.checkSecComptonEdge.Text = RoiWizardStrings.checkSecComptonEdge_Text;
             this.checkSecComptonEdge.Location = new System.Drawing.Point(380, 24);
             this.checkSecComptonEdge.Size = new System.Drawing.Size(166, 20);
-            this.checkSecSingleEscape.Text = "escape 511 (SE)";
+            this.checkSecSingleEscape.Text = RoiWizardStrings.checkSecSingleEscape_Text;
             this.checkSecSingleEscape.Location = new System.Drawing.Point(552, 24);
             this.checkSecSingleEscape.Size = new System.Drawing.Size(146, 20);
             this.checkSecSingleEscape.Checked = true;
-            this.checkSecDoubleEscape.Text = "escape 1022 (DE)";
+            this.checkSecDoubleEscape.Text = RoiWizardStrings.checkSecDoubleEscape_Text;
             this.checkSecDoubleEscape.Location = new System.Drawing.Point(704, 24);
             this.checkSecDoubleEscape.Size = new System.Drawing.Size(156, 20);
             this.checkSecDoubleEscape.Checked = true;
-            this.checkSecIodine.Text = "I-K escape (NaI, −28.6)";
+            this.checkSecIodine.Text = RoiWizardStrings.checkSecIodine_Text;
             this.checkSecIodine.Location = new System.Drawing.Point(224, 48);
             this.checkSecIodine.Size = new System.Drawing.Size(190, 20);
-            this.checkSecAnnihilation.Text = "annihilation 511";
+            this.checkSecAnnihilation.Text = RoiWizardStrings.checkSecAnnihilation_Text;
             this.checkSecAnnihilation.Location = new System.Drawing.Point(420, 48);
             this.checkSecAnnihilation.Size = new System.Drawing.Size(146, 20);
-            this.checkSecSum.Text = "cascade sum (E1+E2)";
+            this.checkSecSum.Text = RoiWizardStrings.checkSecSum_Text;
             this.checkSecSum.Location = new System.Drawing.Point(572, 48);
             this.checkSecSum.Size = new System.Drawing.Size(180, 20);
-            this.checkSecPileUp.Text = "pile-up 2×E";
+            this.checkSecPileUp.Text = RoiWizardStrings.checkSecPileUp_Text;
             this.checkSecPileUp.Location = new System.Drawing.Point(758, 48);
             this.checkSecPileUp.Size = new System.Drawing.Size(120, 20);
-            this.buttonGenerateSecondary.Text = "Generate";
+            this.buttonGenerateSecondary.Text = RoiWizardStrings.buttonGenerateSecondary_Text;
             this.buttonGenerateSecondary.Location = new System.Drawing.Point(940, 22);
             this.buttonGenerateSecondary.Size = new System.Drawing.Size(150, 25);
             this.groupSecondary.Controls.Add(this.labelSecondaryMin);
@@ -617,12 +617,12 @@ namespace BecquerelMonitor.RoiWizard
             this.groupFilters.Controls.Add(this.buttonSelectTop);
             this.tabLines.Controls.Add(this.groupSecondary);
 
-            this.groupNear.Text = "Nearby-line search (whole database — who else emits here)";
+            this.groupNear.Text = RoiWizardStrings.groupNear_Text;
             this.groupNear.Location = new System.Drawing.Point(8, 288);
             this.groupNear.Size = new System.Drawing.Size(1156, 122);
             this.groupNear.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.labelNearEnergy.Text = "energy, keV";
+            this.labelNearEnergy.Text = RoiWizardStrings.labelNearEnergy_Text;
             this.labelNearEnergy.Location = new System.Drawing.Point(8, 26);
             this.labelNearEnergy.Size = new System.Drawing.Size(90, 18);
             this.numNearEnergy.Location = new System.Drawing.Point(102, 23);
@@ -630,7 +630,7 @@ namespace BecquerelMonitor.RoiWizard
             this.numNearEnergy.DecimalPlaces = 2;
             this.numNearEnergy.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
             this.numNearEnergy.Value = new decimal(new int[] { 362, 0, 0, 0 });
-            this.labelNearWindow.Text = "± window";
+            this.labelNearWindow.Text = RoiWizardStrings.labelNearWindow_Text;
             this.labelNearWindow.Location = new System.Drawing.Point(186, 26);
             this.labelNearWindow.Size = new System.Drawing.Size(72, 18);
             this.numNearWindow.Location = new System.Drawing.Point(262, 23);
@@ -639,14 +639,14 @@ namespace BecquerelMonitor.RoiWizard
             this.numNearWindow.Minimum = new decimal(new int[] { 5, 0, 0, 65536 });
             this.numNearWindow.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
             this.numNearWindow.Value = new decimal(new int[] { 10, 0, 0, 0 });
-            this.labelNearIntensity.Text = "I ≥, %";
+            this.labelNearIntensity.Text = RoiWizardStrings.labelNearIntensity_Text;
             this.labelNearIntensity.Location = new System.Drawing.Point(334, 26);
             this.labelNearIntensity.Size = new System.Drawing.Size(50, 18);
             this.numNearIntensity.Location = new System.Drawing.Point(388, 23);
             this.numNearIntensity.Size = new System.Drawing.Size(60, 23);
             this.numNearIntensity.DecimalPlaces = 2;
             this.numNearIntensity.Value = new decimal(new int[] { 5, 0, 0, 65536 });
-            this.labelNearHalfLife.Text = "T½ ≥";
+            this.labelNearHalfLife.Text = RoiWizardStrings.labelNearHalfLife_Text;
             this.labelNearHalfLife.Location = new System.Drawing.Point(460, 26);
             this.labelNearHalfLife.Size = new System.Drawing.Size(44, 18);
             this.numNearHalfLife.Location = new System.Drawing.Point(508, 23);
@@ -656,10 +656,10 @@ namespace BecquerelMonitor.RoiWizard
             this.comboNearHalfLifeUnit.Location = new System.Drawing.Point(574, 23);
             this.comboNearHalfLifeUnit.Size = new System.Drawing.Size(64, 23);
             this.comboNearHalfLifeUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.buttonNearSearch.Text = "Search";
+            this.buttonNearSearch.Text = RoiWizardStrings.buttonNearSearch_Text;
             this.buttonNearSearch.Location = new System.Drawing.Point(654, 22);
             this.buttonNearSearch.Size = new System.Drawing.Size(110, 25);
-            this.buttonNearAdd.Text = "+ add";
+            this.buttonNearAdd.Text = RoiWizardStrings.buttonNearAdd_Text;
             this.buttonNearAdd.Location = new System.Drawing.Point(772, 22);
             this.buttonNearAdd.Size = new System.Drawing.Size(120, 25);
             this.listNear.Location = new System.Drawing.Point(8, 52);
@@ -699,31 +699,31 @@ namespace BecquerelMonitor.RoiWizard
             this.columnLineSelected.Text = "✓";
             this.columnLineSelected.Width = 30;
             this.columnLineName.Editable = false;
-            this.columnLineName.Text = "Nuclide";
+            this.columnLineName.Text = RoiWizardStrings.columnLineName_Text;
             this.columnLineName.Width = 320;
             this.columnLineEnergy.Editable = false;
-            this.columnLineEnergy.Text = "E, keV";
+            this.columnLineEnergy.Text = RoiWizardStrings.columnLineEnergy_Text;
             this.columnLineEnergy.Width = 90;
             this.columnLineEnergy.Alignment = XPTable.Models.ColumnAlignment.Right;
             this.columnLineEnergy.Renderer = new NumberCellRenderer();
             this.columnLineIntensity.Editable = false;
-            this.columnLineIntensity.Text = "I, %";
+            this.columnLineIntensity.Text = RoiWizardStrings.columnLineIntensity_Text;
             this.columnLineIntensity.Width = 90;
             this.columnLineIntensity.Alignment = XPTable.Models.ColumnAlignment.Right;
             this.columnLineIntensity.Renderer = new IntensityBarCellRenderer();
             this.columnLineRelative.Editable = false;
-            this.columnLineRelative.Text = "I rel., %";
+            this.columnLineRelative.Text = RoiWizardStrings.columnLineRelative_Text;
             this.columnLineRelative.Width = 80;
             this.columnLineRelative.Alignment = XPTable.Models.ColumnAlignment.Right;
             this.columnLineRelative.Renderer = new NumberCellRenderer();
             this.columnLineHalfLife.Editable = false;
-            this.columnLineHalfLife.Text = "T½";
+            this.columnLineHalfLife.Text = RoiWizardStrings.columnLineHalfLife_Text;
             this.columnLineHalfLife.Width = 90;
             this.columnLineHalfLife.Alignment = XPTable.Models.ColumnAlignment.Right;
             this.columnLineHalfLife.Renderer = new NumberCellRenderer();
             this.columnLineType.Editable = false;
             this.columnLineType.Renderer = new LineTypeCellRenderer();
-            this.columnLineType.Text = "Type";
+            this.columnLineType.Text = RoiWizardStrings.columnLineType_Text;
             this.columnLineType.Width = 80;
             this.columnModelLines.Columns.AddRange(new XPTable.Models.Column[] {
                 this.columnLineSelected, this.columnLineName, this.columnLineEnergy,
@@ -735,18 +735,18 @@ namespace BecquerelMonitor.RoiWizard
             this.tabLines.Controls.Add(this.tableLines);
 
             // ─── шаг 3 ─────────────────────────────────────────────────────
-            this.groupStyle.Text = "ROI styling";
+            this.groupStyle.Text = RoiWizardStrings.groupStyle_Text;
             this.groupStyle.Location = new System.Drawing.Point(8, 6);
             this.groupStyle.Size = new System.Drawing.Size(1156, 104);
             this.groupStyle.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.labelStyle.Text = "mode";
+            this.labelStyle.Text = RoiWizardStrings.labelStyle_Text;
             this.labelStyle.Location = new System.Drawing.Point(8, 23);
             this.labelStyle.AutoSize = true;
             this.comboStyle.Location = new System.Drawing.Point(56, 20);
             this.comboStyle.Size = new System.Drawing.Size(260, 21);
             this.comboStyle.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.labelWidth.Text = "zone width";
+            this.labelWidth.Text = RoiWizardStrings.labelWidth_Text;
             this.labelWidth.Location = new System.Drawing.Point(330, 23);
             this.labelWidth.AutoSize = true;
             this.comboWidthMode.Location = new System.Drawing.Point(420, 20);
@@ -769,13 +769,13 @@ namespace BecquerelMonitor.RoiWizard
             this.groupStyle.Controls.Add(this.labelWidth);
             this.groupStyle.Controls.Add(this.comboWidthMode);
             this.groupStyle.Controls.Add(this.numZonePercent);
-            this.labelColors.Text = "Colours";
+            this.labelColors.Text = RoiWizardStrings.labelColors_Text;
             this.labelColors.Location = new System.Drawing.Point(8, 60);
             this.labelColors.Size = new System.Drawing.Size(70, 18);
-            this.buttonColorByChain.Text = "by chain";
+            this.buttonColorByChain.Text = RoiWizardStrings.buttonColorByChain_Text;
             this.buttonColorByChain.Location = new System.Drawing.Point(80, 56);
             this.buttonColorByChain.Size = new System.Drawing.Size(110, 25);
-            this.buttonColorByNuclide.Text = "by nuclide";
+            this.buttonColorByNuclide.Text = RoiWizardStrings.buttonColorByNuclide_Text;
             this.buttonColorByNuclide.Location = new System.Drawing.Point(196, 56);
             this.buttonColorByNuclide.Size = new System.Drawing.Size(110, 25);
             // чипы владельцев: цветной квадрат + подпись, клик по квадрату открывает выбор
@@ -789,42 +789,42 @@ namespace BecquerelMonitor.RoiWizard
             this.groupStyle.Controls.Add(this.buttonColorByNuclide);
             this.groupStyle.Controls.Add(this.panelColors);
 
-            this.groupExport.Text = "Export";
+            this.groupExport.Text = RoiWizardStrings.groupExport_Text;
             this.groupExport.Location = new System.Drawing.Point(8, 114);
             this.groupExport.Size = new System.Drawing.Size(1156, 120);
             this.groupExport.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.labelConfigName.Text = "ROI configuration name";
+            this.labelConfigName.Text = RoiWizardStrings.labelConfigName_Text;
             this.labelConfigName.Location = new System.Drawing.Point(8, 23);
             this.labelConfigName.AutoSize = true;
             this.textConfigName.Location = new System.Drawing.Point(148, 20);
             this.textConfigName.Size = new System.Drawing.Size(220, 21);
             this.textConfigName.Text = "IAEA lines";
-            this.buttonCreateRoi.Text = "Create ROI configuration";
+            this.buttonCreateRoi.Text = RoiWizardStrings.buttonCreateRoi_Text;
             this.buttonCreateRoi.Location = new System.Drawing.Point(376, 19);
             this.buttonCreateRoi.Size = new System.Drawing.Size(180, 23);
-            this.buttonPreview.Text = "Preview";
+            this.buttonPreview.Text = RoiWizardStrings.buttonPreview_Text;
             this.buttonPreview.Location = new System.Drawing.Point(564, 19);
             this.buttonPreview.Size = new System.Drawing.Size(130, 23);
-            this.labelSetName.Text = "set name (NuclideSet)";
+            this.labelSetName.Text = RoiWizardStrings.labelSetName_Text;
             this.labelSetName.Location = new System.Drawing.Point(8, 53);
             this.labelSetName.AutoSize = true;
             this.textSetName.Location = new System.Drawing.Point(148, 50);
             this.textSetName.Size = new System.Drawing.Size(220, 21);
-            this.textSetName.Text = "IAEA set";
-            this.labelAnchor.Text = "anchor line";
+            this.textSetName.Text = RoiWizardStrings.textSetName_Text;
+            this.labelAnchor.Text = RoiWizardStrings.labelAnchor_Text;
             this.labelAnchor.Location = new System.Drawing.Point(376, 53);
             this.labelAnchor.AutoSize = true;
             this.comboAnchor.Location = new System.Drawing.Point(468, 50);
             this.comboAnchor.Size = new System.Drawing.Size(278, 21);
             this.comboAnchor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.buttonCreateSet.Text = "Add set to the library";
+            this.buttonCreateSet.Text = RoiWizardStrings.buttonCreateSet_Text;
             this.buttonCreateSet.Location = new System.Drawing.Point(754, 49);
             this.buttonCreateSet.Size = new System.Drawing.Size(192, 23);
-            this.checkFullSet.Text = "full set (all lines, for fitting)";
+            this.checkFullSet.Text = RoiWizardStrings.checkFullSet_Text;
             this.checkFullSet.Location = new System.Drawing.Point(148, 80);
             this.checkFullSet.Size = new System.Drawing.Size(220, 19);
-            this.labelAnchorCount.Text = "anchor lines";
+            this.labelAnchorCount.Text = RoiWizardStrings.labelAnchorCount_Text;
             this.labelAnchorCount.Location = new System.Drawing.Point(376, 82);
             this.labelAnchorCount.AutoSize = true;
             this.numAnchors.Location = new System.Drawing.Point(446, 79);
@@ -845,7 +845,7 @@ namespace BecquerelMonitor.RoiWizard
             this.groupExport.Controls.Add(this.labelAnchorCount);
             this.groupExport.Controls.Add(this.numAnchors);
 
-            this.labelIssues.Text = "Data check:";
+            this.labelIssues.Text = RoiWizardStrings.labelIssues_Text;
             this.labelIssues.Location = new System.Drawing.Point(12, 240);
             this.labelIssues.AutoSize = true;
             this.listIssues.Location = new System.Drawing.Point(8, 258);
@@ -881,7 +881,7 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonStepNext.Text = "Next ▸";
             this.buttonStepNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.buttonStepNext.AutoToolTip = false;
-            this.buttonHelp.Text = "Help";
+            this.buttonHelp.Text = RoiWizardStrings.buttonHelp_Text;
             this.buttonHelp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.buttonHelp.AutoToolTip = false;
             this.buttonHelp.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
@@ -896,7 +896,7 @@ namespace BecquerelMonitor.RoiWizard
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.statusStrip);
             this.Name = "RoiWizardForm";
-            this.Text = "ROI and nuclide set builder";
+            this.Text = RoiWizardStrings.form_Title;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 
             ((System.ComponentModel.ISupportInitialize)(this.numResolution)).EndInit();
