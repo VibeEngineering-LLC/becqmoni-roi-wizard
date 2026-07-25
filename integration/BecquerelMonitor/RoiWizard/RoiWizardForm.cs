@@ -54,6 +54,7 @@ namespace BecquerelMonitor.RoiWizard
             this.WireEvents();
 
             this.buttonFromSpectrum.Enabled = resolutionProvider != null;
+            this.SyncGroupButtons();
             if (Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName == "ru")
             {
                 this.ApplyRussian();
@@ -173,6 +174,7 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonAddChain.Click += delegate { this.AddFromCatalog(AddMode.Chain); };
             this.tableCatalog.DoubleClick += delegate { this.AddFromCatalog(AddMode.Single); };
 
+            this.comboGroup.SelectedIndexChanged += delegate { this.SyncGroupButtons(); };
             this.buttonGroupAll.Click += delegate { this.AddFromGroup(AddMode.Single); };
             this.buttonGroupFamily.Click += delegate { this.AddFromGroup(AddMode.FamilyLines); };
             this.buttonGroupChain.Click += delegate { this.AddFromGroup(AddMode.Chain); };
@@ -299,6 +301,17 @@ namespace BecquerelMonitor.RoiWizard
                 return this.catalog.Find(this.textSearch.Text.Trim());
             }
             return this.tableModelCatalog.Rows[index].Tag as CatalogNuclide;
+        }
+
+        // «+ линии семейства» и «+ цепочкой» имеют смысл только для ряда распада: у семейства
+        // нет родителя, и раньше обе кнопки молча работали как «добавить все»
+        void SyncGroupButtons()
+        {
+            int index = this.comboGroup.SelectedIndex;
+            bool isChain = index >= 0 && index < this.groupKeys.Count &&
+                           this.groupKeys[index].StartsWith("c:", StringComparison.Ordinal);
+            this.buttonGroupFamily.Enabled = isChain;
+            this.buttonGroupChain.Enabled = isChain;
         }
 
         void AddFromGroup(AddMode mode)
@@ -600,6 +613,12 @@ namespace BecquerelMonitor.RoiWizard
             }
 
             ROIConfigData built = this.exporter.BuildRoiConfig(this.lines, this.textConfigName.Text, ColorOf);
+            // SaveConfig пишет файл по Filename, поэтому вторая конфигурация с тем же именем
+            // молча затрёт файл первой
+            if (!this.ConfirmOverwriteRoi(built.Name))
+            {
+                return;
+            }
 
             // Регистрировать конфигурацию обязан сам менеджер: CreateConfig кладёт её и в
             // ROIConfigList, и в ROIConfigMap, и поднимает ROIConfigListChanged. Простое
@@ -641,6 +660,12 @@ namespace BecquerelMonitor.RoiWizard
                 return;
             }
 
+            // повторное нажатие добавило бы в библиотеку полный дубль записей
+            if (!this.ConfirmDuplicateSet(this.textSetName.Text))
+            {
+                return;
+            }
+
             List<NuclideDefinition> definitions;
             NuclideSet set = this.exporter.BuildNuclideSet(this.lines, this.textSetName.Text, ColorOf,
                                                           this.CurrentAnchor(), out definitions);
@@ -652,6 +677,37 @@ namespace BecquerelMonitor.RoiWizard
 
             this.statusLabel.Text = string.Format(CultureInfo.CurrentCulture,
                 "set «{0}» added to the library: {1} lines, one anchor", set.Name, definitions.Count);
+        }
+
+        bool ConfirmOverwriteRoi(string name)
+        {
+            string filename = SafeFileName(name) + ".xml";
+            foreach (ROIConfigData existing in ROIConfigManager.GetInstance().ROIConfigList)
+            {
+                if (string.Equals(existing.Filename, filename, StringComparison.OrdinalIgnoreCase))
+                {
+                    return MessageBox.Show(this,
+                        string.Format(CultureInfo.CurrentCulture,
+                            "Конфигурация «{0}» уже есть — её файл будет перезаписан. Продолжить?", name),
+                        this.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
+                }
+            }
+            return true;
+        }
+
+        bool ConfirmDuplicateSet(string name)
+        {
+            foreach (NuclideSet existing in NuclideDefinitionManager.GetInstance().NuclideSets)
+            {
+                if (string.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return MessageBox.Show(this,
+                        string.Format(CultureInfo.CurrentCulture,
+                            "Набор «{0}» в библиотеке уже есть. Добавить ещё один с тем же именем?", name),
+                        this.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
+                }
+            }
+            return true;
         }
 
         bool Confirm(List<SetIssue> issues, bool blocking)

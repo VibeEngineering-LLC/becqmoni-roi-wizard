@@ -28,6 +28,7 @@ namespace BecquerelMonitor.RoiWizard.Tests
             LibraryNameTests();
             MergerTests();
             EquilibriumTests();
+            EquilibriumScopeTests(catalogPath);
             AnchorTests(catalogPath);
             SetTests(catalogPath);
             SecondaryTests();
@@ -144,6 +145,46 @@ namespace BecquerelMonitor.RoiWizard.Tests
             // сумма по развилке Bi-212 должна давать единицу
             Near("Tl-208 + Po-212 = 1",
                  EquilibriumFactors.For("Tl-208") + EquilibriumFactors.For("Po-212"), 1.0, 1e-9);
+        }
+
+        // ── 3b. Равновесие применяется только к нуклиду, взятому в составе ряда ──
+        static void EquilibriumScopeTests(string catalogPath)
+        {
+            Section("Равновесие: область применения");
+            NuclideCatalog catalog = LoadCatalog(catalogPath);
+            if (catalog == null)
+            {
+                return;
+            }
+            LineSetBuilder builder = new LineSetBuilder(catalog).Reset();
+
+            // Tl-208 сам по себе: родителя в наборе нет, множитель применяться не должен
+            SourceSelection single = new SourceSelection();
+            single.Add(catalog, "Tl-208", AddMode.Single);
+            Near("одиночный Tl-208: 2614 кэВ = табличные 99.75 %",
+                 IntensityAt(builder.Build(single, null), 2614.51), 99.75, 0.3);
+
+            // тот же Tl-208 в составе ряда: 99.75 × 0.3594
+            SourceSelection chain = new SourceSelection();
+            chain.Add(catalog, "Th-232", AddMode.Chain);
+            Near("в ряду Th-232: 2614 кэВ = 99.75 × 0.3594",
+                 IntensityAt(builder.Build(chain, null), 2614.51), 99.75 * 0.3594, 0.3);
+
+            builder.ScaleToSeriesParent = false;
+            Near("с выключенным равновесием — снова табличные",
+                 IntensityAt(builder.Build(chain, null), 2614.51), 99.75, 0.3);
+        }
+
+        static double IntensityAt(List<SpectralLine> lines, double energy)
+        {
+            foreach (SpectralLine line in lines)
+            {
+                if (Math.Abs(line.Energy - energy) < 0.5)
+                {
+                    return line.Intensity;
+                }
+            }
+            return -1;
         }
 
         // ── 4. Якорь: правило «сильная и одинокая», без ХРИ и вторичных ──

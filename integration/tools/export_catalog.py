@@ -23,6 +23,22 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 OUT = os.path.join(ROOT, "integration", "BecquerelMonitor", "RoiWizard", "nuclides.xml")
 
 
+def at_key_position(out):
+    """Идентификатор стоит в позиции ключа объекта?
+
+    Признак — ближайший непробельный символ слева это `{`, `,` или `[` (либо слева ничего
+    нет). Раньше условие было записано как `out[-1].strip()[-1:] in "{,["`, что истинно и
+    для пробельного символа: пустая строка входит в любую. Вторая половина `or` была мертва,
+    а «позиция ключа» понималась шире задуманного.
+    """
+    for chunk in reversed(out):
+        stripped = chunk.strip()
+        if not stripped:
+            continue                      # пробелы и переводы строк пропускаем
+        return stripped[-1] in "{,["
+    return True                           # ничего слева — начало объекта
+
+
 def js_to_json(src):
     """Ключи в xrf.js записаны в JS-нотации без кавычек (`Z:26, ctx:"..."`).
 
@@ -49,9 +65,8 @@ def js_to_json(src):
             i += 1
             continue
         m = re.match(r"([A-Za-z_]\w*)\s*:", src[i:])
-        if m and (not out or out[-1].strip()[-1:] in "{,[" or out[-1] in " \n\r\t"):
+        if m and at_key_position(out):
             # идентификатор в позиции ключа — оборачиваем в кавычки
-            tail = src[i + m.end() - 1:]
             out.append('"%s":' % m.group(1))
             i += m.end()
             continue

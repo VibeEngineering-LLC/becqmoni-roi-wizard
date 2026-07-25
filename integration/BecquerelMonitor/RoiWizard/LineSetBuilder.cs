@@ -176,10 +176,16 @@ namespace BecquerelMonitor.RoiWizard
                 {
                     continue;
                 }
-                double equilibrium = this.ScaleToSeriesParent
+                string label = entry.Value;
+                // Пересчёт на распад родителя применим только к нуклиду, взятому в составе
+                // ряда: у одиночно добавленного Tl-208 родителя в наборе нет, и множитель
+                // 0.3594 превратил бы 99.75 % его линии 2614 кэВ в 35.85 % без всяких на то
+                // оснований. Признак «взят в составе ряда» — подпись отличается от имени:
+                // при Chain это «Tl-208 (Th-232)», при FamilyLines — имя родителя.
+                bool partOfSeries = !string.Equals(label, nuclide.Name, StringComparison.Ordinal);
+                double equilibrium = this.ScaleToSeriesParent && partOfSeries
                     ? EquilibriumFactors.For(nuclide.Name)
                     : 1.0;
-                string label = entry.Value;
 
                 foreach (CatalogGammaLine gamma in nuclide.Gamma)
                 {

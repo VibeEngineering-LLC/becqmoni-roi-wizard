@@ -45,14 +45,23 @@ namespace BecquerelMonitor.RoiWizard
         const string ResourceName = "BecquerelMonitor.RoiWizard.nuclides.xml";
 
         static NuclideCatalog instance;
+        static readonly object instanceLock = new object();
 
         // Каталог читается один раз на процесс: снимок неизменен, а разбор XML на 121 нуклид
-        // стоит заметно дороже, чем удержание его в памяти.
+        // стоит заметно дороже, чем удержание его в памяти. Блокировка нужна не ради UI-потока,
+        // а на случай, если каталог когда-нибудь понадобится фоновой обработке спектра:
+        // двойная загрузка дала бы два разных экземпляра и рассинхронизацию ссылок.
         public static NuclideCatalog GetInstance()
         {
             if (instance == null)
             {
-                instance = LoadEmbedded();
+                lock (instanceLock)
+                {
+                    if (instance == null)
+                    {
+                        instance = LoadEmbedded();
+                    }
+                }
             }
             return instance;
         }
