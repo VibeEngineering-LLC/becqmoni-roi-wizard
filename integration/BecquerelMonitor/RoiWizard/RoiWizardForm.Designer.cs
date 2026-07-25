@@ -148,6 +148,8 @@ namespace BecquerelMonitor.RoiWizard
             this.labelConfigName = new System.Windows.Forms.Label();
             this.textConfigName = new System.Windows.Forms.TextBox();
             this.buttonCreateRoi = new System.Windows.Forms.Button();
+            this.buttonPreview = new System.Windows.Forms.Button();
+            this.textPreview = new System.Windows.Forms.TextBox();
             this.labelSetName = new System.Windows.Forms.Label();
             this.textSetName = new System.Windows.Forms.TextBox();
             this.labelAnchor = new System.Windows.Forms.Label();
@@ -788,6 +790,9 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonCreateRoi.Text = "Create ROI configuration";
             this.buttonCreateRoi.Location = new System.Drawing.Point(376, 19);
             this.buttonCreateRoi.Size = new System.Drawing.Size(180, 23);
+            this.buttonPreview.Text = "Preview";
+            this.buttonPreview.Location = new System.Drawing.Point(564, 19);
+            this.buttonPreview.Size = new System.Drawing.Size(130, 23);
             this.labelSetName.Text = "set name (NuclideSet)";
             this.labelSetName.Location = new System.Drawing.Point(8, 53);
             this.labelSetName.AutoSize = true;
@@ -817,6 +822,7 @@ namespace BecquerelMonitor.RoiWizard
             this.groupExport.Controls.Add(this.labelConfigName);
             this.groupExport.Controls.Add(this.textConfigName);
             this.groupExport.Controls.Add(this.buttonCreateRoi);
+            this.groupExport.Controls.Add(this.buttonPreview);
             this.groupExport.Controls.Add(this.labelSetName);
             this.groupExport.Controls.Add(this.textSetName);
             this.groupExport.Controls.Add(this.labelAnchor);
@@ -832,6 +838,16 @@ namespace BecquerelMonitor.RoiWizard
             this.listIssues.Location = new System.Drawing.Point(8, 258);
             this.listIssues.Size = new System.Drawing.Size(1156, 158);
             this.listIssues.Anchor = System.Windows.Forms.AnchorStyles.Top |
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            // моноширинный текст: предпросмотр повторяет <pre> на странице
+            this.textPreview.Location = new System.Drawing.Point(8, 424);
+            this.textPreview.Size = new System.Drawing.Size(1156, 140);
+            this.textPreview.Multiline = true;
+            this.textPreview.ReadOnly = true;
+            this.textPreview.WordWrap = false;
+            this.textPreview.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textPreview.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.textPreview.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
             this.listIssues.HorizontalScrollbar = true;
@@ -840,6 +856,7 @@ namespace BecquerelMonitor.RoiWizard
             this.tabExport.Controls.Add(this.groupExport);
             this.tabExport.Controls.Add(this.labelIssues);
             this.tabExport.Controls.Add(this.listIssues);
+            this.tabExport.Controls.Add(this.textPreview);
 
             // ─── строка состояния ──────────────────────────────────────────
             // счётчик занимает всё свободное место, кнопки прижаты вправо — как на странице
@@ -1013,6 +1030,8 @@ namespace BecquerelMonitor.RoiWizard
         System.Windows.Forms.Label labelConfigName;
         System.Windows.Forms.TextBox textConfigName;
         System.Windows.Forms.Button buttonCreateRoi;
+        System.Windows.Forms.Button buttonPreview;
+        System.Windows.Forms.TextBox textPreview;
         System.Windows.Forms.Label labelSetName;
         System.Windows.Forms.TextBox textSetName;
         System.Windows.Forms.Label labelAnchor;

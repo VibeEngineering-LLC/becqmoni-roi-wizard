@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using XPTable.Models;
 
 namespace BecquerelMonitor.RoiWizard
@@ -544,6 +546,7 @@ namespace BecquerelMonitor.RoiWizard
             this.numZoneFactor.ValueChanged += delegate { this.RunChecks(); };
             this.buttonColorByChain.Click += delegate { this.SetColorMode(true); };
             this.buttonColorByNuclide.Click += delegate { this.SetColorMode(false); };
+            this.buttonPreview.Click += delegate { this.PreviewXml(); };
             this.buttonCreateRoi.Click += delegate { this.CreateRoiConfig(); };
             this.buttonCreateSet.Click += delegate { this.CreateNuclideSet(); };
             // при «полном наборе» таблица и ручной якорь не участвуют — набор собирается
@@ -1380,6 +1383,51 @@ namespace BecquerelMonitor.RoiWizard
             this.listIssues.EndUpdate();
         }
 
+        // Что именно ляжет в файл — тем же сериализатором, каким пишет ROIConfigManager.
+        // Собирать «похожий» XML руками нельзя: предпросмотр показывал бы не тот текст.
+        void PreviewXml()
+        {
+            List<SpectralLine> selected = this.SelectedLines();
+            if (selected.Count == 0)
+            {
+                this.textPreview.Text = this.previewEmpty;
+                return;
+            }
+            this.ApplyExporterSettings();
+            ROIConfigData built = this.exporter.BuildRoiConfig(this.lines, this.textConfigName.Text,
+                                                              this.ColorOfLine);
+            StringBuilder text = new StringBuilder();
+            List<SetIssue> issues = SetChecker.Check(this.lines, false, this.zones);
+            text.Append(issues.Count == 0
+                ? this.previewClean
+                : string.Format(CultureInfo.CurrentCulture, this.previewIssues, issues.Count));
+            text.Append(Environment.NewLine);
+            foreach (SetIssue issue in issues)
+            {
+                text.Append("  · ").Append(issue.Text).Append(Environment.NewLine);
+            }
+            text.Append(Environment.NewLine);
+            text.Append(Serialize(built));
+            this.textPreview.Text = text.ToString();
+            this.textPreview.Select(0, 0);
+        }
+
+        static string Serialize(ROIConfigData config)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(ROIConfigData));
+            using (MemoryStream stream = new MemoryStream())
+            {
+                serializer.Serialize(stream, config);
+                // читаем байты, а не StringWriter: тот объявил бы кодировку utf-16,
+                // тогда как в файл уходит utf-8
+                return new UTF8Encoding(false).GetString(stream.ToArray()).TrimStart('\uFEFF');
+            }
+        }
+
+        string previewEmpty = "no lines selected";
+        string previewClean = "Data check: no issues.";
+        string previewIssues = "DATA CHECK — {0} note(s):";
+
         void CreateRoiConfig()
         {
             List<SpectralLine> selected = this.SelectedLines();
@@ -1754,6 +1802,10 @@ namespace BecquerelMonitor.RoiWizard
             this.stepNames = new string[] { "Изотопы", "Линии", "Оформление и экспорт" };
             this.stepBack = "◂ Назад";
             this.stepForward = "Вперёд ▸";
+            this.buttonPreview.Text = "Предпросмотр";
+            this.previewEmpty = "линии не выбраны";
+            this.previewClean = "Проверка данных: замечаний нет.";
+            this.previewIssues = "ПРОВЕРКА ДАННЫХ — замечаний: {0}";
             this.presetsCaption = "Пресеты:";
             this.labelSearchHint.Text = "Ввод сужает список: по имени или по коду семейства.";
             this.labelXrfHint.Text = "Kα/Kβ (+L для тяжёлых). Интенсивности относительные (Kα1 = 100) — только маркеры.";
