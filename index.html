@@ -561,21 +561,38 @@ function buildGroupSel(){
 }
 // члены выбранной группы + кнопки, зависящие от её типа
 function renderGroup(){
+  renderGroupButtons();
+  renderSource();
+  if ($("famInfoBox").style.display !== "none") showFamInfo(true);
+}
+// Кнопки группы пересобираются и отдельно — при каждой смене галочек: от того,
+// что отмечено, зависит и область действия, и доступность кнопок.
+function renderGroupButtons(){
   var v = $("famSel").value, kind = v.slice(0,1), id = v.slice(2);
   var ctl = $("famCtl");
-  // Раскрывать «одним»/«цепочкой» имеет смысл, только если в группе есть нуклиды с
-  // дочерними ВНЕ ЕРН-рядов (Mo-99 → Tc-99m и подобные пары). У члена ряда родитель
-  // задан самим рядом, и подменять его предшественником нельзя — цепочка развалится.
-  var expandable = kind==="c" || famNucs(id).some(function(n){
+  // Раскрытие применяется к ОТМЕЧЕННЫМ галочкой нуклидам группы. Если не отмечено
+  // ничего — ко всей группе, и тогда оно осмысленно лишь там, где есть кого
+  // раскрывать: у ряда либо у пар вне рядов (Mo-99 → Tc-99m). У члена ЕРН-ряда
+  // родитель задан самим рядом, подменять его нельзя — цепочка развалится.
+  var picked = groupPicked();
+  var pickedExpandable = picked.filter(function(n){ return daughtersOf(n).filter(hasLines).length>0; });
+  var groupExpandable = kind==="c" || famNucs(id).some(function(n){
     var e = DB.nuclides[n];
     return e && !e.chain && daughtersOf(n).filter(hasLines).length > 0;
   });
-  var offHint = T("В этой группе нечего раскрывать: у членов рядов родитель задан самим рядом — выберите нужный ряд в разделе «Ряды».",
-                  "Nothing to expand here: for series members the parent comes from the series itself — pick the series under “Series”.");
+  var expandable = pickedExpandable.length > 0 || (!picked.length && groupExpandable);
+  var offHint = picked.length
+    ? T("У отмеченных нуклидов нет дочерних с линиями в базе.",
+        "The ticked nuclides have no daughters with lines in the database.")
+    : T("Отметьте галочкой нужный нуклид — действие применится к нему. Без отметок раскрывать в этой группе нечего: у членов рядов родитель задан самим рядом.",
+        "Tick the nuclide you need — the action applies to it. With nothing ticked there is nothing to expand here: for series members the parent comes from the series itself.");
+  var scope = picked.length
+    ? T(" Применяется к отмеченным ("+picked.length+").", " Applies to the ticked ones ("+picked.length+").")
+    : T(" Ничего не отмечено — применяется ко всей группе.", " Nothing ticked — applies to the whole group.");
   function btn(mode, label, tip){
     var off = !expandable && mode!=="all";
     return '<button class="grpAdd" data-mode="'+mode+'"'+(off?" disabled":"")+
-           ' title="'+(off ? offHint : tip)+'">'+label+'</button> ';
+           ' title="'+(off ? offHint : tip + (mode==="all" ? "" : scope))+'">'+label+'</button> ';
   }
   // те же три варианта, что и в поиске: по одному / линиями под именем родителя / цепочкой
   ctl.innerHTML =
@@ -586,8 +603,6 @@ function renderGroup(){
         : T("Дочерние — линиями под именем своего родителя","Daughters as lines under their parent’s name")) +
     btn("chain", T("+ цепочка","+ chain"),
         T("Дочерние отдельными нуклидами с пометкой родителя в скобках","Daughters as separate nuclides, parent in brackets"));
-  renderSource();
-  if ($("famInfoBox").style.display !== "none") showFamInfo(true);
 }
 function showFamInfo(keepOpen){
   var b = $("famInfoBox"), v = $("famSel").value;
@@ -694,12 +709,12 @@ function rebuildLines(){
     // дефолт выбора новых линий назначается ниже — по активным фильтрам
     e.g.forEach(function(li){
       var key = "g|"+n+"|"+li[0];
-      out.push({key:key, nuc:n, label:label, E:li[0], I:+(li[1]*eq).toFixed(4), rawI:li[1],
+      out.push({key:key, nuc:n, label:label, base:label, E:li[0], I:+(li[1]*eq).toFixed(4), rawI:li[1],
         type:"g", hlY:e.hl_y||1e9, hl:hlText(n), sel: key in old ? old[key] : false, _new: !(key in old)});
     });
     e.x.forEach(function(li){
       var key = "x|"+n+"|"+li[0]+"|"+li[2];
-      out.push({key:key, nuc:n, label:withSuffix(label, "X "+li[2]), E:li[0], I:+(li[1]*eq).toFixed(4), rawI:li[1],
+      out.push({key:key, nuc:n, label:withSuffix(label, "X "+li[2]), base:label, E:li[0], I:+(li[1]*eq).toFixed(4), rawI:li[1],
         type:"x", hlY:e.hl_y||1e9, hl:hlText(n), sel: key in old ? old[key] : false, _new: !(key in old)});
     });
   });
@@ -1006,8 +1021,12 @@ function libLabel(L){
   // Поэтому «U-238 X L» оказывается собственной цепочкой и не связывается с «U-238»:
   // у корня ряда и у одиночного нуклида линии с суффиксом выпадали из связки. Цепочку
   // дописываем явно — для ХРИ материалов не делаем, у них связывать нечего.
-  if (L.type!=="xrf" && L.type!=="sec" && !/\([^()]*\)\s*$/.test(name) && name!==L.nuc){
-    name += " ("+L.nuc+")";
+  // Цепочку берём из базовой подписи, а не из имени нуклида: в режиме «линии
+  // семейства» линия Ra-228 числится под именем Th-232, и цепочкой должен стать
+  // Th-232, иначе набор снова рассыпется по членам ряда.
+  var base = L.base || L.nuc;
+  if (L.type!=="xrf" && L.type!=="sec" && !/\([^()]*\)\s*$/.test(name) && name!==base){
+    name += " ("+base+")";
   }
   return name;
 }
@@ -1407,6 +1426,8 @@ document.addEventListener("change", function(ev){
   var t = ev.target;
   if (t.dataset && t.dataset.nuc){
     if (t.checked) addNuc(t.dataset.nuc); else delNuc(t.dataset.nuc);
+    // от набора отмеченных зависит, к чему применятся «+ линии семейства» и «+ цепочка»
+    renderGroupButtons();
     rebuildLines(); renderTable(); renderSelBar(); return;
   }
   if (t.dataset && t.dataset.xrf){
@@ -1502,9 +1523,39 @@ $("nucAddF").addEventListener("click", function(){ addWithDaughters(false); });
 $("nucAddC").addEventListener("click", function(){ addWithDaughters(true); });
 // та же тройка для группы из комбобокса: all — каждый сам по себе;
 // one — дочерние линиями под именем родителя; chain — дочерние с пометкой родителя
+// Отмеченные галочкой члены текущей группы. Галочка — это и есть выбор цели:
+// «взял ЕРН, отметил Th-232, нажал цепочку» должно дать цепочку Th-232, а не
+// раскрыть всё семейство.
+function groupPicked(){
+  var v = $("famSel").value, kind = v.slice(0,1), id = v.slice(2);
+  return (kind==="c" ? DB.chains[id].order : famNucs(id))
+    .filter(hasLines).filter(function(n){ return sel.nuc[n]; });
+}
+// Раскрыть один нуклид: дочерние линиями под его именем (one) либо отдельными
+// нуклидами с пометкой родителя в скобках (chain). Возвращает число добавленных.
+function expandOne(n, mode){
+  addNuc(n); delete sel.attr[n]; delete sel.par[n];
+  var count = 0;
+  daughtersOf(n).forEach(function(d){
+    if (!hasLines(d)) return;
+    addNuc(d); count++; delete sel.root[d];
+    if (mode==="chain"){ sel.par[d] = n; delete sel.attr[d]; }
+    else { sel.attr[d] = n; delete sel.par[d]; }
+  });
+  if (mode==="chain" && count) sel.root[n] = true;   // родитель — без чужой скобки
+  else if (mode==="one") delete sel.root[n];
+  return count;
+}
 function addGroup(mode){
   var v = $("famSel").value, kind = v.slice(0,1), id = v.slice(2);
   var members = (kind==="c" ? DB.chains[id].order : famNucs(id)).filter(hasLines);
+  // «добавить все» — всегда про группу целиком; раскрытие — про отмеченные,
+  // а если не отмечено ничего, то про всю группу, как раньше
+  var picked = groupPicked();
+  if (mode!=="all" && picked.length){
+    picked.forEach(function(n){ expandOne(n, mode); });
+    return;
+  }
   if (kind==="c" && mode==="one"){
     var root = chainRootName(id);
     members.forEach(function(n){ addNuc(n); sel.attr[n] = root; delete sel.par[n]; delete sel.root[n]; });

@@ -28,6 +28,11 @@ namespace BecquerelMonitor.RoiWizard
         // Родитель в скобках — признак цепочки для BecqMoni, не украшение.
         public string Label { get; set; }
 
+        // Подпись нуклида без суффикса линии — то, чем линия числится в наборе.
+        // В режиме «линии семейства» линия Ra-228 идёт под именем Th-232, и цепочку
+        // надо брать отсюда, а не из Nuclide: иначе набор рассыпется по членам ряда.
+        public string OwnerLabel { get; set; }
+
         public double Energy { get; set; }
 
         // Интенсивность, % (с учётом равновесия ряда, если оно включено)
@@ -90,10 +95,11 @@ namespace BecquerelMonitor.RoiWizard
                 // с «U-238»: линии с суффиксом у корня ряда и у одиночного нуклида
                 // выпадали из связки. Дописываем цепочку явно; у ХРИ материалов и
                 // вторичных маркеров связывать нечего, их не трогаем.
+                string owner = string.IsNullOrEmpty(this.OwnerLabel) ? this.Nuclide : this.OwnerLabel;
                 if (this.Type != LineType.Xrf && this.Type != LineType.Secondary &&
-                    !EndsWithBrackets(name) && !string.Equals(name, this.Nuclide, StringComparison.Ordinal))
+                    !EndsWithBrackets(name) && !string.Equals(name, owner, StringComparison.Ordinal))
                 {
-                    name += " (" + this.Nuclide + ")";
+                    name += " (" + owner + ")";
                 }
                 return name;
             }
