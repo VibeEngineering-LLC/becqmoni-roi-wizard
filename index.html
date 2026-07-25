@@ -49,7 +49,11 @@
   .cols.aligned{grid-template-rows:auto auto auto auto}
   .cols.aligned > div{display:grid; grid-row:span 4; grid-template-rows:subgrid;
     row-gap:0; align-content:start}
-  .cols.aligned .ctl{align-self:start}
+  .cols.aligned .ctl{align-self:start; position:relative}
+  /* словарик кодов — всплывающей панелью поверх списка, чтобы не двигать вёрстку */
+  .infoPop{position:absolute; left:0; right:0; top:100%; z-index:20; margin:4px 0 0;
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:9px 11px; box-shadow:0 8px 24px rgba(0,0,0,.16)}
   @media(max-width:900px){
     .cols{grid-template-columns:1fr}
     .cols.aligned{grid-template-rows:none}
@@ -145,7 +149,7 @@
           <button id="famInfoBtn" title="Что означают коды семейств">(i)</button>
         </div>
         <div class="row" style="margin-top:6px" id="famCtl"></div>
-        <p class="hint" id="famInfoBox" style="display:none"></p>
+        <p class="hint infoPop" id="famInfoBox" style="display:none"></p>
       </div>
       <div class="nuclist" id="famBox"></div>
       <div><p class="hint" id="chainHint">Член цепочки без γ/X-линий выше порога базы показан серым.</p></div>
@@ -1101,6 +1105,9 @@ function renderExpStat(){
 // ── события ──
 document.addEventListener("click", function(ev){
   var t = ev.target;
+  // словарик закрывается кликом мимо него
+  if (!t.closest || (!t.closest("#famInfoBox") && !t.closest("#famInfoBtn")))
+    $("famInfoBox").style.display = "none";
   if (t.classList.contains("grpAdd")){
     addGroup(t.dataset.mode);
     buildSelectors(); rebuildLines(); renderTable(); return;
