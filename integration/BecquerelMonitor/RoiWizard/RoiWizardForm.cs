@@ -537,6 +537,7 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonStepNext.Click += delegate { this.GoStep(1); };
             this.tabSources.Resize += delegate { this.LayoutSources(); };
             this.tabLines.Resize += delegate { this.LayoutLines(); };
+            this.tabExport.Resize += delegate { this.LayoutExport(); };
             this.groupSecondary.MouseClick += delegate(object sender, MouseEventArgs e)
             {
                 this.ToggleFold(this.groupSecondary, e.Y);
@@ -1738,37 +1739,103 @@ namespace BecquerelMonitor.RoiWizard
             }
             // Полоса чипов живёт строкой кнопок режима: размеры задаются здесь, уже после
             // автомасштаба формы, поэтому считаются от фактической высоты кнопки, а не
-            // от чисел разметки — иначе квадраты встают выше центра.
+            // от чисел разметки — иначе чипы встают выше центра.
+            int row = this.buttonColorByChain.Height;
             this.panelColors.Top = this.buttonColorByChain.Top;
-            this.panelColors.Height = this.buttonColorByChain.Height;
-            int row = this.panelColors.ClientSize.Height;
-            int side = Math.Min(18, Math.Max(8, row - 6));
+            this.panelColors.WrapContents = true;      // .colorchips{flex-wrap:wrap}
+            this.panelColors.AutoScroll = false;
+            this.panelColors.Height = row * MaxColorRows;
 
             this.panelColors.SuspendLayout();
             this.panelColors.Controls.Clear();
             foreach (string owner in owners)
             {
-                Panel swatch = new Panel();
-                swatch.Size = new Size(side, side);
-                swatch.Margin = new Padding(2, Math.Max(0, (row - side) / 2), 5, 0);
-                swatch.BackColor = this.ColorForOwner(owner);
-                swatch.BorderStyle = BorderStyle.FixedSingle;
-                swatch.Cursor = Cursors.Hand;
-                string captured = owner;
-                swatch.Click += delegate { this.PickColor(captured, swatch); };
-
-                Label caption = new Label();
-                caption.Text = owner;
-                caption.AutoSize = false;
-                caption.TextAlign = ContentAlignment.MiddleLeft;
-                caption.Size = new Size(
-                    TextRenderer.MeasureText(owner, this.panelColors.Font).Width + 4, row);
-                caption.Margin = new Padding(0, 0, 14, 0);
-
-                this.panelColors.Controls.Add(swatch);
-                this.panelColors.Controls.Add(caption);
+                this.panelColors.Controls.Add(this.ColorChip(owner, row - 4));
             }
-            this.panelColors.ResumeLayout();
+            this.panelColors.ResumeLayout(true);
+
+            // высота — по факту раскладки: сколько строк заняли чипы, столько и берём
+            int bottom = row;
+            foreach (Control chip in this.panelColors.Controls)
+            {
+                bottom = Math.Max(bottom, chip.Bottom + chip.Margin.Bottom);
+            }
+            if (bottom > row * MaxColorRows)
+            {
+                bottom = row * MaxColorRows;
+                this.panelColors.AutoScroll = true;    // владельцев больше, чем строк
+            }
+            this.panelColors.Height = bottom;
+            this.LayoutExport();
+        }
+
+        const int MaxColorRows = 3;
+
+        // Чип цвета — коробочка .cchip: фон --chip, рамка --line, квадрат цвета
+        // и подпись владельца. Щелчок по чипу открывает выбор цвета.
+        Control ColorChip(string owner, int height)
+        {
+            const int Side = 18;
+            int textWidth = TextRenderer.MeasureText(owner, this.panelColors.Font).Width;
+
+            Panel chip = new Panel();
+            chip.Size = new Size(6 + Side + 6 + textWidth + 6, height);
+            chip.Margin = new Padding(0, 2, 5, 2);
+            chip.BackColor = WizardTheme.Chip;
+            chip.Cursor = Cursors.Hand;
+            string captured = owner;
+            chip.Click += delegate { this.PickColor(captured, chip); };
+            chip.Paint += delegate(object sender, PaintEventArgs e)
+            {
+                Control box = (Control)sender;
+                using (Pen pen = new Pen(WizardTheme.Line))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, box.Width - 1, box.Height - 1);
+                }
+                Rectangle square = new Rectangle(6, (box.Height - Side) / 2, Side, Side);
+                using (SolidBrush brush = new SolidBrush(this.ColorForOwner(captured)))
+                {
+                    e.Graphics.FillRectangle(brush, square);
+                }
+                using (Pen pen = new Pen(WizardTheme.Line))
+                {
+                    e.Graphics.DrawRectangle(pen, square);
+                }
+                TextRenderer.DrawText(e.Graphics, captured, this.panelColors.Font,
+                    new Rectangle(square.Right + 6, 0, box.Width - square.Right - 8, box.Height),
+                    WizardTheme.Ink, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+            };
+            return chip;
+        }
+
+        // Вкладка «Оформление и экспорт» складывается сверху вниз: полоса цветов
+        // растёт на вторую строку, и всё под ней должно съезжать.
+        void LayoutExport()
+        {
+            int width = this.tabExport.ClientSize.Width;
+            int height = this.tabExport.ClientSize.Height;
+            if (width < 120 || height < 160)
+            {
+                return;
+            }
+            const int Pad = 8;
+            const int Gap = 6;
+            this.groupStyle.Height = this.panelColors.Bottom + this.panelColors.Margin.Bottom + 12;
+            int y = 6;
+            this.groupStyle.SetBounds(Pad, y, width - Pad * 2, this.groupStyle.Height);
+            y += this.groupStyle.Height + Gap;
+            this.groupExport.SetBounds(Pad, y, width - Pad * 2, this.groupExport.Height);
+            y += this.groupExport.Height + Gap;
+            this.labelIssues.Location = new Point(Pad + 4, y);
+            y += this.labelIssues.Height + 2;
+            this.listIssues.SetBounds(Pad, y, width - Pad * 2, this.listIssues.Height);
+            y += this.listIssues.Height + Gap;
+            int rest = height - Pad - y;
+            if (rest < 60)
+            {
+                rest = 60;
+            }
+            this.textPreview.SetBounds(Pad, y, width - Pad * 2, rest);
         }
 
         void PickColor(string owner, Panel swatch)

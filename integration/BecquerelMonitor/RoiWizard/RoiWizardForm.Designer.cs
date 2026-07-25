@@ -853,8 +853,7 @@ namespace BecquerelMonitor.RoiWizard
             this.textPreview.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textPreview.Font = new System.Drawing.Font("Consolas", 8.25F);
             this.textPreview.Anchor = System.Windows.Forms.AnchorStyles.Top |
-                System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left |
-                System.Windows.Forms.AnchorStyles.Right;
+                System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.listIssues.HorizontalScrollbar = true;
 
             this.tabExport.Controls.Add(this.groupStyle);
