@@ -202,73 +202,6 @@ def patch_mainform(root):
     return ["вставлено: обработчик и ShowRoiWizardForm"]
 
 
-def patch_nuclide_manager(root):
-    """Событие об изменении библиотеки нуклидов.
-
-    У ROI-конфигураций такое событие есть (`ROIConfigManager.ROIConfigListChanged`),
-    и списки в интерфейсе обновляются сами. У наборов нуклидов события нет вовсе:
-    `DCPeakDetectionView.RefreshNuclideSets()` вызывается только в конструкторе,
-    поэтому добавленный набор появляется в выпадающем списке «Набор» лишь после
-    перезапуска приложения. Это касается не только мастера — то же самое было и
-    при сохранении из `NuclideSetForm`.
-    """
-    path = os.path.join(root, "BecquerelMonitor", "NuclideDefinitionManager.cs")
-    text = read(path)
-    if "NuclideDefinitionListChanged" in text:
-        return ["уже есть: событие NuclideDefinitionListChanged"]
-
-    declaration = "        public static NuclideDefinitionManager GetInstance()"
-    if declaration not in text:
-        raise SystemExit("не найден GetInstance в NuclideDefinitionManager")
-    text = text.replace(declaration,
-                        "        // Поднимается после успешной записи файла определений: списки наборов\n"
-                        "        // в интерфейсе иначе обновляются только при следующем запуске.\n"
-                        "        public event EventHandler NuclideDefinitionListChanged;\n\n"
-                        + declaration, 1)
-
-    anchor = """                MessageBox.Show(Resources.ERRSavingNuclideDefinitionFile, Resources.ErrorDialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Hand);
-                return false;
-            }
-            return true;
-        }"""
-    if anchor not in text:
-        raise SystemExit("не найден хвост SaveDefinitionFile")
-    text = text.replace(anchor, """                MessageBox.Show(Resources.ERRSavingNuclideDefinitionFile, Resources.ErrorDialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Hand);
-                return false;
-            }
-            if (this.NuclideDefinitionListChanged != null)
-            {
-                this.NuclideDefinitionListChanged(this, new EventArgs());
-            }
-            return true;
-        }""", 1)
-    write(path, text)
-    return ["вставлено: событие NuclideDefinitionListChanged"]
-
-
-def patch_peak_detection_view(root):
-    """Подписка списка «Набор» на это событие."""
-    path = os.path.join(root, "BecquerelMonitor", "DCPeakDetectionView.cs")
-    text = read(path)
-    if "NuclideDefinitionListChanged" in text:
-        return ["уже есть: подписка списка наборов"]
-
-    anchor = """            this.RefreshNuclideSets();
-            this.UpdateDeconvolutionInfoButtonState();"""
-    if anchor not in text:
-        raise SystemExit("не найден конструктор DCPeakDetectionView")
-    text = text.replace(anchor, """            this.RefreshNuclideSets();
-            this.UpdateDeconvolutionInfoButtonState();
-            // список наборов пересобирается при каждой записи файла определений,
-            // иначе новый набор виден только после перезапуска
-            this.nuclideManager.NuclideDefinitionListChanged += delegate(object sender, EventArgs e)
-            {
-                this.RefreshNuclideSets();
-            };""", 1)
-    write(path, text)
-    return ["вставлено: подписка списка наборов"]
-
-
 def patch_resx(root, filename, entries):
     path = os.path.join(root, "BecquerelMonitor", filename)
     text = read(path)
@@ -351,8 +284,6 @@ def main():
     steps += patch_csproj(root)
     steps += patch_designer(root)
     steps += patch_mainform(root)
-    steps += patch_nuclide_manager(root)
-    steps += patch_peak_detection_view(root)
     steps += patch_resx(root, "MainForm.resx", """  <data name="%(name)s.Size" type="System.Drawing.Size, System.Drawing">
     <value>224, 22</value>
   </data>
