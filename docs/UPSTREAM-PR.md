@@ -31,7 +31,7 @@ BecqMoni, PR живёт вместе с проектом.
 | Правка хоста | пункт меню в `MainForm` + две строки ресурсов | ≈40 |
 | Данные | `nuclides.xml` — снимок IAEA/ENSDF: 121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ, словарь семейств | 101 КБ |
 | | `help.xml` — текст справки на двух языках | 21 КБ |
-| Подписи | `RoiWizardStrings.resx` (английская) + `.ru.resx`, доступ через `RoiWizardStrings.Designer.cs` | 149 строк |
+| Подписи | `RoiWizardStrings.resx` (английская) + `.ru.resx`, доступ через `RoiWizardStrings.Designer.cs` | 156 строк |
 | Инструменты | `tools/export_catalog.py`, `tools/export_help.py`, `tools/gen_strings.py` | 500 |
 | Тесты | `tests/RoiWizardTests.cs`, `HostStubs.cs`, `run_tests.cmd` | 490 |
 
