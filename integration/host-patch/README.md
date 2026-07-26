@@ -1,9 +1,10 @@
-# Правки в самом BecqMoni: пункт меню
+# Правки в самом BecqMoni: пункт меню и уведомление об изменении библиотеки
 
 Модуль лежит целиком в `BecquerelMonitor/RoiWizard/` и приложение не трогает — кроме
-одного: окно надо чем-то открыть. Здесь ровно то, что для этого добавляется в хост.
+двух вещей: окно надо чем-то открыть, и о новом наборе нуклидов надо кого-то известить.
+Здесь ровно то, что для этого добавляется в хост.
 
-Четыре файла, шесть вставок. Ничего существующего не изменяется, только добавляется.
+Шесть файлов, восемь вставок. Ничего существующего не изменяется, только добавляется.
 
 Проверено сборкой на снимке `master` от 25.07.2026 (`apply_patch.py` применяет всё это
 к дереву и компилирует).
@@ -61,10 +62,18 @@ public void ShowRoiWizardForm()
     if (this.roiWizardForm == null || this.roiWizardForm.IsDisposed)
     {
         this.roiWizardForm = new RoiWizard.RoiWizardForm(this.RoiWizardResolution);
+        // Размер плавающего окна берётся у самой формы: её Size уже подогнан
+        // шрифтом темы (AutoScaleMode.Font укрупняет разметку), и плавающее
+        // окно отдаёт содержимому ровно столько же, сколько форма имеет в
+        // клиентской области. Жёсткие числа здесь обрезали бы содержимое.
+        System.Drawing.Size want = this.roiWizardForm.Size;
+        System.Drawing.Rectangle work = Screen.FromControl(this).WorkingArea;
+        want = new System.Drawing.Size(Math.Min(want.Width, work.Width),
+                                       Math.Min(want.Height, work.Height));
         System.Drawing.Rectangle bounds = new System.Drawing.Rectangle(
-            this.Location.X + Math.Max(0, (this.Width - 1200) / 2),
-            this.Location.Y + Math.Max(0, (this.Height - 700) / 2),
-            1200, 700);
+            work.X + Math.Max(0, (work.Width - want.Width) / 2),
+            work.Y + Math.Max(0, (work.Height - want.Height) / 2),
+            want.Width, want.Height);
         this.roiWizardForm.Show(this.dockPanel1, bounds);
     }
     else
@@ -101,7 +110,50 @@ double RoiWizardResolution()
 безразлично. Есть и конструктор без аргументов — тогда кнопка «из спектра» на втором шаге
 просто выключена, а форма работает автономно.
 
-## 3. `MainForm.resx` (базовый, английский)
+## 3. `NuclideDefinitionManager.cs` — событие об изменении библиотеки
+
+У ROI-конфигураций такое событие уже есть (`ROIConfigManager.ROIConfigListChanged`),
+и списки в интерфейсе обновляются сами. У наборов нуклидов события нет вовсе, а
+`DCPeakDetectionView.RefreshNuclideSets()` вызывается только в конструкторе — поэтому
+добавленный набор появляется в списке «Набор» лишь после перезапуска приложения.
+Это касается не только мастера: то же самое происходило и при сохранении из
+`NuclideSetForm`.
+
+**а)** рядом с `GetInstance()`:
+
+```csharp
+// Поднимается после успешной записи файла определений: списки наборов
+// в интерфейсе иначе обновляются только при следующем запуске.
+public event EventHandler NuclideDefinitionListChanged;
+```
+
+**б)** в конце `SaveDefinitionFile()`, перед `return true`:
+
+```csharp
+if (this.NuclideDefinitionListChanged != null)
+{
+    this.NuclideDefinitionListChanged(this, new EventArgs());
+}
+```
+
+## 4. `DCPeakDetectionView.cs` — подписка списка «Набор»
+
+В конструкторе, следом за `RefreshNuclideSets()` и `UpdateDeconvolutionInfoButtonState()`:
+
+```csharp
+// список наборов пересобирается при каждой записи файла определений,
+// иначе новый набор виден только после перезапуска
+this.nuclideManager.NuclideDefinitionListChanged += delegate(object sender, EventArgs e)
+{
+    this.RefreshNuclideSets();
+};
+```
+
+Проверено живьём: набор, созданный мастером, появляется в выпадающем списке «Набор»
+сразу, без перезапуска (`RefreshNuclideSets` сохраняет текущий выбор — он
+восстанавливается по `IndexOf(selectedNuclideSet)`).
+
+## 5. `MainForm.resx` (базовый, английский)
 
 ```xml
 <data name="RoiWizardToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -112,7 +164,7 @@ double RoiWizardResolution()
 </data>
 ```
 
-## 4. `MainForm.ru.resx`
+## 6. `MainForm.ru.resx`
 
 ```xml
 <data name="RoiWizardToolStripMenuItem.Text" xml:space="preserve">
