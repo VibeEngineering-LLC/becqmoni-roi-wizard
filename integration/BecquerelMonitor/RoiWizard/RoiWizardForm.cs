@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using XPTable.Events;
 using XPTable.Models;
 
 namespace BecquerelMonitor.RoiWizard
@@ -327,7 +328,8 @@ namespace BecquerelMonitor.RoiWizard
                 Row row = new Row();
                 row.Cells.Add(new Cell(nuclide.Name));
                 row.Cells.Add(new Cell(nuclide.Families ?? ""));
-                row.Cells.Add(new Cell(nuclide.HalfLifeText ?? "", nuclide.HalfLifeYears));
+                row.Cells.Add(new Cell(HalfLifeLabel(nuclide.HalfLifeText ?? ""),
+                                       nuclide.HalfLifeYears));
                 // счётчики уходят рендереру парой чисел: «γ» и «X» красятся по-разному
                 row.Cells.Add(new Cell(
                     nuclide.Gamma.Count.ToString(CultureInfo.InvariantCulture) + " " +
@@ -506,6 +508,26 @@ namespace BecquerelMonitor.RoiWizard
             columns[columns.Length - 1].Width = Math.Max(24, free - used);   // остаток — последней
         }
 
+        // В таблице находок колонки держат свою ширину, а лишнее место уходит в пустой
+        // столбец справа: на странице такая таблица шириной по содержимому, и числа
+        // стоят сразу за именем нуклида, а не через полстраницы пустоты.
+        void LayoutNearColumns()
+        {
+            int used = this.columnNearDelta.Width
+                       + this.columnNearName.Width
+                       + this.columnNearEnergy.Width
+                       + this.columnNearIntensity.Width
+                       + this.columnNearType.Width
+                       + this.columnNearHalfLife.Width
+                       + this.columnNearAdd.Width;
+            int free = this.tableNear.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4
+                       - used;
+            if (free > 0 && free != this.columnNearFill.Width)
+            {
+                this.columnNearFill.Width = free;
+            }
+        }
+
         // Свободное место забирает колонка семейств: «T½ γN X N» остаётся прижатым
         // к правому краю строки — это margin-left:auto у .nuc .hl на странице.
         void LayoutCatalogColumns()
@@ -604,8 +626,17 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonSelectNone.Click += delegate { this.SetVisibleSelected(false); };
             this.buttonGenerateSecondary.Click += delegate { this.GenerateSecondary(); };
             this.buttonNearSearch.Click += delegate { this.SearchNearby(); };
-            this.buttonNearAdd.Click += delegate { this.AddFromNearby(); };
-            this.listNear.DoubleClick += delegate { this.AddFromNearby(); };
+            this.tableNear.CellButtonClicked += delegate(object sender, CellButtonEventArgs e)
+            {
+                // что добавлять, знает сама ячейка: строки переупорядочиваются
+                // сортировкой по столбцу, и номер строки списку находок уже не равен
+                NearHit hit = e.Cell == null ? null : e.Cell.Tag as NearHit;
+                if (hit != null)
+                {
+                    this.AddFromNearby(hit);
+                }
+            };
+            this.tableNear.Resize += delegate { this.LayoutNearColumns(); };
             this.buttonSelectTop.Click += delegate
             {
                 LineSetBuilder.SelectTopPerNuclide(this.lines, (int)this.numTopN.Value);
@@ -746,7 +777,7 @@ namespace BecquerelMonitor.RoiWizard
             {
                 CatalogNuclide nuclide = this.catalog.Find(member);
                 string title = nuclide != null && !string.IsNullOrEmpty(nuclide.HalfLifeText)
-                    ? member + "   " + nuclide.HalfLifeText
+                    ? member + "   " + HalfLifeLabel(nuclide.HalfLifeText)
                     : member;
                 this.checkedGroup.Items.Add(title, this.selection.Nuclides.ContainsKey(member));
             }
@@ -1068,7 +1099,7 @@ namespace BecquerelMonitor.RoiWizard
                 intensity.Tag = relative;          // Data занят сортировкой, доля бара — в Tag
                 row.Cells.Add(intensity);
                 row.Cells.Add(new Cell(relative.ToString("0.#", CultureInfo.CurrentCulture), relative));
-                row.Cells.Add(new Cell(line.HalfLifeText ?? "", line.HalfLifeYears));
+                row.Cells.Add(new Cell(HalfLifeLabel(line.HalfLifeText ?? ""), line.HalfLifeYears));
                 Cell kind = new Cell(this.TypeName(line.Type));
                 kind.Tag = TypeKind(line.Type);    // цвет бейджа — по коду, не по подписи
                 row.Cells.Add(kind);
@@ -1089,6 +1120,69 @@ namespace BecquerelMonitor.RoiWizard
                 case LineType.Xrf: return this.checkTypeXrf.Checked;
                 default: return this.checkTypeSecondary.Checked;
             }
+        }
+
+        // T½ каталог хранит по-русски и в машинной записи («1.6e+03 лет»). Показывается
+        // он так же, как на странице: степень десятки верхним индексом, разделитель
+        // дробной части из культуры, единица на языке интерфейса. Сам каталог остаётся
+        // одноязычным — это данные, подписи к ним собирает форма.
+        static string HalfLifeLabel(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+            int space = text.LastIndexOf(' ');
+            if (space <= 0)
+            {
+                return text;
+            }
+            return ScientificLabel(text.Substring(0, space)) + " "
+                   + HalfLifeUnit(text.Substring(space + 1));
+        }
+
+        static string HalfLifeUnit(string unit)
+        {
+            switch (unit)
+            {
+                case "с": return RoiWizardStrings.hlSeconds;
+                case "мин": return RoiWizardStrings.hlMinutes;
+                case "ч": return RoiWizardStrings.hlHours;
+                case "сут": return RoiWizardStrings.hlDays;
+                case "лет": return RoiWizardStrings.hlYears;
+                default: return unit;
+            }
+        }
+
+        static string ScientificLabel(string value)
+        {
+            string text = value;
+            int mark = value.IndexOf('e');
+            if (mark > 0)
+            {
+                string power = value.Substring(mark + 1);
+                bool negative = power.StartsWith("-", StringComparison.Ordinal);
+                power = power.TrimStart('+', '-').TrimStart('0');
+                if (power.Length == 0)
+                {
+                    power = "0";
+                }
+                text = value.Substring(0, mark) + "·10" + (negative ? "⁻" : "") + Superscript(power);
+            }
+            return text.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+        }
+
+        static string Superscript(string digits)
+        {
+            const string Plain = "0123456789";
+            const string Raised = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+            StringBuilder builder = new StringBuilder(digits.Length);
+            foreach (char symbol in digits)
+            {
+                int index = Plain.IndexOf(symbol);
+                builder.Append(index >= 0 ? Raised[index] : symbol);
+            }
+            return builder.ToString();
         }
 
         string TypeName(LineType type)
@@ -1170,7 +1264,7 @@ namespace BecquerelMonitor.RoiWizard
                     if (Math.Abs(gamma.Energy - energy) <= window && gamma.Intensity >= minIntensity)
                     {
                         this.nearHits.Add(new NearHit(nuclide.Name, gamma.Energy, gamma.Intensity,
-                                                      "γ", nuclide.HalfLifeText, null));
+                                                      "γ", "g", nuclide.HalfLifeText, null));
                     }
                 }
                 foreach (CatalogXrayLine xray in nuclide.Xray)
@@ -1178,7 +1272,8 @@ namespace BecquerelMonitor.RoiWizard
                     if (Math.Abs(xray.Energy - energy) <= window && xray.Intensity >= minIntensity)
                     {
                         this.nearHits.Add(new NearHit(nuclide.Name, xray.Energy, xray.Intensity,
-                                                      "X " + xray.Shell, nuclide.HalfLifeText, null));
+                                                      "X " + xray.Shell, "x",
+                                                      nuclide.HalfLifeText, null));
                     }
                 }
             }
@@ -1188,8 +1283,11 @@ namespace BecquerelMonitor.RoiWizard
                 {
                     if (Math.Abs(line.Energy - energy) <= window)
                     {
-                        this.nearHits.Add(new NearHit("XRF " + element.Symbol, line.Energy, line.Intensity,
-                                                      "XRF " + line.Label, "—", element.Symbol));
+                        this.nearHits.Add(new NearHit(
+                            RoiWizardStrings.lineTypeXrf + " " + element.Symbol,
+                            line.Energy, line.Intensity,
+                            RoiWizardStrings.lineTypeXrf + " " + line.Label, "xrf",
+                            "—", element.Symbol));
                     }
                 }
             }
@@ -1199,35 +1297,63 @@ namespace BecquerelMonitor.RoiWizard
                 return Math.Abs(a.Energy - centre).CompareTo(Math.Abs(b.Energy - centre));
             });
 
-            this.listNear.BeginUpdate();
-            this.listNear.Items.Clear();
-            foreach (NearHit hit in this.nearHits)
+            this.tableNear.SuspendLayout();
+            this.tableModelNear.Rows.Clear();
+            int shown = Math.Min(this.nearHits.Count, NearHitLimit);
+            for (int i = 0; i < shown; i++)
             {
+                NearHit hit = this.nearHits[i];
                 double delta = hit.Energy - energy;
                 bool added = hit.XrfSymbol != null
                     ? this.selection.XrfElements.Contains(hit.XrfSymbol)
                     : this.selection.Nuclides.ContainsKey(hit.Nuclide);
-                this.listNear.Items.Add(string.Format(CultureInfo.CurrentCulture,
-                    RoiWizardStrings.nearHitFormat,
-                    delta >= 0 ? "+" : "", delta, hit.Nuclide, hit.Energy, hit.Intensity,
-                    hit.Type, hit.HalfLife, added ? "   ✓" : ""));
+
+                Row row = new Row();
+                row.Cells.Add(new Cell((delta >= 0 ? "+" : "")
+                    + delta.ToString("0.0", CultureInfo.CurrentCulture), delta));
+                row.Cells.Add(new Cell(hit.Nuclide));
+                row.Cells.Add(new Cell(hit.Energy.ToString("0.00", CultureInfo.CurrentCulture),
+                                       hit.Energy));
+                row.Cells.Add(new Cell(hit.Intensity.ToString("0.###", CultureInfo.CurrentCulture),
+                                       hit.Intensity));
+                Cell kind = new Cell(hit.TypeName);
+                kind.Tag = hit.TypeKind;           // цвет бейджа — по коду, не по подписи
+                row.Cells.Add(kind);
+                row.Cells.Add(new Cell(HalfLifeLabel(hit.HalfLife)));
+                // тег ячейки — признак «есть что нажимать»: у добавленного нуклида
+                // кнопки нет, как и на странице, вместо неё подпись «в наборе»
+                Cell action = new Cell(added ? RoiWizardStrings.nearAdded
+                                             : RoiWizardStrings.buttonNearAdd_Text);
+                action.Tag = added ? null : (object)hit;
+                row.Cells.Add(action);
+                row.Tag = hit;
+                this.tableModelNear.Rows.Add(row);
             }
-            this.listNear.EndUpdate();
+            this.tableNear.ResumeLayout();
+            this.LayoutNearColumns();
+
             if (this.nearHits.Count == 0)
             {
-                this.listNear.Items.Add(string.Format(CultureInfo.CurrentCulture,
-                    this.nearEmptyFormat, energy, window));
+                this.labelNearHint.Text = string.Format(CultureInfo.CurrentCulture,
+                    this.nearEmptyFormat, energy, window);
+            }
+            else if (this.nearHits.Count > shown)
+            {
+                this.labelNearHint.Text = string.Format(CultureInfo.CurrentCulture,
+                    RoiWizardStrings.nearMoreFormat, shown, this.nearHits.Count);
+            }
+            else
+            {
+                this.labelNearHint.Text = "";
             }
         }
 
-        void AddFromNearby()
+        // Столько же строк, сколько показывает страница: дальше по списку идут линии,
+        // отстоящие от заданной энергии сильнее любой из показанных.
+        const int NearHitLimit = 40;
+
+        void AddFromNearby(NearHit hit)
         {
-            int index = this.listNear.SelectedIndex;
-            if (index < 0 || index >= this.nearHits.Count)
-            {
-                return;
-            }
-            NearHit hit = this.nearHits[index];
             if (hit.XrfSymbol != null)
             {
                 this.selection.XrfElements.Add(hit.XrfSymbol);
@@ -1253,17 +1379,19 @@ namespace BecquerelMonitor.RoiWizard
             public readonly string Nuclide;
             public readonly double Energy;
             public readonly double Intensity;
-            public readonly string Type;
+            public readonly string TypeName;     // подпись бейджа: она переводится
+            public readonly string TypeKind;     // код типа: по нему берётся цвет
             public readonly string HalfLife;
             public readonly string XrfSymbol;
 
             public NearHit(string nuclide, double energy, double intensity,
-                           string type, string halfLife, string xrfSymbol)
+                           string typeName, string typeKind, string halfLife, string xrfSymbol)
             {
                 this.Nuclide = nuclide;
                 this.Energy = energy;
                 this.Intensity = intensity;
-                this.Type = type;
+                this.TypeName = typeName;
+                this.TypeKind = typeKind;
                 this.HalfLife = string.IsNullOrEmpty(halfLife) ? "—" : halfLife;
                 this.XrfSymbol = xrfSymbol;
             }

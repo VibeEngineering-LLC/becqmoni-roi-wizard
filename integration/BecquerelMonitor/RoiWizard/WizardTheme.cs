@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using XPTable.Models;
 
@@ -143,6 +144,13 @@ namespace BecquerelMonitor.RoiWizard
                     continue;
                 }
 
+                NumericUpDown numeric = control as NumericUpDown;
+                if (numeric != null)
+                {
+                    ApplyNumberPadding(numeric);
+                    continue;
+                }
+
                 Label label = control as Label;
                 if (label != null && label.Text.EndsWith(":", StringComparison.Ordinal))
                 {
@@ -152,6 +160,46 @@ namespace BecquerelMonitor.RoiWizard
 
                 Walk(control);
             }
+        }
+
+        // Отступ числа от правого края поля. В теме у input задан padding 1px 4px,
+        // а у поля ввода WinForms отступа нет ни свойством, ни стилем: внутренние
+        // поля текста задаёт окну сообщение EM_SETMARGINS. Число прижимается вправо
+        // (TextAlign задан в разметке), и без отступа оно упиралось бы в стрелки.
+        const int EM_SETMARGINS = 0x00D3;
+        const int EC_RIGHTMARGIN = 0x0002;
+        const int NumberPadding = 4;                 // px, как padding-right в теме
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+        static void ApplyNumberPadding(NumericUpDown numeric)
+        {
+            // поле ввода счётчика — его дочерний контрол; сообщение шлётся окну,
+            // поэтому отступ ставится и заново при каждом пересоздании дескриптора
+            foreach (Control child in numeric.Controls)
+            {
+                TextBoxBase edit = child as TextBoxBase;
+                if (edit == null)
+                {
+                    continue;
+                }
+                SetRightMargin(edit);
+                edit.HandleCreated += delegate(object sender, EventArgs e)
+                {
+                    SetRightMargin((Control)sender);
+                };
+            }
+        }
+
+        static void SetRightMargin(Control edit)
+        {
+            if (!edit.IsHandleCreated)
+            {
+                return;
+            }
+            SendMessage(edit.Handle, EM_SETMARGINS,
+                        (IntPtr)EC_RIGHTMARGIN, (IntPtr)(NumberPadding << 16));
         }
     }
 }

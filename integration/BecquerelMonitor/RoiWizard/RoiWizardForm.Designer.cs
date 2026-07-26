@@ -112,8 +112,18 @@ namespace BecquerelMonitor.RoiWizard
             this.numNearHalfLife = new System.Windows.Forms.NumericUpDown();
             this.comboNearHalfLifeUnit = new System.Windows.Forms.ComboBox();
             this.buttonNearSearch = new System.Windows.Forms.Button();
-            this.listNear = new System.Windows.Forms.ListBox();
-            this.buttonNearAdd = new System.Windows.Forms.Button();
+            this.labelNearHint = new System.Windows.Forms.Label();
+            this.tableNear = new XPTable.Models.Table();
+            this.columnModelNear = new XPTable.Models.ColumnModel();
+            this.columnNearDelta = new XPTable.Models.TextColumn();
+            this.columnNearName = new XPTable.Models.TextColumn();
+            this.columnNearEnergy = new XPTable.Models.TextColumn();
+            this.columnNearIntensity = new XPTable.Models.TextColumn();
+            this.columnNearType = new XPTable.Models.TextColumn();
+            this.columnNearHalfLife = new XPTable.Models.TextColumn();
+            this.columnNearAdd = new XPTable.Models.ButtonColumn();
+            this.columnNearFill = new XPTable.Models.TextColumn();
+            this.tableModelNear = new XPTable.Models.TableModel();
             this.buttonSelectAll = new System.Windows.Forms.Button();
             this.buttonSelectNone = new System.Windows.Forms.Button();
             this.numTopN = new System.Windows.Forms.NumericUpDown();
@@ -619,7 +629,7 @@ namespace BecquerelMonitor.RoiWizard
 
             this.groupNear.Text = RoiWizardStrings.groupNear_Text;
             this.groupNear.Location = new System.Drawing.Point(8, 288);
-            this.groupNear.Size = new System.Drawing.Size(1156, 122);
+            this.groupNear.Size = new System.Drawing.Size(1156, 178);
             this.groupNear.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.labelNearEnergy.Text = RoiWizardStrings.labelNearEnergy_Text;
@@ -659,13 +669,68 @@ namespace BecquerelMonitor.RoiWizard
             this.buttonNearSearch.Text = RoiWizardStrings.buttonNearSearch_Text;
             this.buttonNearSearch.Location = new System.Drawing.Point(654, 22);
             this.buttonNearSearch.Size = new System.Drawing.Size(110, 25);
-            this.buttonNearAdd.Text = RoiWizardStrings.buttonNearAdd_Text;
-            this.buttonNearAdd.Location = new System.Drawing.Point(772, 22);
-            this.buttonNearAdd.Size = new System.Drawing.Size(120, 25);
-            this.listNear.Location = new System.Drawing.Point(8, 52);
-            this.listNear.Size = new System.Drawing.Size(1140, 62);
-            this.listNear.Anchor = System.Windows.Forms.AnchorStyles.Top |
+            // подсказка о найденном: сколько всего и сколько показано — на странице
+            // она стоит под таблицей, здесь встала в свободное место строки фильтров
+            this.labelNearHint.Location = new System.Drawing.Point(776, 26);
+            this.labelNearHint.Size = new System.Drawing.Size(360, 18);
+            this.labelNearHint.Text = "";
+
+            // Результаты — таблица со строкой на линию и кнопкой «+ добавить» в каждой,
+            // как на странице: нуклид добавляется прямо из находки, не возвращаясь к шагу 1.
+            this.tableNear.Location = new System.Drawing.Point(8, 52);
+            this.tableNear.Size = new System.Drawing.Size(1140, 118);
+            this.tableNear.Anchor = System.Windows.Forms.AnchorStyles.Top |
                 System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            this.tableNear.BorderColor = System.Drawing.Color.Black;
+            this.tableNear.ColumnModel = this.columnModelNear;
+            this.tableNear.TableModel = this.tableModelNear;
+            this.tableNear.FullRowSelect = true;
+            this.tableNear.GridLines = XPTable.Models.GridLines.Rows;
+            this.tableNear.HeaderRenderer = new CenteredHeaderRenderer();
+            this.tableModelNear.RowHeight = 20;
+            this.columnNearDelta.Editable = false;
+            this.columnNearDelta.Text = RoiWizardStrings.columnNearDelta_Text;
+            this.columnNearDelta.Width = 60;
+            this.columnNearDelta.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnNearDelta.Renderer = new NumberCellRenderer();
+            this.columnNearName.Editable = false;
+            this.columnNearName.Text = RoiWizardStrings.columnLineName_Text;
+            this.columnNearName.Width = 200;
+            this.columnNearEnergy.Editable = false;
+            this.columnNearEnergy.Text = RoiWizardStrings.columnLineEnergy_Text;
+            this.columnNearEnergy.Width = 90;
+            this.columnNearEnergy.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnNearEnergy.Renderer = new NumberCellRenderer();
+            this.columnNearIntensity.Editable = false;
+            this.columnNearIntensity.Text = RoiWizardStrings.columnLineIntensity_Text;
+            this.columnNearIntensity.Width = 90;
+            this.columnNearIntensity.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnNearIntensity.Renderer = new NumberCellRenderer();
+            this.columnNearType.Editable = false;
+            this.columnNearType.Text = RoiWizardStrings.columnLineType_Text;
+            this.columnNearType.Width = 80;
+            this.columnNearType.Renderer = new LineTypeCellRenderer();
+            this.columnNearHalfLife.Editable = false;
+            this.columnNearHalfLife.Text = RoiWizardStrings.columnLineHalfLife_Text;
+            this.columnNearHalfLife.Width = 100;
+            this.columnNearHalfLife.Alignment = XPTable.Models.ColumnAlignment.Right;
+            this.columnNearHalfLife.Renderer = new NumberCellRenderer();
+            this.columnNearAdd.Text = "";
+            this.columnNearAdd.Width = 110;
+            this.columnNearAdd.Resizable = false;
+            this.columnNearAdd.Sortable = false;
+            this.columnNearAdd.Renderer = new NearAddCellRenderer();
+            // на странице таблица находок шириной по содержимому, а XPTable всегда
+            // занимает контрол целиком — лишнее место забирает пустой столбец справа,
+            // иначе оно растянуло бы колонку с именем и оторвало числа от подписей
+            this.columnNearFill.Text = "";
+            this.columnNearFill.Editable = false;
+            this.columnNearFill.Sortable = false;
+            this.columnNearFill.Width = 40;
+            this.columnModelNear.Columns.AddRange(new XPTable.Models.Column[] {
+                this.columnNearDelta, this.columnNearName, this.columnNearEnergy,
+                this.columnNearIntensity, this.columnNearType, this.columnNearHalfLife,
+                this.columnNearAdd, this.columnNearFill });
             this.groupNear.Controls.Add(this.labelNearEnergy);
             this.groupNear.Controls.Add(this.numNearEnergy);
             this.groupNear.Controls.Add(this.labelNearWindow);
@@ -676,8 +741,8 @@ namespace BecquerelMonitor.RoiWizard
             this.groupNear.Controls.Add(this.numNearHalfLife);
             this.groupNear.Controls.Add(this.comboNearHalfLifeUnit);
             this.groupNear.Controls.Add(this.buttonNearSearch);
-            this.groupNear.Controls.Add(this.buttonNearAdd);
-            this.groupNear.Controls.Add(this.listNear);
+            this.groupNear.Controls.Add(this.labelNearHint);
+            this.groupNear.Controls.Add(this.tableNear);
             this.tabLines.Controls.Add(this.groupNear);
 
             this.tableLines.Location = new System.Drawing.Point(8, 416);
@@ -870,6 +935,27 @@ namespace BecquerelMonitor.RoiWizard
             this.tabExport.Controls.Add(this.listIssues);
             this.tabExport.Controls.Add(this.textPreview);
 
+            // ─── числа в полях настроек ────────────────────────────────────
+            // Все счётчики выровнены по правому краю: разряды выстраиваются в столбик,
+            // и число не отъезжает от подписи при вводе. Отступ от правого края задаёт
+            // WizardTheme.Apply — свойства для него у поля ввода нет.
+            this.numResolution.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numFactor.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numMinIntensity.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numMinEnergy.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numMaxEnergy.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numMinHalfLife.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numMaxHalfLife.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numTopN.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numSecondaryMin.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numNearEnergy.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numNearWindow.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numNearIntensity.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numNearHalfLife.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numZonePercent.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numZoneFactor.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numAnchors.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+
             // ─── строка состояния ──────────────────────────────────────────
             // счётчик занимает всё свободное место, кнопки прижаты вправо — как на странице
             this.statusLabel.Spring = true;
@@ -1000,8 +1086,18 @@ namespace BecquerelMonitor.RoiWizard
         System.Windows.Forms.NumericUpDown numNearHalfLife;
         System.Windows.Forms.ComboBox comboNearHalfLifeUnit;
         System.Windows.Forms.Button buttonNearSearch;
-        System.Windows.Forms.Button buttonNearAdd;
-        System.Windows.Forms.ListBox listNear;
+        System.Windows.Forms.Label labelNearHint;
+        XPTable.Models.Table tableNear;
+        XPTable.Models.ColumnModel columnModelNear;
+        XPTable.Models.TextColumn columnNearDelta;
+        XPTable.Models.TextColumn columnNearName;
+        XPTable.Models.TextColumn columnNearEnergy;
+        XPTable.Models.TextColumn columnNearIntensity;
+        XPTable.Models.TextColumn columnNearType;
+        XPTable.Models.TextColumn columnNearHalfLife;
+        XPTable.Models.ButtonColumn columnNearAdd;
+        XPTable.Models.TextColumn columnNearFill;
+        XPTable.Models.TableModel tableModelNear;
         System.Windows.Forms.Button buttonSelectAll;
         System.Windows.Forms.Button buttonSelectNone;
         System.Windows.Forms.NumericUpDown numTopN;

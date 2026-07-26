@@ -122,6 +122,14 @@ STRINGS = [
     ("unitDays", "d", "сут"),
     ("unitYears", "y", "лет"),
 
+    # ── единицы T½ в подписях: каталог хранит их по-русски, показываются они
+    #    на языке интерфейса (в фильтре единицы свои — там «сек», здесь «с»)
+    ("hlSeconds", "s", "с"),
+    ("hlMinutes", "min", "мин"),
+    ("hlHours", "h", "ч"),
+    ("hlDays", "d", "сут"),
+    ("hlYears", "y", "лет"),
+
     # ── шаг 2: таблица линий ──
     ("columnLineName_Text", "Nuclide", "Нуклид"),
     ("columnLineEnergy_Text", "E, keV", "E, кэВ"),
@@ -157,8 +165,9 @@ STRINGS = [
     ("labelNearHalfLife_Text", "T½ ≥", "T½ ≥"),
     ("buttonNearSearch_Text", "Search", "Искать"),
     ("buttonNearAdd_Text", "+ add", "+ добавить"),
-    ("nearHitFormat", "{0}{1:0.0}   {2,-14} {3,9:0.00} keV   I {4,7:0.###} %   {5,-8} {6}{7}",
-     "{0}{1:0.0}   {2,-14} {3,9:0.00} кэВ   I {4,7:0.###} %   {5,-8} {6}{7}"),
+    ("columnNearDelta_Text", "ΔE", "ΔE"),
+    ("nearAdded", "added", "в наборе"),
+    ("nearMoreFormat", "showing the first {0} of {1}", "показаны первые {0} из {1}"),
     ("nearEmptyFormat", "nothing found within {0} ± {1} keV",
      "в окне {0} ± {1} кэВ ничего не найдено"),
 

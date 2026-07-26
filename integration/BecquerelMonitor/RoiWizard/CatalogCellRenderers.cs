@@ -239,6 +239,74 @@ namespace BecquerelMonitor.RoiWizard
         }
     }
 
+    // Кнопка «+ добавить» в строке результата поиска близких линий. Штатный
+    // ButtonCellRenderer растягивает кнопку на всю ячейку, а на странице это
+    // компактная кнопка у левого края; для нуклида, уже лежащего в наборе, кнопки
+    // на странице нет вовсе — вместо неё подпись «в наборе».
+    //
+    // Обе правки делаются одним местом: и рисование, и попадание мыши в XPTable
+    // идут через CalcButtonBounds. Пустой прямоугольник для «в наборе» гасит и
+    // отрисовку кнопки (ThemeManager.DrawButton молча выходит на нулевом размере),
+    // и клик — событие поднимается только из своих границ.
+    public class NearAddCellRenderer : ButtonCellRenderer
+    {
+        const int PadX = 9;              // button{padding:2px 9px} темы
+        const int Inset = 2;             // кнопка ниже строки таблицы, как на странице
+
+        Cell current;
+
+        protected override Rectangle CalcButtonBounds()
+        {
+            Rectangle rect = this.ClientRectangle;
+            if (this.current == null || this.current.Tag == null)
+            {
+                return Rectangle.Empty;          // уже в наборе — кнопки нет
+            }
+            int width = TextRenderer.MeasureText(this.current.Text ?? "", this.Font).Width + PadX * 2;
+            return new Rectangle(rect.X, rect.Y + Inset,
+                                 Math.Min(rect.Width, width), Math.Max(0, rect.Height - Inset * 2));
+        }
+
+        public override void OnPaintCell(PaintCellEventArgs e)
+        {
+            this.current = e.Cell;
+            base.OnPaintCell(e);
+            if (e.Cell != null && e.Cell.Tag == null && !string.IsNullOrEmpty(e.Cell.Text))
+            {
+                // кнопки нет — на её месте приглушённая подпись
+                TextRenderer.DrawText(e.Graphics, e.Cell.Text, this.Font, this.ClientRectangle,
+                    WizardTheme.Muted,
+                    TextFormatFlags.NoPadding | TextFormatFlags.VerticalCenter);
+            }
+        }
+
+        // Мышь приходит без прохода через OnPaintCell, а границы кнопки зависят от
+        // ячейки — иначе клик по «в наборе» считался бы попаданием в чужую кнопку.
+        public override void OnMouseDown(CellMouseEventArgs e)
+        {
+            this.current = e.Cell;
+            base.OnMouseDown(e);
+        }
+
+        public override void OnMouseUp(CellMouseEventArgs e)
+        {
+            this.current = e.Cell;
+            base.OnMouseUp(e);
+        }
+
+        public override void OnMouseMove(CellMouseEventArgs e)
+        {
+            this.current = e.Cell;
+            base.OnMouseMove(e);
+        }
+
+        public override void OnMouseEnter(CellMouseEventArgs e)
+        {
+            this.current = e.Cell;
+            base.OnMouseEnter(e);
+        }
+    }
+
     // Приглушённый хвост строки (.nuc .hl): 11 px цветом --muted. Цвет берётся
     // из ячейки, если он задан — так серым гаснет нуклид без линий.
     public class HintCellRenderer : CellRenderer

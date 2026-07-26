@@ -407,6 +407,31 @@ namespace BecquerelMonitor.RoiWizard
             get { return Get("unitYears", "y"); }
         }
 
+        public static string hlSeconds
+        {
+            get { return Get("hlSeconds", "s"); }
+        }
+
+        public static string hlMinutes
+        {
+            get { return Get("hlMinutes", "min"); }
+        }
+
+        public static string hlHours
+        {
+            get { return Get("hlHours", "h"); }
+        }
+
+        public static string hlDays
+        {
+            get { return Get("hlDays", "d"); }
+        }
+
+        public static string hlYears
+        {
+            get { return Get("hlYears", "y"); }
+        }
+
         public static string columnLineName_Text
         {
             get { return Get("columnLineName_Text", "Nuclide"); }
@@ -547,9 +572,19 @@ namespace BecquerelMonitor.RoiWizard
             get { return Get("buttonNearAdd_Text", "+ add"); }
         }
 
-        public static string nearHitFormat
+        public static string columnNearDelta_Text
         {
-            get { return Get("nearHitFormat", "{0}{1:0.0}   {2,-14} {3,9:0.00} keV   I {4,7:0.###} %   {5,-8} {6}{7}"); }
+            get { return Get("columnNearDelta_Text", "ΔE"); }
+        }
+
+        public static string nearAdded
+        {
+            get { return Get("nearAdded", "added"); }
+        }
+
+        public static string nearMoreFormat
+        {
+            get { return Get("nearMoreFormat", "showing the first {0} of {1}"); }
         }
 
         public static string nearEmptyFormat

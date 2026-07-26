@@ -40,6 +40,9 @@ body{font:12px/1.4 "Segoe UI",Tahoma,Arial,sans-serif}
 
 /* ── 3. Контролы: 23 px, прямые углы, подписи без капслока ───────────── */
 input[type=number],input[type=text],select{height:23px; padding:1px 4px; border-radius:0}
+/* числа — по правому краю с отступом: разряды выстраиваются в столбик, и значение
+   не упирается в стрелки счётчика (в окне BecqMoni то же правило) */
+input[type=number]{text-align:right; padding-right:6px}
 select{padding-right:2px}
 button{height:23px; padding:2px 9px; border-radius:0; white-space:nowrap; /* подпись не режется */
   background:var(--chip); border:1px solid var(--line)}

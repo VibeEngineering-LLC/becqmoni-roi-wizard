@@ -280,6 +280,21 @@
   <data name="unitYears" xml:space="preserve">
     <value>лет</value>
   </data>
+  <data name="hlSeconds" xml:space="preserve">
+    <value>с</value>
+  </data>
+  <data name="hlMinutes" xml:space="preserve">
+    <value>мин</value>
+  </data>
+  <data name="hlHours" xml:space="preserve">
+    <value>ч</value>
+  </data>
+  <data name="hlDays" xml:space="preserve">
+    <value>сут</value>
+  </data>
+  <data name="hlYears" xml:space="preserve">
+    <value>лет</value>
+  </data>
   <data name="columnLineName_Text" xml:space="preserve">
     <value>Нуклид</value>
   </data>
@@ -364,8 +379,14 @@
   <data name="buttonNearAdd_Text" xml:space="preserve">
     <value>+ добавить</value>
   </data>
-  <data name="nearHitFormat" xml:space="preserve">
-    <value>{0}{1:0.0}   {2,-14} {3,9:0.00} кэВ   I {4,7:0.###} %   {5,-8} {6}{7}</value>
+  <data name="columnNearDelta_Text" xml:space="preserve">
+    <value>ΔE</value>
+  </data>
+  <data name="nearAdded" xml:space="preserve">
+    <value>в наборе</value>
+  </data>
+  <data name="nearMoreFormat" xml:space="preserve">
+    <value>показаны первые {0} из {1}</value>
   </data>
   <data name="nearEmptyFormat" xml:space="preserve">
     <value>в окне {0} ± {1} кэВ ничего не найдено</value>
