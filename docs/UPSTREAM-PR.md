@@ -59,9 +59,10 @@ BecqMoni и для `Properties/Resources.resx`. Новый язык добавл
 класть мегабайт картинок в дерево BecqMoni незачем, в описании PR они вставляются
 ссылками на `raw.githubusercontent.com` и отображаются прямо в теле.
 
-Для описания PR достаточно четырёх — по одному на шаг плюс справка:
+Для описания PR достаточно пяти — пункт меню, по одному на шаг и справка:
 
 ```markdown
+![Пункт меню](https://raw.githubusercontent.com/VibeEngineering-LLC/becqmoni-roi-wizard/main/docs/screenshots/13-main-menu.png)
 ![Шаг 1 · Изотопы](https://raw.githubusercontent.com/VibeEngineering-LLC/becqmoni-roi-wizard/main/docs/screenshots/03-step1-preset.png)
 ![Шаг 2 · Линии](https://raw.githubusercontent.com/VibeEngineering-LLC/becqmoni-roi-wizard/main/docs/screenshots/05-step2-folded.png)
 ![Шаг 3 · Оформление и экспорт](https://raw.githubusercontent.com/VibeEngineering-LLC/becqmoni-roi-wizard/main/docs/screenshots/08-step3.png)
@@ -117,14 +118,16 @@ BecqMoni и для `Properties/Resources.resx`. Новый язык добавл
       маркеров в нём нет по построению; равновесие ряда действует.
 - [x] **Несколько якорей** — `AnchorPicker.PickMany`, по умолчанию 3 (поле «якорей» на
       форме, 1–9). Правило прежнее: сильные и одинокие γ-линии, одинокие вперёд.
-- [x] **Открыта в дизайнере** (26.07, VS 2022 Community): решение с модулем загружено,
-      `RoiWizardForm.cs` открыт видом конструктора — вкладка «RoiWizardForm.cs
-      [Конструктор]», список ошибок пуст, страницы «не удалось загрузить конструктор»
-      нет. Значит присваивания вида `RoiWizardStrings.columnLineName_Text` и
+- [x] **Открыта в дизайнере** (26.07, VS 2022 Community): форма рисуется на поверхности
+      конструктора целиком — три вкладки, панели шага 1, таблицы `XPTable`, лоток
+      компонентов (`columnModelCatalog`, `tableModelNear`, `statusStrip`, …), ноль
+      ошибок. Значит присваивания вида `RoiWizardStrings.columnLineName_Text` и
       `new NearAddCellRenderer()` в `InitializeComponent` дизайнер разбирает.
-      Хвост: сверить отрисовку глазами (снимок экрана снимался при заблокированном
-      рабочем столе и потому недоступен) и, если правка через дизайнер вообще нужна,
-      проверить, что сохранение из него не переставляет разметку.
+      Условие: **проект должен быть собран в активной конфигурации**. При пустом
+      `bin\Debug` дизайнер выдаёт девять ошибок вида «Не удалось найти тип
+      XPTable.Models.Table» и «Переменная 'tableCatalog' не объявлена» — типы он берёт
+      из собранной сборки проекта, а не из исходников; собранного `bin\Release`
+      для этого мало. Это не свойство модуля: так же ведёт себя любая форма BecqMoni.
 - [x] **Локализация переведена на механизм проекта** (26.07): подписи в
       `RoiWizardStrings.resx` / `.ru.resx`, сателлит собирает MSBuild. Заодно закрыта
       течь: тексты проверок данных были только русскими и в английском интерфейсе
