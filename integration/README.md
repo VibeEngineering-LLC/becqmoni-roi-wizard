@@ -165,6 +165,16 @@ nuclides.SaveDefinitionFile();
 оформление и экспорт. Шаг 1 повторяет и раскладку: «Поиск изотопа» | «Группа» |
 «ХРИ — элементы» в ряд, «Выбрано» — полосой снизу.
 
+**Окно — `DockContent` из DockPanelSuite**, то есть родная док-панель BecqMoni:
+открывается плавающей поверх главного окна, пристыковывается к любому краю,
+группируется вкладкой с другими панелями и убирается в автоскрытие булавкой —
+полоску заголовка и кнопки рисует та же `VS2015BlueTheme`, что у «Обнаружения
+пиков». Окно немодальное: спектр остаётся доступным, пока мастер открыт.
+Закрытие панели прячет её (`HideOnClose`), так что выбранные источники и
+настройки переживают переоткрытие из меню. Окно справки в док-систему не входит —
+ему полоску в стиле панелей (высота, палитра, кнопки, окантовка `ToolWindowBorder`)
+рисует `WizardTheme.ApplyCaption`.
+
 **Галочка в списке членов группы — это выбор цели**, а не только признак «взят».
 «+ линии семейства» и «+ цепочкой» применяются к отмеченным нуклидам; если не отмечено
 ничего — ко всей группе. «Добавить все» всегда работает по группе. Подпись под списком
@@ -179,12 +189,22 @@ nuclides.SaveDefinitionFile();
 Подключение к меню приложения:
 
 ```csharp
-// MainForm.cs — рядом с ShowNuclideSetForm()
+// MainForm.cs — рядом с ShowNuclideSetForm(). Окно — DockContent, поэтому
+// показывается плавающей панелью на общем dockPanel1; экземпляр один,
+// закрытие прячет панель (HideOnClose), настройки переживают переоткрытие.
+RoiWizard.RoiWizardForm roiWizardForm;
+
 public void ShowRoiWizardForm()
 {
-    using (var form = new RoiWizard.RoiWizardForm(this.RoiWizardResolution))
+    if (this.roiWizardForm == null || this.roiWizardForm.IsDisposed)
     {
-        form.ShowDialog(this);
+        this.roiWizardForm = new RoiWizard.RoiWizardForm(this.RoiWizardResolution);
+        this.roiWizardForm.Show(this.dockPanel1, floatWindowBounds);
+    }
+    else
+    {
+        this.roiWizardForm.Show(this.dockPanel1);
+        this.roiWizardForm.Activate();
     }
 }
 

@@ -42,7 +42,11 @@ global::System.Windows.Forms.ToolStripMenuItem RoiWizardToolStripMenuItem;
 
 ## 2. `MainForm.cs`
 
-Рядом с `NuclideSetToolStripMenuItem_Click` и `ShowNuclideSetForm` — тот же образец:
+Рядом с `NuclideSetToolStripMenuItem_Click` и `ShowNuclideSetForm` — тот же образец,
+только окно мастера — `DockContent` и показывается плавающей док-панелью на общем
+`dockPanel1`: её можно пристыковать, сгруппировать с другими панелями и убрать в
+автоскрытие булавкой. Экземпляр один: закрытие панели прячет её (`HideOnClose`
+внутри самой формы), повторный вызов из меню возвращает панель со всеми настройками.
 
 ```csharp
 void RoiWizardToolStripMenuItem_Click(object sender, EventArgs e)
@@ -50,11 +54,23 @@ void RoiWizardToolStripMenuItem_Click(object sender, EventArgs e)
     this.ShowRoiWizardForm();
 }
 
+RoiWizard.RoiWizardForm roiWizardForm;
+
 public void ShowRoiWizardForm()
 {
-    using (RoiWizard.RoiWizardForm form = new RoiWizard.RoiWizardForm(this.RoiWizardResolution))
+    if (this.roiWizardForm == null || this.roiWizardForm.IsDisposed)
     {
-        form.ShowDialog(this);
+        this.roiWizardForm = new RoiWizard.RoiWizardForm(this.RoiWizardResolution);
+        System.Drawing.Rectangle bounds = new System.Drawing.Rectangle(
+            this.Location.X + Math.Max(0, (this.Width - 1200) / 2),
+            this.Location.Y + Math.Max(0, (this.Height - 700) / 2),
+            1200, 700);
+        this.roiWizardForm.Show(this.dockPanel1, bounds);
+    }
+    else
+    {
+        this.roiWizardForm.Show(this.dockPanel1);
+        this.roiWizardForm.Activate();
     }
 }
 

@@ -203,6 +203,10 @@ public void ShowNuclideSetForm()
 Разрешение детектора передаётся конструктором `RoiWizardForm(Func<double>)`; если брать
 неоткуда — конструктор без аргументов, тогда кнопка «из спектра» просто выключена.
 
+Показ — не `ShowDialog`, а `Show(this.dockPanel1, bounds)`: окно мастера наследует
+`DockContent` и живёт в док-системе приложения как обычная панель (стыковка,
+группировка, автоскрытие, тема VS2015BlueTheme). Точный код — `host-patch/README.md`.
+
 ## 6. Порядок
 
 1. **Форк `Am6er/BecqMoni`** в организацию `VibeEngineering-LLC` + ветка `feat/roi-wizard`.

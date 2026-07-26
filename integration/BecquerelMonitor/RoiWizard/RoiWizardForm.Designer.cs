@@ -22,7 +22,6 @@ namespace BecquerelMonitor.RoiWizard
             this.tabSources = new System.Windows.Forms.TabPage();
             this.tabLines = new System.Windows.Forms.TabPage();
             this.tabExport = new System.Windows.Forms.TabPage();
-            this.buttonPin = new System.Windows.Forms.CheckBox();
 
             // — шаг 1: поиск и группы
             this.groupSearch = new System.Windows.Forms.GroupBox();
@@ -975,21 +974,6 @@ namespace BecquerelMonitor.RoiWizard
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
                 this.statusLabel, this.buttonHelp, this.buttonStepPrev, this.buttonStepNext });
 
-            // ─── булавка «поверх остальных окон» ───────────────────────────
-            // живёт в ряду заголовков вкладок, у правого края — ближайшее к
-            // булавке док-панелей BecqMoni место: в системный заголовок Windows
-            // свою кнопку не пускает. Глифы булавки — шрифт Segoe MDL2 Assets.
-            this.buttonPin.Appearance = System.Windows.Forms.Appearance.Button;
-            this.buttonPin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonPin.FlatAppearance.BorderSize = 0;
-            this.buttonPin.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(0xCD, 0xE4, 0xF7);
-            this.buttonPin.Font = new System.Drawing.Font("Segoe MDL2 Assets", 9F);
-            this.buttonPin.Text = "";
-            this.buttonPin.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.buttonPin.Size = new System.Drawing.Size(26, 22);
-            this.buttonPin.Location = new System.Drawing.Point(1152, 1);
-            this.buttonPin.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.buttonPin.TabStop = false;
 
             // ─── форма ─────────────────────────────────────────────────────
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -997,7 +981,6 @@ namespace BecquerelMonitor.RoiWizard
             this.ClientSize = new System.Drawing.Size(1180, 620);
             this.MinimumSize = new System.Drawing.Size(1000, 500);
             this.ShowIcon = false;
-            this.Controls.Add(this.buttonPin);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.statusStrip);
             this.Name = "RoiWizardForm";
@@ -1028,7 +1011,6 @@ namespace BecquerelMonitor.RoiWizard
         System.Windows.Forms.TabPage tabSources;
         System.Windows.Forms.TabPage tabLines;
         System.Windows.Forms.TabPage tabExport;
-        System.Windows.Forms.CheckBox buttonPin;
 
         System.Windows.Forms.GroupBox groupSearch;
         System.Windows.Forms.TextBox textSearch;
