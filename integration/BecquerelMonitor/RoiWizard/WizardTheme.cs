@@ -96,6 +96,63 @@ namespace BecquerelMonitor.RoiWizard
         {
             root.Font = BaseFont;
             Walk(root);
+            Form form = root as Form;
+            if (form != null)
+            {
+                ApplyCaption(form);
+            }
+        }
+
+        // Тёмно-синий caption окна и уменьшенное скругление углов — чтобы окно модуля
+        // выглядело как док-панели самого BecqMoni («Управление измерением» и другие).
+        // DWM API работает на Windows 11 22H2+ (build 22621); на более старых системах
+        // атрибуты тихо игнорируются, ошибок не бросают. Значение Head — из темы модуля
+        // (--head), тот же тон, которым в вебе окрашены заголовки панелей.
+        const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+        const int DWMWA_BORDER_COLOR = 34;
+        const int DWMWA_CAPTION_COLOR = 35;
+        const int DWMWA_TEXT_COLOR = 36;
+        const int DWMWCP_ROUNDSMALL = 3;      // маленький радиус скругления (Win11)
+
+        [DllImport("dwmapi.dll")]
+        static extern int DwmSetWindowAttribute(IntPtr window, int attribute,
+                                                ref int value, int size);
+
+        public static void ApplyCaption(Form form)
+        {
+            if (form.IsHandleCreated)
+            {
+                SetCaption(form);
+            }
+            form.HandleCreated += delegate(object sender, EventArgs e)
+            {
+                SetCaption((Form)sender);
+            };
+        }
+
+        static int ColorRef(Color color)
+        {
+            // DWM ждёт 0x00BBGGRR (COLORREF), а Color.ToArgb — 0xAARRGGBB
+            return color.R | (color.G << 8) | (color.B << 16);
+        }
+
+        static void SetCaption(Form form)
+        {
+            IntPtr handle = form.Handle;
+            int caption = ColorRef(Head);
+            int text = ColorRef(Card);              // белый текст заголовка
+            int border = ColorRef(Head);
+            int corner = DWMWCP_ROUNDSMALL;
+            try
+            {
+                DwmSetWindowAttribute(handle, DWMWA_CAPTION_COLOR, ref caption, sizeof(int));
+                DwmSetWindowAttribute(handle, DWMWA_TEXT_COLOR, ref text, sizeof(int));
+                DwmSetWindowAttribute(handle, DWMWA_BORDER_COLOR, ref border, sizeof(int));
+                DwmSetWindowAttribute(handle, DWMWA_WINDOW_CORNER_PREFERENCE,
+                                      ref corner, sizeof(int));
+            }
+            catch (DllNotFoundException) { }        // dwmapi.dll есть везде, где есть Aero
+            catch (EntryPointNotFoundException) { } // на всякий случай
         }
 
         static void Walk(Control parent)

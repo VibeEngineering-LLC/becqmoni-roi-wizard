@@ -57,6 +57,7 @@ namespace BecquerelMonitor.RoiWizard
             this.FillXrf();
             this.RefreshCatalog();
             this.WireEvents();
+            this.WirePin();
 
             this.buttonFromSpectrum.Enabled = resolutionProvider != null;
             this.SyncSetControls();
@@ -75,6 +76,19 @@ namespace BecquerelMonitor.RoiWizard
         ResolutionModel Resolution
         {
             get { return new ResolutionModel((double)this.numResolution.Value); }
+        }
+
+        // Булавка «поверх остальных окон» — как закрепка у док-панелей BecqMoni.
+        // Глифы шрифта Segoe MDL2 Assets: E718 — приколоть, E77A — открепить.
+        void WirePin()
+        {
+            this.buttonPin.Text = "";
+            this.tips.SetToolTip(this.buttonPin, RoiWizardStrings.pinTip);
+            this.buttonPin.CheckedChanged += delegate
+            {
+                this.TopMost = this.buttonPin.Checked;
+                this.buttonPin.Text = this.buttonPin.Checked ? "" : "";
+            };
         }
 
         // ─── наполнение ─────────────────────────────────────────────────────
