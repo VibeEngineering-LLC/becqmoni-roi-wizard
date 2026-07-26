@@ -12,6 +12,7 @@
 """
 from __future__ import print_function
 
+import codecs
 import io
 import os
 import shutil
@@ -100,7 +101,13 @@ def read(path):
 
 
 def write(path, text):
-    io.open(path, "w", encoding="utf-8", newline="").write(text)
+    # BOM сохраняется таким, каким был у файла: без этого правка на одну строку
+    # показывалась бы в дифференциале как изменение всего заголовка файла —
+    # чужие файлы должны меняться ровно там, куда вставлено.
+    with io.open(path, "rb") as probe:
+        bom = probe.read(3) == codecs.BOM_UTF8
+    encoding = "utf-8-sig" if bom else "utf-8"
+    io.open(path, "w", encoding=encoding, newline="").write(text)
 
 
 def insert_after(text, anchor, addition, tag):
