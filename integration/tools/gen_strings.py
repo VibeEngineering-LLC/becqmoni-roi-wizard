@@ -36,7 +36,6 @@ STRINGS = [
     ("stepNuclides", "Nuclides", "Изотопы"),
     ("stepLines", "Lines", "Линии"),
     ("stepExport", "Styling and export", "Оформление и экспорт"),
-    ("pinTip", "Keep on top of other windows", "Поверх остальных окон"),
 
     # ── шаг 1: поиск ──
     ("groupSearch_Text", "Nuclide search", "Поиск изотопа"),

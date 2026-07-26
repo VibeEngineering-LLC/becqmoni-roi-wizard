@@ -17,7 +17,7 @@ BecqMoni, PR живёт вместе с проектом.
 данных, скрипт обновления), задаются прямо в описании PR — они не блокируют ревью.
 
 **Состояние на 26.07.2026: PR отправлен — [Am6er/BecqMoni#32](https://github.com/Am6er/BecqMoni/pull/32)**
-(draft, 24 файла, +10 443/−0). Форк — `VibeEngineering-LLC/BecqMoni`, ветка
+(draft, 24 файла, +10 816/−0 после обновления 26.07). Форк — `VibeEngineering-LLC/BecqMoni`, ветка
 `feat/roi-wizard`; ветка собрана перед отправкой (Release, ноль ошибок), тесты модуля —
 100 проверок, все зелёные, прогон на реальном спектре сделан, форма открыта в дизайнере
 Visual Studio без ошибок (см. чек-лист).
@@ -32,11 +32,12 @@ Visual Studio без ошибок (см. чек-лист).
 | Правка хоста | пункт меню в `MainForm` + две строки ресурсов | ≈40 |
 | Данные | `nuclides.xml` — снимок IAEA/ENSDF: 121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ, словарь семейств | 101 КБ |
 | | `help.xml` — текст справки на двух языках | 21 КБ |
-| Подписи | `RoiWizardStrings.resx` (английская) + `.ru.resx`, доступ через `RoiWizardStrings.Designer.cs` | 156 строк |
+| Подписи | `RoiWizardStrings.resx` (английская) + `.ru.resx`, доступ через `RoiWizardStrings.Designer.cs` | 157 строк |
 | Инструменты | `tools/export_catalog.py`, `tools/export_help.py`, `tools/gen_strings.py` | 500 |
 | Тесты | `tests/RoiWizardTests.cs`, `HostStubs.cs`, `run_tests.cmd` | 490 |
 
-Новых зависимостей нет: `XmlSerializer`, WinForms и `XPTable` — всё уже в проекте.
+Новых зависимостей нет: `XmlSerializer`, WinForms, `XPTable` и `DockPanelSuite` (окно —
+`DockContent`) — всё уже в проекте.
 
 ### Локализация — механизмом проекта
 
