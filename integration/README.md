@@ -32,17 +32,21 @@ BecquerelMonitor/RoiWizard/
   RoiWizardForm.Designer.cs  разметка формы (XPTable, как в NuclideSetForm)
   HelpForm.cs           окно справки: разбор того же подмножества разметки, что на странице
   RoiWizardStrings.Designer.cs  доступ к таблице строк (генерируется tools/gen_strings.py)
-  nuclides.xml          сам снимок (121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ; 101 КБ)
-  help.xml              текст справки на двух языках, выгружен из index.html
+  nuclides.xml          снимок каталога (121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ;
+                        101 КБ). УСТАРЕЛ: модуль читает встроенную базу приложения
+                        nucdb.sqlite, ресурса nuclides.xml в дереве сборки больше нет —
+                        см. «Устаревшее» ниже
+  help.xml              текст справки МОДУЛЯ на двух языках, генерируется tools/gen_help.py
   RoiWizardStrings.resx        подписи интерфейса, нейтральная (английская) таблица
   RoiWizardStrings.ru.resx     русский перевод; MSBuild собирает из него сателлит
 host-patch/
   apply_patch.py        встраивание в дерево BecqMoni: файлы, .csproj, пункт меню, ресурсы
   README.md             то же самое построчно, если применять руками
 tools/
-  export_catalog.py     пересборка nuclides.xml из data/nuclides.js и data/xrf.js
-  export_help.py        пересборка help.xml из index.html (оба языка)
+  gen_help.py           текст справки модуля: help.xml на двух языках
   gen_strings.py        таблица подписей: .resx, .ru.resx и доступ к ним
+  export_catalog.py     пересборка nuclides.xml из data/nuclides.js и data/xrf.js.
+                        УСТАРЕЛ вместе с nuclides.xml, см. «Устаревшее»
 tests/
   RoiWizardTests.cs     тесты инвариантов, run_tests.cmd — сборка и прогон
   HostStubs.cs          заглушки типов BecqMoni: только для тестовой сборки,
@@ -335,14 +339,42 @@ BecqMoni собирается вместе с модулем целиком (MSB
 
 ## Обновление данных
 
-`nuclides.xml` пересобирается из снимка веб-инструмента:
+Каталог линий модуль берёт из встроенной базы приложения `nucdb.sqlite`, открытой только
+для чтения, — обращений в сеть нет и обновлять нечего. Данные страницы (`data/nuclides.js`,
+`data/xrf.js`) обновляются `update_nuclides.py` (запрос к IAEA Live Chart; API не отдаёт
+CORS, поэтому скриптом, а не из страницы) и относятся к странице, а не к модулю.
+
+Текст справки и подписи интерфейса ведутся генераторами:
 
 ```
-python integration/tools/export_catalog.py
+python integration/tools/gen_help.py <корень дерева BecqMoni>
+python integration/tools/gen_strings.py
 ```
 
-Сам снимок обновляется `update_nuclides.py` (запрос к IAEA Live Chart; API не отдаёт CORS,
-поэтому обновление скриптом, а не из страницы).
+`gen_help.py` без аргумента пишет в рабочее дерево сборки; чтобы обновить копию в этом
+репозитории, передать `integration`. Правя поведение модуля, править и текст справки —
+иначе она снова начнёт описывать не то, что делает код.
+
+## Устаревшее
+
+**`nuclides.xml` и `export_catalog.py`.** Первая версия модуля несла свой снимок каталога
+отдельным встроенным ресурсом `BecquerelMonitor.RoiWizard.nuclides.xml`, который собирался
+из данных страницы скриптом `export_catalog.py`. Затем `NuclideCatalog` был переведён на
+`nucdb.sqlite` — ту же базу, по которой считает само приложение, — и ресурс из дерева
+сборки ушёл: в `BecquerelMonitor.csproj` у модуля остались три `EmbeddedResource`
+(`help.xml`, `RoiWizardStrings.resx`, `RoiWizardStrings.ru.resx`). Файл и его генератор
+лежат здесь как история и пока не удалены.
+
+**Что из-за этого сломано:** `host-patch/apply_patch.py` всё ещё вписывает в `.csproj`
+четвёртую запись `EmbeddedResource Include="RoiWizard\nuclides.xml"`. На свежем дереве
+BecqMoni, куда `nuclides.xml` не копируется, это даёт запись ресурса на несуществующий
+файл. То же перечисление стоит в `docs/UPSTREAM-PR.md`. Не исправлено, вынесено отдельным
+пунктом ченжлога.
+
+**`export_help.py` удалён.** Он собирал `help.xml` из `index.html`, то есть держал справку
+модуля и текст страницы одним источником. После переработки под WinForms тексты разошлись,
+и общий источник не помог этого заметить — выгрузку просто перестали запускать. Справка
+модуля теперь ведётся отдельно, `gen_help.py`.
 
 ## Откуда числа
 

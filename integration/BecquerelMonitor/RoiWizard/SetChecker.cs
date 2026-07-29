@@ -20,7 +20,8 @@ namespace BecquerelMonitor.RoiWizard
         AnchorIsSecondary,
         NoAnchor,
         AnchorIsXray,
-        ZonesOverlap
+        ZonesOverlap,
+        MixedChains
     }
 
     public class SetIssue
@@ -103,7 +104,7 @@ namespace BecquerelMonitor.RoiWizard
             IssueLevel level = forLibrary ? IssueLevel.Error : IssueLevel.Warning;
             for (int i = 1; i < sorted.Count; i++)
             {
-                if (Math.Abs(sorted[i].Energy - sorted[i - 1].Energy) < 1.0)
+                if (Math.Abs(sorted[i].Energy - sorted[i - 1].Energy) < DegenerateGap(sorted[i], resolution))
                 {
                     // Совпавшие энергии подгонку вырождают, но запрещать из-за них экспорт
                     // нельзя: пара «рентген распада + ХРИ того же элемента» — физически одна
@@ -121,6 +122,15 @@ namespace BecquerelMonitor.RoiWizard
             }
             foreach (SpectralLine line in sorted)
             {
+                // Аппаратные записи (ХРИ защиты и расчётные вторичные) выхода на распад
+                // не имеют по определению, и в набор они уходят с Intencity = 0 намеренно
+                // — см. SetExporter.BuildNuclideSet. Требовать от них ненулевой
+                // интенсивности значило бы запрещать единственное, ради чего они нужны:
+                // занять место, куда иначе сядет фантомная линия нуклида.
+                if (line.Type == LineType.Xrf || line.Type == LineType.Secondary)
+                {
+                    continue;
+                }
                 if (!(line.Intensity > 0))
                 {
                     issues.Add(new SetIssue
@@ -176,6 +186,37 @@ namespace BecquerelMonitor.RoiWizard
                     });
                 }
             }
+            if (forLibrary)
+            {
+                // Один набор — одна цепочка. Якорный гейт LibraryPeakFitter общий на весь
+                // набор: если в нём лежат и Th-232, и U-238, то одного найденного якоря
+                // (скажем, 2614,5 кэВ тория) достаточно, чтобы фит посадил компоненты и
+                // на урановую половину — на ториевом образце она даёт ложные
+                // отождествления. Ровно это делал пресет «ЕРН-фон», добавлявший два ряда
+                // одним набором.
+                //
+                // Линии без родителя в скобках (K-40, Cs-137, ХРИ, вторичные) в ряд не
+                // входят и здесь не считаются: набор «Cs-137 + Co-60» законен.
+                List<string> chains = new List<string>();
+                foreach (SpectralLine line in sorted)
+                {
+                    string chain = ChainOf(line);
+                    if (chain == null || chains.Contains(chain))
+                    {
+                        continue;
+                    }
+                    chains.Add(chain);
+                }
+                if (chains.Count > 1)
+                {
+                    issues.Add(new SetIssue
+                    {
+                        Level = IssueLevel.Warning,
+                        Kind = IssueKind.MixedChains,
+                        Args = new object[] { string.Join(", ", chains.ToArray()) }
+                    });
+                }
+            }
             if (!forLibrary && zones != null && zones.Style != RoiStyle.Markers)
             {
                 for (int i = 1; i < sorted.Count; i++)
@@ -197,6 +238,58 @@ namespace BecquerelMonitor.RoiWizard
                 }
             }
             return issues;
+        }
+
+        // Ниже какого разноса две линии считаются стоящими «на одной позиции».
+        //
+        // Фиксированный килоэлектронвольт для этого не годится: разрешение растёт как
+        // корень из энергии, и один и тот же зазор на 14 кэВ — это пятая доля FWHM
+        // (позиции ещё различимы), а на 2614 кэВ — сотая (позиции неразличимы ничем).
+        // Порог поэтому в долях FWHM: у сцинтиллятора R = 7.5 % это 0.7 кэВ на 13 кэВ —
+        // примерно прежний килоэлектронвольт — и 9.8 кэВ на 2614, где прежний порог
+        // молча пропускал вырожденные пары.
+        //
+        // 0.1·FWHM — заметно ниже и предела Sparrow (0.85), и допуска заявки линии в
+        // LibraryPeakFitter (0.25): пары шире этого фит ещё разбирает BR-связкой,
+        // а ближе — амплитуда делится между компонентами произвольно.
+        public const double DegenerateFwhmFactor = 0.1;
+
+        // Запасной порог, когда модель разрешения не задана (проверка ROI зовётся без
+        // неё): прежняя константа, чтобы поведение не менялось молча.
+        const double DegenerateGapFallbackKeV = 1.0;
+
+        static double DegenerateGap(SpectralLine line, ResolutionModel resolution)
+        {
+            if (resolution == null)
+            {
+                return DegenerateGapFallbackKeV;
+            }
+            double fwhm = resolution.Fwhm(line.Energy);
+            return fwhm > 0 ? DegenerateFwhmFactor * fwhm : DegenerateGapFallbackKeV;
+        }
+
+        // Цепочка линии — так, как её прочитает LibraryPeakFitter.ChainOf: текст в
+        // ПОСЛЕДНИХ скобках имени записи. Скобки в имени не украшение, а признак ряда
+        // (см. SpectralLine.LibraryName), поэтому смотреть надо именно на LibraryName, а
+        // не на Nuclide: в режиме «линии семейства» линия Ra-228 идёт под именем Th-232.
+        //
+        // null означает «линия не входит ни в один ряд»: одиночный нуклид (K-40, Cs-137),
+        // ХРИ материала или расчётный вторичный пик. Такие линии в проверке смешения не
+        // участвуют — набор из нескольких независимых нуклидов законен.
+        static string ChainOf(SpectralLine line)
+        {
+            string name = line.LibraryName;
+            if (string.IsNullOrEmpty(name) || name[name.Length - 1] != ')')
+            {
+                return null;
+            }
+            int close = name.Length - 1;
+            int open = name.LastIndexOf('(', close - 1);
+            if (open <= 0)
+            {
+                return null;
+            }
+            return name.Substring(open + 1, close - open - 1);
         }
 
         static string Name(SpectralLine line, bool forLibrary)

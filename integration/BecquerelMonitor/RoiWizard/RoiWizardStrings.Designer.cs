@@ -54,7 +54,7 @@ namespace BecquerelMonitor.RoiWizard
 
         public static string tabExport_Text
         {
-            get { return Get("tabExport_Text", "3 · Styling and export"); }
+            get { return Get("tabExport_Text", "3 · Styling and creation"); }
         }
 
         public static string statusFormat
@@ -89,7 +89,7 @@ namespace BecquerelMonitor.RoiWizard
 
         public static string stepExport
         {
-            get { return Get("stepExport", "Styling and export"); }
+            get { return Get("stepExport", "Styling and creation"); }
         }
 
         public static string groupSearch_Text
@@ -295,6 +295,11 @@ namespace BecquerelMonitor.RoiWizard
         public static string criterionSparrow
         {
             get { return Get("criterionSparrow", "Sparrow limit — ROI markers (0.85·FWHM)"); }
+        }
+
+        public static string criterionMeasured
+        {
+            get { return Get("criterionMeasured", "measured optimum — set composition (0.7·FWHM)"); }
         }
 
         public static string criterionAnchored
@@ -527,6 +532,51 @@ namespace BecquerelMonitor.RoiWizard
             get { return Get("buttonGenerateSecondary_Text", "Generate"); }
         }
 
+        public static string statusMerged
+        {
+            get { return Get("statusMerged", "merged groups: {0}, lines absorbed: {1}"); }
+        }
+
+        public static string statusRoiCreated
+        {
+            get { return Get("statusRoiCreated", "ROI configuration «{0}» created: {1} regions"); }
+        }
+
+        public static string tipConfigName
+        {
+            get { return Get("tipConfigName", "The name becomes the file name under config\\ROI; a matching name overwrites that file."); }
+        }
+
+        public static string tipSetName
+        {
+            get { return Get("tipSetName", "Name of the set in the nuclide library; a duplicate name is confirmed before saving."); }
+        }
+
+        public static string tipFullSet
+        {
+            get { return Get("tipFullSet", "Applies to the SET only: the ROI configuration is always built from the table."); }
+        }
+
+        public static string tipAnchorManual
+        {
+            get { return Get("tipAnchorManual", "Anchor chosen by hand. Disabled with the full set: there the anchors are picked automatically."); }
+        }
+
+        public static string tipAnchorCount
+        {
+            get { return Get("tipAnchorCount", "How many lines to mark as anchors when they are picked automatically."); }
+        }
+
+        public static string statusRoiNotMeasurable
+        {
+            get { return Get("statusRoiNotMeasurable", "{0} of them do not measure area (markers: no zone, no Bq/cps coefficient)"); }
+        }
+
+        public static string statusSetCreated
+        {
+            get { return Get("statusSetCreated", "set «{0}» added to the library: {1} lines, {2} anchor(s)"); }
+        }
+
         public static string secondaryFormat
         {
             get { return Get("secondaryFormat", "secondary markers added: {0}"); }
@@ -649,7 +699,7 @@ namespace BecquerelMonitor.RoiWizard
 
         public static string groupExport_Text
         {
-            get { return Get("groupExport_Text", "Export"); }
+            get { return Get("groupExport_Text", "Create"); }
         }
 
         public static string labelConfigName_Text
@@ -689,7 +739,7 @@ namespace BecquerelMonitor.RoiWizard
 
         public static string checkFullSet_Text
         {
-            get { return Get("checkFullSet_Text", "full set (all lines, for fitting)"); }
+            get { return Get("checkFullSet_Text", "recommended composition (0.7·FWHM, ≥1 %)"); }
         }
 
         public static string labelAnchorCount_Text
@@ -755,6 +805,11 @@ namespace BecquerelMonitor.RoiWizard
         public static string issueAnchorIsXray
         {
             get { return Get("issueAnchorIsXray", "the anchor is the X-ray line “{0}” ({1} keV): a γ line is a firmer footing for the fit"); }
+        }
+
+        public static string issueMixedChains
+        {
+            get { return Get("issueMixedChains", "the set mixes decay series ({0}): the anchor gate is common to the whole set, so one matched anchor switches the others on as well and they yield false identifications"); }
         }
 
         public static string issueZonesOverlap

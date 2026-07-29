@@ -30,10 +30,10 @@ Visual Studio без ошибок (см. чек-лист).
 | Мост к приложению | `SetExporter` | 145 |
 | Форма | `RoiWizardForm` + `.Designer`, `WizardTheme`, `CatalogCellRenderers`, `HelpForm` | ≈2400 |
 | Правка хоста | пункт меню в `MainForm` + две строки ресурсов | ≈40 |
-| Данные | `nuclides.xml` — снимок IAEA/ENSDF: 121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ, словарь семейств | 101 КБ |
-| | `help.xml` — текст справки на двух языках | 21 КБ |
-| Подписи | `RoiWizardStrings.resx` (английская) + `.ru.resx`, доступ через `RoiWizardStrings.Designer.cs` | 157 строк |
-| Инструменты | `tools/export_catalog.py`, `tools/export_help.py`, `tools/gen_strings.py` | 500 |
+| Данные | линии берутся из встроенной `nucdb.sqlite` приложения (только чтение); отдельного ресурса каталога у модуля больше нет — `nuclides.xml` и `export_catalog.py` устарели, см. «Устаревшее» в `integration/README.md` | — |
+| | `help.xml` — текст справки модуля на двух языках | 25 КБ |
+| Подписи | `RoiWizardStrings.resx` (английская) + `.ru.resx`, доступ через `RoiWizardStrings.Designer.cs` | 167 ключей |
+| Инструменты | `tools/gen_help.py`, `tools/gen_strings.py` | 486 |
 | Тесты | `tests/RoiWizardTests.cs`, `HostStubs.cs`, `run_tests.cmd` | 490 |
 
 Новых зависимостей нет: `XmlSerializer`, WinForms, `XPTable` и `DockPanelSuite` (окно —
@@ -91,9 +91,12 @@ BecqMoni и для `Properties/Resources.resx`. Новый язык добавл
 - Наш код — MIT, upstream — GPL-2.0. **MIT-код включается в GPL-проект без препятствий**:
   условия MIT (сохранить копирайт и текст лицензии) совместимы с GPL-2.0. Внутри BecqMoni
   файлы будут распространяться на условиях GPL-2.0 — это нормальный и ожидаемый исход.
-- **Данные.** `nuclides.xml` — снимок IAEA Live Chart of Nuclides (ENSDF). В PR это стоит
-  назвать явно: источник, дата снимка, скрипт пересборки. Атрибуция уже лежит в
-  атрибутах корневого элемента (`Generated`, пороги интенсивности).
+- **Данные.** Пункт УСТАРЕЛ на 30.07: `NuclideCatalog` читает встроенную базу приложения
+  `nucdb.sqlite`, своего снимка каталога модуль больше не несёт, и вопрос об атрибуции
+  внешних данных в PR не возникает. Ниже — как было, пока ресурсом служил `nuclides.xml`:
+  снимок IAEA Live Chart of Nuclides (ENSDF), в PR стоило назвать источник, дату снимка
+  и скрипт пересборки; атрибуция лежала в атрибутах корневого элемента (`Generated`,
+  пороги интенсивности).
 - Заимствований из кода BecqMoni в модуле нет: пороги (0.85 / 0.25 / z ≥ 4) — это числа,
   прочитанные из `LibraryPeakFitter.cs`, а не скопированный код.
 
@@ -173,11 +176,16 @@ BecqMoni и для `Properties/Resources.resx`. Новый язык добавл
 <Compile Include="RoiWizard\RoiWizardForm.Designer.cs">
   <DependentUpon>RoiWizardForm.cs</DependentUpon>
 </Compile>
-<EmbeddedResource Include="RoiWizard\nuclides.xml" />
+<EmbeddedResource Include="RoiWizard\help.xml" />
+<EmbeddedResource Include="RoiWizard\RoiWizardStrings.resx" />
+<EmbeddedResource Include="RoiWizard\RoiWizardStrings.ru.resx" />
 ```
 
-Имя ресурса получится `BecquerelMonitor.RoiWizard.nuclides.xml` — оно и захардкожено в
-`NuclideCatalog.ResourceName` (корневое пространство имён проекта — `BecquerelMonitor`).
+**Строку `EmbeddedResource Include="RoiWizard\nuclides.xml"` не добавлять** — с 30.07
+`NuclideCatalog` работает по встроенной `nucdb.sqlite`, файла в дереве модуля нет, и запись
+укажет на несуществующий ресурс. В рабочем `BecquerelMonitor.csproj` у модуля ровно три
+`EmbeddedResource`, перечисленные выше. `host-patch/apply_patch.py` эту строку пока всё ещё
+вписывает — не исправлено, отдельным заходом.
 
 **`tests/HostStubs.cs` в проект не добавлять** — там заглушки тех же типов, будет `CS0101`.
 
