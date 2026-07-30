@@ -178,10 +178,38 @@
 
 <!-- ═══════════ 2. ЦЕПОЧКИ ═══════════ -->
 <div class="tabbody" data-body="2">
+  <div class="gbox"><span class="lg">Кто светит на этой энергии</span>
+    <div class="line">
+      <label for="laraE">E =</label>
+      <input type="number" id="laraE" min="1" step="0.1" style="width:74px"> <span>кэВ</span>
+      <label for="laraW">±</label>
+      <input type="number" id="laraW" value="10" min="0.5" step="0.5" style="width:56px"> <span>кэВ</span>
+      <label for="laraI">I ≥</label>
+      <input type="number" id="laraI" value="0.1" min="0" step="0.1" style="width:56px"> %
+      <label><input type="checkbox" id="laraEq" checked>
+        <span id="laraEqLbl">интенсивность на распад корня ряда</span></label>
+      <button id="laraGo" class="primary">Найти</button>
+    </div>
+    <div id="laraOut"></div>
+  </div>
   <div class="gbox"><span class="lg">Ряды распада</span>
     <div class="hint" id="chainsHint"></div>
     <div class="chainCols" id="chainsBox"></div>
     <div class="hint" id="chainsFoot"></div>
+  </div>
+  <div class="gbox"><span class="lg">Таблица эмиссий ряда</span>
+    <div class="line">
+      <label for="emiChain"><span id="emiChainLbl">ряд</span></label>
+      <select id="emiChain"></select>
+      <label for="emiI">I ≥</label>
+      <input type="number" id="emiI" value="0.1" min="0" step="0.1" style="width:56px"> %
+      <label><input type="checkbox" id="emiSortI">
+        <span id="emiSortLbl">сортировать по интенсивности</span></label>
+      <button id="emiGo">Показать</button>
+      <button id="emiCsv">Скачать CSV</button>
+    </div>
+    <div class="hint" id="emiHint"></div>
+    <div id="emiOut"></div>
   </div>
 </div>
 
@@ -1763,6 +1791,11 @@ var RU2EN = {
   "Изотопы, семейства, цепочки":"Nuclides, families, chains",
   "1 · Источники":"1 · Sources","2 · Цепочки":"2 · Chains","3 · Линии":"3 · Lines",
   "4 · Оформление и экспорт":"4 · Styling and export","Ряды распада":"Decay series",
+  "Кто светит на этой энергии":"Who emits at this energy","Найти":"Find",
+  "интенсивность на распад корня ряда":"intensity per decay of the series root",
+  "Таблица эмиссий ряда":"Series emission table","ряд":"series","Показать":"Show",
+  "Скачать CSV":"Download CSV","сортировать по интенсивности":"sort by intensity",
+  "кэВ":"keV",
   "Готовые наборы":"Presets","Поиск":"Search",
   "Группы и ряды":"Groups and series","Очистить":"Clear",
   "Разрешение R, % @662":"Resolution R, % @662","Критерий неразделимости":"Inseparability criterion",
@@ -1933,6 +1966,11 @@ function setLang(l){
   updDbInfo(); updMergeHint(); buildPresets();
   buildSelectors(); rebuildLines(); renderTable(); renderChains();
   if ($("nearOut").innerHTML) searchNear();
+  if ($("laraOut").innerHTML) laraSearch();
+  $("laraEqLbl").textContent = T("интенсивность на распад корня ряда",
+                                 "intensity per decay of the series root");
+  emiFillChains();
+  if ($("emiOut").innerHTML) emiRender();
 }
 $("langBtn").addEventListener("click", function(){ setLang(LANG==="en" ? "ru" : "en"); });
 // справка по инструменту
@@ -2087,6 +2125,134 @@ $("chainsBox").addEventListener("change", function(ev){
   var cb = ev.target.closest("input[data-chain-nuc]"); if (!cb) return;
   if (cb.checked) addNuc(cb.dataset.chainNuc); else delNuc(cb.dataset.chainNuc);
   chainApply();
+});
+
+// ── «кто светит на этой энергии»: поиск соседей с равновесным весом ряда ──
+// По образцу таблицы эмиссий NUCLEIDE-LARA (LNHB): интенсивность члена ряда
+// приводится к распаду КОРНЯ (множители EQ_FACTOR), рядом — контрольные линии,
+// по которым кандидата подтверждают или отбрасывают.
+function laraTop(n, exceptE, eqOn){
+  // нормировка контрольных линий обязана совпадать с колонкой I строки,
+  // иначе внутри одной строки окажутся две несовместимые шкалы
+  var e = DB.nuclides[n], eq = (eqOn && EQ_FACTOR[n]) ? EQ_FACTOR[n] : 1;
+  var s = e.g.filter(function(li){ return Math.abs(li[0]-exceptE) > 0.01; })
+    .sort(function(a,b){ return b[1]-a[1]; }).slice(0,2)
+    .map(function(li){ return li[0].toFixed(1)+" ("+fmtI(li[1]*eq)+" %)"; }).join(", ");
+  return s || "—";
+}
+function fmtI(v){ return v>=1 ? v.toFixed(1) : (v>=0.01 ? v.toFixed(2) : v.toExponential(1)); }
+function laraSearch(){
+  var E0 = parseFloat($("laraE").value), W = parseFloat($("laraW").value)||10;
+  var mi = parseFloat($("laraI").value)||0, eqOn = $("laraEq").checked;
+  var out = $("laraOut");
+  if (!(E0>0)){ out.innerHTML = '<span class="warn">'+T("Задайте энергию.","Enter an energy.")+"</span>"; return; }
+  var hits = [];
+  Object.keys(DB.nuclides).forEach(function(n){
+    var e = DB.nuclides[n], eq = eqOn && EQ_FACTOR[n] ? EQ_FACTOR[n] : 1;
+    var chain = e.chain || null;
+    e.g.forEach(function(li){
+      if (Math.abs(li[0]-E0)<=W && li[1]*eq>=mi)
+        hits.push({n:n, E:li[0], I:li[1]*eq, raw:li[1], t:"γ", chain:chain});
+    });
+    e.x.forEach(function(li){
+      if (Math.abs(li[0]-E0)<=W && li[1]*eq>=mi)
+        hits.push({n:n, E:li[0], I:li[1]*eq, raw:li[1], t:"X "+(li[2]||""), chain:chain});
+    });
+  });
+  hits.sort(function(a,b){ return b.I-a.I; });
+  if (!hits.length){
+    out.innerHTML = '<span class="hint">'+T("В окне ±","Nothing within ±")+W+
+      T(" кэВ выше порога ничего нет."," keV above the threshold.")+"</span>";
+    return;
+  }
+  var h = '<table class="laraTbl"><thead><tr><th>E, '+T("кэВ","keV")+"</th><th>I, %"+
+    (eqOn ? " <span class='hint'>"+T("на распад корня","per root decay")+"</span>" : "")+
+    "</th><th>"+T("тип","type")+"</th><th>"+T("нуклид","nuclide")+"</th><th>"+
+    T("ряд","series")+"</th><th>T&frac12;</th><th>"+T("проверить по","check against")+
+    "</th><th></th></tr></thead><tbody>";
+  hits.slice(0,40).forEach(function(x){
+    var root = x.chain ? chainRootName(x.chain) : null;
+    h += "<tr"+(sel.nuc[x.n] ? ' class="inset"' : "")+"><td>"+x.E.toFixed(2)+"</td><td><b>"+
+      fmtI(x.I)+"</b>"+(x.I!==x.raw ? ' <span class="hint">('+fmtI(x.raw)+" "+T("своей","own")+")</span>" : "")+
+      "</td><td>"+esc(x.t)+"</td><td><b>"+esc(dispNuc(x.n))+"</b></td><td>"+
+      (root ? esc(root) : "—")+"</td><td>"+hlText(x.n)+"</td><td>"+laraTop(x.n, x.E, eqOn)+"</td><td>"+
+      (sel.nuc[x.n] ? '<span class="hint">'+T("в наборе","in the set")+"</span>"
+        : '<a data-lara-add="'+esc(x.n)+'">'+T("+ нуклид","+ nuclide")+"</a>"+
+          (root ? ' <a data-lara-chain="'+esc(x.chain)+'">'+T("+ ряд","+ series")+"</a>" : ""))+
+      "</td></tr>";
+  });
+  h += "</tbody></table>";
+  if (hits.length>40) h += '<div class="hint">'+T("Показаны первые 40 из ","Showing the first 40 of ")+hits.length+"</div>";
+  out.innerHTML = h;
+}
+// ── таблица эмиссий ряда: самостоятельный справочник в духе LARA ──
+// Все γ и X членов ряда одной таблицей, интенсивности приведены к распаду
+// КОРНЯ (EQ_FACTOR); от набора не зависит, ничего в него не пишет.
+function emiRows(c){
+  var rows = [];
+  DB.chains[c].order.forEach(function(m){
+    var e = DB.nuclides[m]; if (!e) return;
+    var eq = EQ_FACTOR[m] || 1;
+    e.g.forEach(function(li){ rows.push({E:li[0], I:li[1]*eq, raw:li[1], t:"γ", n:m}); });
+    e.x.forEach(function(li){ rows.push({E:li[0], I:li[1]*eq, raw:li[1], t:"X "+(li[2]||""), n:m}); });
+  });
+  return rows;
+}
+function emiRender(){
+  var c = $("emiChain").value, mi = parseFloat($("emiI").value)||0;
+  var byI = $("emiSortI").checked;
+  var all = emiRows(c), rows = all.filter(function(r){ return r.I>=mi; });
+  rows.sort(byI ? function(a,b){ return b.I-a.I; } : function(a,b){ return a.E-b.E; });
+  var fac = DB.chains[c].order.filter(function(m){ return EQ_FACTOR[m]; })
+      .map(function(m){ return m+" ×"+EQ_FACTOR[m]; }).join(", ");
+  $("emiHint").textContent = T("Интенсивность — на 100 распадов ","Intensity — per 100 decays of ")+
+    chainRootName(c)+T(" в вековом равновесии"," in secular equilibrium")+
+    (fac ? T("; множители ветвей: ","; branch factors: ")+fac : "")+
+    ". "+T("Показано ","Shown ")+rows.length+T(" из ", " of ")+all.length+
+    ". "+T("CSV выгружается по возрастанию энергии.","The CSV is exported in ascending energy order.");
+  var h = '<div class="tblscroll" style="max-height:340px;overflow:auto">'+
+    '<table class="laraTbl"><thead><tr><th>E, '+T("кэВ","keV")+"</th><th>I, % "+
+    T("на распад корня","per root decay")+"</th><th>"+T("тип","type")+"</th><th>"+
+    T("излучатель","emitter")+"</th><th>"+T("своя I, %","own I, %")+"</th></tr></thead><tbody>";
+  rows.forEach(function(r){
+    h += "<tr><td>"+r.E.toFixed(2)+"</td><td><b>"+fmtI(r.I)+"</b></td><td>"+esc(r.t)+
+      "</td><td>"+esc(r.n)+"</td><td>"+fmtI(r.raw)+"</td></tr>";
+  });
+  $("emiOut").innerHTML = h+"</tbody></table></div>";
+}
+function emiCsv(){
+  var c = $("emiChain").value, mi = parseFloat($("emiI").value)||0;
+  var rows = emiRows(c).filter(function(r){ return r.I>=mi; })
+    .sort(function(a,b){ return a.E-b.E; });
+  var s = "E_keV;I_per_root_decay_pct;type;emitter;I_own_pct\n";
+  rows.forEach(function(r){
+    s += r.E+";"+r.I.toPrecision(5)+";"+r.t+";"+r.n+";"+r.raw+"\n";
+  });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([s], {type:"text/csv"}));
+  a.download = chainRootName(c)+"_equilibrium_emissions.csv";
+  a.click();
+}
+function emiFillChains(){
+  var s = $("emiChain"), keep = s.value; s.innerHTML = "";
+  Object.keys(DB.chains).forEach(function(c){
+    var o = document.createElement("option"); o.value = c; o.textContent = chainTitle(c);
+    s.appendChild(o);
+  });
+  if (keep && DB.chains[keep]) s.value = keep;   // смена языка не меняет выбранный ряд
+}
+$("emiGo").addEventListener("click", emiRender);
+$("emiCsv").addEventListener("click", emiCsv);
+$("emiChain").addEventListener("change", emiRender);
+$("emiSortI").addEventListener("change", emiRender);
+
+$("laraGo").addEventListener("click", laraSearch);
+$("laraE").addEventListener("keydown", function(ev){ if (ev.key==="Enter") laraSearch(); });
+$("laraOut").addEventListener("click", function(ev){
+  var t = ev.target.closest("[data-lara-add],[data-lara-chain]"); if (!t) return;
+  if (t.dataset.laraAdd) addNuc(t.dataset.laraAdd);
+  else DB.chains[t.dataset.laraChain].order.forEach(addNuc);
+  chainApply(); laraSearch();
 });
 
 // ── init ──

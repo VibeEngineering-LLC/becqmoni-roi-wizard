@@ -126,6 +126,12 @@ button.exp{height:19px; min-width:24px; border-radius:0; font-size:11px}
   padding:0 5px; border-radius:2px}
 .gasb{background:#fdf2df; border:1px solid #e0bd7e; color:#7a5a17; font-size:10.5px;
   padding:0 5px; border-radius:2px; cursor:help}
+.laraTbl{border-collapse:collapse; margin-top:6px; width:100%}
+.laraTbl th,.laraTbl td{border:1px solid var(--line); padding:2px 7px; text-align:left;
+  font-size:12px; white-space:nowrap}
+.laraTbl th{background:#f2f5f8; font-weight:400; color:#5a6a7a}
+.laraTbl tr.inset td{background:var(--sel)}
+.laraTbl a{cursor:pointer; color:var(--accent-ink); text-decoration:underline dotted}
 /* длинные комбобоксы — по содержимому, но с потолком, чтобы не давить соседей */
 #iMode{width:auto !important; max-width:270px !important; min-width:0}
 #anchorSel{width:auto !important; max-width:300px !important; min-width:0}
