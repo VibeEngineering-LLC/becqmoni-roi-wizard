@@ -241,7 +241,7 @@ def patch_csproj(root):
         text = text[:end] + "\n".join(missing) + "\n" + text[end:]
         steps.append("вставлено записей Compile: %d" % len(missing))
 
-    for resource in ["RoiWizard\\nuclides.xml", "RoiWizard\\help.xml",
+    for resource in ["RoiWizard\\help.xml",
                      "RoiWizard\\RoiWizardStrings.resx", "RoiWizard\\RoiWizardStrings.ru.resx"]:
         if resource in text:
             steps.append("уже есть: EmbeddedResource %s" % resource)
@@ -259,6 +259,13 @@ def patch_csproj(root):
     return steps
 
 
+# Файлы, которые модуль модулю больше НЕ ставит: имя оставлено на случай,
+# если снимок вернётся в зеркало из старой ветки — фильтр по расширению
+# такой файл поднял бы, а свежая сборка BecqMoni несла бы 101 КБ мёртвого
+# груза со снимком каталога, который модуль уже не читает.
+SKIP_COPY = {"nuclides.xml"}
+
+
 def copy_module(root):
     target = os.path.join(root, "BecquerelMonitor", "RoiWizard")
     if not os.path.isdir(target):
@@ -266,6 +273,8 @@ def copy_module(root):
     copied = 0
     for name in sorted(os.listdir(MODULE)):
         if not (name.endswith(".cs") or name.endswith(".xml") or name.endswith(".resx")):
+            continue
+        if name in SKIP_COPY:
             continue
         shutil.copy2(os.path.join(MODULE, name), os.path.join(target, name))
         copied += 1

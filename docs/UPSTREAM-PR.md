@@ -30,7 +30,7 @@ Visual Studio без ошибок (см. чек-лист).
 | Мост к приложению | `SetExporter` | 145 |
 | Форма | `RoiWizardForm` + `.Designer`, `WizardTheme`, `CatalogCellRenderers`, `HelpForm` | ≈2400 |
 | Правка хоста | пункт меню в `MainForm` + две строки ресурсов | ≈40 |
-| Данные | линии берутся из встроенной `nucdb.sqlite` приложения (только чтение); отдельного ресурса каталога у модуля больше нет — `nuclides.xml` и `export_catalog.py` устарели, см. «Устаревшее» в `integration/README.md` | — |
+| Данные | линии берутся из встроенной `nucdb.sqlite` приложения (только чтение); отдельного ресурса каталога у модуля нет — `nuclides.xml` и `export_catalog.py` удалены 30.07, см. «Устаревшее» в `integration/README.md` | — |
 | | `help.xml` — текст справки модуля на двух языках | 25 КБ |
 | Подписи | `RoiWizardStrings.resx` (английская) + `.ru.resx`, доступ через `RoiWizardStrings.Designer.cs` | 167 ключей |
 | Инструменты | `tools/gen_help.py`, `tools/gen_strings.py` | 486 |
@@ -91,12 +91,11 @@ BecqMoni и для `Properties/Resources.resx`. Новый язык добавл
 - Наш код — MIT, upstream — GPL-2.0. **MIT-код включается в GPL-проект без препятствий**:
   условия MIT (сохранить копирайт и текст лицензии) совместимы с GPL-2.0. Внутри BecqMoni
   файлы будут распространяться на условиях GPL-2.0 — это нормальный и ожидаемый исход.
-- **Данные.** Пункт УСТАРЕЛ на 30.07: `NuclideCatalog` читает встроенную базу приложения
-  `nucdb.sqlite`, своего снимка каталога модуль больше не несёт, и вопрос об атрибуции
-  внешних данных в PR не возникает. Ниже — как было, пока ресурсом служил `nuclides.xml`:
-  снимок IAEA Live Chart of Nuclides (ENSDF), в PR стоило назвать источник, дату снимка
-  и скрипт пересборки; атрибуция лежала в атрибутах корневого элемента (`Generated`,
-  пороги интенсивности).
+- **Данные.** `NuclideCatalog` читает встроенную базу приложения `nucdb.sqlite` (только
+  чтение), своего снимка каталога модуль не несёт — вопрос об атрибуции внешних данных
+  в PR не возникает. Раньше модуль вёз свой снимок `nuclides.xml` (снимок IAEA Live Chart
+  of Nuclides / ENSDF), который собирался из данных страницы; файл и его генератор
+  удалены 30.07.
 - Заимствований из кода BecqMoni в модуле нет: пороги (0.85 / 0.25 / z ≥ 4) — это числа,
   прочитанные из `LibraryPeakFitter.cs`, а не скопированный код.
 
@@ -106,8 +105,8 @@ BecqMoni и для `Properties/Resources.resx`. Новый язык добавл
       `BecquerelMonitor.sln` (MSBuild из VS 2022 Build Tools, `.NET Framework 4.8
       Developer Pack`, `/t:Rebuild`) вместе с модулем и патчем меню — **ноль ошибок**.
       Результат: `bin\Release\BecquerelMonitor.exe`, 11,2 МБ, внутри `RoiWizardForm`,
-      `AnchorPicker`, `BuildFullSet` и ресурс `BecquerelMonitor.RoiWizard.nuclides.xml`;
-      сателлитная сборка `ru\BecquerelMonitor.resources.dll` содержит подпись пункта меню
+      `AnchorPicker`, `BuildFullSet`; сателлитная сборка
+      `ru\BecquerelMonitor.resources.dll` содержит подпись пункта меню
       «Конструктор ROI и наборов нуклидов…». Единственное предупреждение сборки —
       `MSB3327` про сертификат подписи ClickOnce, к вкладу отношения не имеет.
       *(Если Developer Pack ставить некуда, решение собирается и без него: reference
@@ -181,11 +180,11 @@ BecqMoni и для `Properties/Resources.resx`. Новый язык добавл
 <EmbeddedResource Include="RoiWizard\RoiWizardStrings.ru.resx" />
 ```
 
-**Строку `EmbeddedResource Include="RoiWizard\nuclides.xml"` не добавлять** — с 30.07
-`NuclideCatalog` работает по встроенной `nucdb.sqlite`, файла в дереве модуля нет, и запись
-укажет на несуществующий ресурс. В рабочем `BecquerelMonitor.csproj` у модуля ровно три
-`EmbeddedResource`, перечисленные выше. `host-patch/apply_patch.py` эту строку пока всё ещё
-вписывает — не исправлено, отдельным заходом.
+**Строку `EmbeddedResource Include="RoiWizard\nuclides.xml"` не добавлять** — `NuclideCatalog`
+работает по встроенной `nucdb.sqlite`, файла в дереве модуля нет. В рабочем
+`BecquerelMonitor.csproj` у модуля ровно три `EmbeddedResource`, перечисленные выше.
+`host-patch/apply_patch.py` строку тоже больше не вставляет и сам файл не копирует
+(правки 30.07).
 
 **`tests/HostStubs.cs` в проект не добавлять** — там заглушки тех же типов, будет `CS0101`.
 

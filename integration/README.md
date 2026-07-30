@@ -32,10 +32,6 @@ BecquerelMonitor/RoiWizard/
   RoiWizardForm.Designer.cs  разметка формы (XPTable, как в NuclideSetForm)
   HelpForm.cs           окно справки: разбор того же подмножества разметки, что на странице
   RoiWizardStrings.Designer.cs  доступ к таблице строк (генерируется tools/gen_strings.py)
-  nuclides.xml          снимок каталога (121 нуклид, 1222 γ, 327 X, 3 ряда, 10 элементов ХРИ;
-                        101 КБ). УСТАРЕЛ: модуль читает встроенную базу приложения
-                        nucdb.sqlite, ресурса nuclides.xml в дереве сборки больше нет —
-                        см. «Устаревшее» ниже
   help.xml              текст справки МОДУЛЯ на двух языках, генерируется tools/gen_help.py
   RoiWizardStrings.resx        подписи интерфейса, нейтральная (английская) таблица
   RoiWizardStrings.ru.resx     русский перевод; MSBuild собирает из него сателлит
@@ -45,8 +41,6 @@ host-patch/
 tools/
   gen_help.py           текст справки модуля: help.xml на двух языках
   gen_strings.py        таблица подписей: .resx, .ru.resx и доступ к ним
-  export_catalog.py     пересборка nuclides.xml из data/nuclides.js и data/xrf.js.
-                        УСТАРЕЛ вместе с nuclides.xml, см. «Устаревшее»
 tests/
   RoiWizardTests.cs     тесты инвариантов, run_tests.cmd — сборка и прогон
   HostStubs.cs          заглушки типов BecqMoni: только для тестовой сборки,
@@ -94,15 +88,14 @@ python integration\host-patch\apply_patch.py <путь к дереву BecqMoni>
 <Compile Include="RoiWizard\RoiWizardForm.Designer.cs">
   <DependentUpon>RoiWizardForm.cs</DependentUpon>
 </Compile>
-<EmbeddedResource Include="RoiWizard\nuclides.xml" />
 <EmbeddedResource Include="RoiWizard\help.xml" />
 <EmbeddedResource Include="RoiWizard\RoiWizardStrings.resx" />
 <EmbeddedResource Include="RoiWizard\RoiWizardStrings.ru.resx" />
 ```
 
-Имя ресурса должно получиться `BecquerelMonitor.RoiWizard.nuclides.xml` — это значение
-по умолчанию для корневого пространства имён `BecquerelMonitor`; оно захардкожено в
-`NuclideCatalog.ResourceName`.
+Каталог линий модуль читает из встроенной базы приложения `nucdb.sqlite` (только чтение);
+своего снимка каталога в дереве модуля нет. Строку `EmbeddedResource
+Include="RoiWizard\nuclides.xml"` в `.csproj` НЕ добавлять — файл был убран 30.07.
 
 Папку `tests/` в проект добавлять не нужно: `HostStubs.cs` объявляет те же типы, что
 приходят из самого приложения, и сборка встанет на `CS0101`.
@@ -357,19 +350,16 @@ python integration/tools/gen_strings.py
 
 ## Устаревшее
 
-**`nuclides.xml` и `export_catalog.py`.** Первая версия модуля несла свой снимок каталога
-отдельным встроенным ресурсом `BecquerelMonitor.RoiWizard.nuclides.xml`, который собирался
-из данных страницы скриптом `export_catalog.py`. Затем `NuclideCatalog` был переведён на
-`nucdb.sqlite` — ту же базу, по которой считает само приложение, — и ресурс из дерева
-сборки ушёл: в `BecquerelMonitor.csproj` у модуля остались три `EmbeddedResource`
-(`help.xml`, `RoiWizardStrings.resx`, `RoiWizardStrings.ru.resx`). Файл и его генератор
-лежат здесь как история и пока не удалены.
-
-**Что из-за этого сломано:** `host-patch/apply_patch.py` всё ещё вписывает в `.csproj`
-четвёртую запись `EmbeddedResource Include="RoiWizard\nuclides.xml"`. На свежем дереве
-BecqMoni, куда `nuclides.xml` не копируется, это даёт запись ресурса на несуществующий
-файл. То же перечисление стоит в `docs/UPSTREAM-PR.md`. Не исправлено, вынесено отдельным
-пунктом ченжлога.
+**`nuclides.xml` и `export_catalog.py` удалены 30.07.** Первая версия модуля несла свой
+снимок каталога отдельным встроенным ресурсом `BecquerelMonitor.RoiWizard.nuclides.xml`,
+который собирался из данных страницы скриптом `export_catalog.py`. `NuclideCatalog` был
+переведён на встроенную базу приложения `nucdb.sqlite` — ту же, по которой считает само
+приложение, — и ресурс из дерева сборки ушёл: у модуля осталось три `EmbeddedResource`
+(`help.xml`, `RoiWizardStrings.resx`, `RoiWizardStrings.ru.resx`). Файл и генератор
+оставались как история; удалены в тот же день, потому что `apply_patch.py` брал их из
+зеркала по маске расширений и молча тащил на свежий клон BecqMoni 101 КБ мёртвого груза,
+который модуль уже не читает. На всякий случай в `apply_patch.py` заведён чёрный список
+имён, чтобы возврат снимка в зеркало не повторил проблему.
 
 **`export_help.py` удалён.** Он собирал `help.xml` из `index.html`, то есть держал справку
 модуля и текст страницы одним источником. После переработки под WinForms тексты разошлись,
