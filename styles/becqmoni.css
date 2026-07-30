@@ -104,28 +104,7 @@ button.exp{height:19px; min-width:24px; border-radius:0; font-size:11px}
 .tabbody[data-body="3"] .tblscroll{flex:1 1 auto; min-height:260px; margin-top:6px}
 .tabbody[data-body="3"] .gbox .hint{margin:2px 0 0}
 
-/* ── Шаг 2 «Цепочки»: три ряда колонками, дерево строками ── */
-.chainCols{display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap; margin-top:6px}
-.chainCol{flex:1 1 320px; min-width:300px; padding:6px 8px}
-.chainHead{margin-bottom:5px; line-height:1.5}
-.chainHead .mini{padding:0 7px; font-size:11px}
-.chainRow{display:flex; align-items:center; gap:5px; padding:1px 2px; line-height:1.7;
-  white-space:nowrap}
-.chainRow > b{flex:0 0 auto}
-.chainRow .brb{flex:0 0 auto}
-.chainRow.inset{background:var(--sel)}
-.chainRow.nolines > b{color:#999}
-.chainRow .glyph{width:20px; color:#9aa7b4; text-align:center; flex:0 0 auto;
-  font-family:Consolas,monospace}
-.chainRow .hl{margin-left:2px}
-.chainRow.tail{color:#9aa7b4}
-.chainAct{margin-left:auto; white-space:nowrap; visibility:hidden}
-.chainRow:hover .chainAct{visibility:visible}
-.chainAct a{cursor:pointer; color:var(--accent-ink); text-decoration:underline dotted; font-size:11px}
-.brb{background:#eef4e2; border:1px solid #b9cf8e; color:#4a6320; font-size:10.5px;
-  padding:0 5px; border-radius:2px}
-.gasb{background:#fdf2df; border:1px solid #e0bd7e; color:#7a5a17; font-size:10.5px;
-  padding:0 5px; border-radius:2px; cursor:help}
+/* ── Шаг 2 «Цепочки»: справочные таблицы ── */
 .laraTbl{border-collapse:collapse; margin-top:6px; width:100%}
 .laraTbl th,.laraTbl td{border:1px solid var(--line); padding:2px 7px; text-align:left;
   font-size:12px; white-space:nowrap}

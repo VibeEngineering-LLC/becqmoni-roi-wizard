@@ -36,11 +36,13 @@
       родитель в скобках имени). Скобки не косметика: по ним BecqMoni узнаёт цепочку и связывает
       амплитуды линий. Пять готовых наборов под полем поиска дают рабочий пример в один клик.</p>
 
-      <p><b>Шаг 2 · Цепочки.</b> Три ряда ЕРН деревом: развилки — с долями ветвления
-      (IAEA NDS), газообразные члены (радон) помечены — ниже них вековое равновесие может
-      быть нарушено. «Отсюда» берёт член ряда со всеми потомками, «✕» снимает всё, что
-      питается только через выбранный член; исключение минорной ветви не трогает общий
-      ствол ряда. Выбор синхронизирован с шагами «Изотопы» и «Линии».</p>
+      <p><b>Шаг 2 · Цепочки.</b> Справочник по рядам ЕРН в духе NUCLÉIDE-LARA (LNHB).
+      «Кто светит на этой энергии» — кандидаты в окне ±W кэВ, для членов рядов
+      интенсивность приведена к распаду корня (доли ветвлений и равновесие уже свёрнуты),
+      рядом контрольные линии кандидата в той же нормировке — по ним его подтверждают
+      или отбрасывают; кнопки добавляют нуклид или весь ряд в выбор. «Таблица эмиссий
+      ряда» — все γ и X ряда на 100 распадов корня, порог, сортировка, выгрузка CSV;
+      от набора не зависит и работает как самостоятельный справочник.</p>
 
       <p><b>Шаг 3 · Линии.</b> <b>R</b> — паспортное разрешение детектора на 662 кэВ; из него
       считается FWHM(E) = R·√(662·E)/100 (модель для сцинтилляторов). <b>Объединить близкие</b>
@@ -191,11 +193,6 @@
       <button id="laraGo" class="primary">Найти</button>
     </div>
     <div id="laraOut"></div>
-  </div>
-  <div class="gbox"><span class="lg">Ряды распада</span>
-    <div class="hint" id="chainsHint"></div>
-    <div class="chainCols" id="chainsBox"></div>
-    <div class="hint" id="chainsFoot"></div>
   </div>
   <div class="gbox"><span class="lg">Таблица эмиссий ряда</span>
     <div class="line">
@@ -1509,7 +1506,6 @@ $("tabs").addEventListener("click", function(ev){
   document.querySelectorAll(".tabs button").forEach(function(x){ x.classList.toggle("on", x===b); });
   document.querySelectorAll(".tabbody").forEach(function(x){
     x.classList.toggle("on", x.dataset.body===b.dataset.tab); });
-  if (b.dataset.tab==="2") renderChains();
   renderSum();
 });
 var NSTEP = 4;
@@ -1892,7 +1888,7 @@ var PARA_EN = {
   resHint:'<p><b>R</b> — detector resolution (FWHM at 662 keV): NaI(Tl) 6.5–8 %, CsI(Tl) 8–10 %, SrI₂(Eu) 3–3.5 %, LaBr₃ 2.7–3.3 %. Peaks broaden as √E: FWHM(E) = R·√(662·E)/100 — a <b>scintillator</b> model (LaBr₃/NaI/SrI₂/CsI); for HPGe (R ~0.15 %) it underestimates the width at low energies — a √(a+bE) law would be needed (not implemented here). </p><p><b>Criterion</b> — how close lines have to be to count as inseparable. <b>Sparrow limit</b> (ΔE &lt; 0.85·FWHM, i.e. 2σ) is the physical resolvability limit of two peaks: closer than that a doublet looks like a single peak, so ROI markers are merged. </p><p><b>Anchored set</b> (ΔE &lt; 0.25·FWHM) is for sets exported into the BecqMoni library: pairs between 0.25 and 0.85 FWHM are resolved there by the library fit around the anchor line (amplitudes tied by tabulated intensities), wider ones by deconvolution — merging them only impoverishes the set. </p><p><b>Manual</b> — the previous behaviour (2–3×FWHM is a coarse identification window).</p>',
   eqHint:'<p>Unchecked: I is “per 100 decays of the emitting nuclide”, as in the IAEA database and BecqMoni “Intensities” files: the Tl-208 2614 keV line has I = 99.75 %. But in the equilibrium Th-232 series only 35.94 % of decays pass through Tl-208 (Bi-212 branching: β 64 % / α 36 %), so <b>per one Th-232 decay</b> this line yields 99.75 × 0.3594 ≈ 35.85 %. </p><p>The checkbox applies this factor to members behind branch points (Tl-208 ×0.3594, Po-212 ×0.6406; in the U-235 series: Th-227 ×0.9862, Fr-223 ×0.0138, Tl-207 ×0.99724, Po-211 ×0.00276); all other members — ×1.</p><p>Enable when the ROI set describes an equilibrium series as a whole; disable for handbook values.</p>',
   secHint:'<p>BS = E/(1+2E/511); CE = E−BS; SE = E−511 (E&gt;1122); DE = E−1022 (E&gt;1222); I-escape for E&lt;200 keV. </p><p><b>SUM</b> = E1+E2 — true-coincidence summing of cascade lines of one nuclide (close geometry: Co-60 → 2505, Y-88 → 2734); <b>PU</b> = 2×E — pulse pile-up of one strong line at high count rate (Cs-137 → 1324). </p><p></p><p><b>Position corrections.</b> The analytical formula gives the edge of a step, while the spectrum shows the centroid of a feature smeared by the resolution, so the Compton edge is shifted down by <b>0.8·FWHM</b> and the backscatter peak up by <b>10 keV</b> (multiple scattering adds to the single 180° path). Both corrections come from measurements on the Gamma-1C complex (NaI(Tl) 63×63, Pb 50 mm + Cd/Cu shield): 31 sound records out of 41; the edge coefficient clusters in 0.69–0.84 over 340–1250 keV, while the backscatter shift ranges from +0.3 to +18 keV and is set by the source geometry.</p><p>Marker intensity — a fraction of the parent line taken from the measured area ratios: BS 8 %, CE 6 %, SE 6 %, DE and the rest 10 % (for SUM — of the weaker line of the pair). Physics (checked against the originals): Knoll, Radiation Detection and Measurement, 3rd Ed., ch. 10 — Compton edge in sec. II.B, backscatter peak, escape peaks and summing in sec. III; Gilmore, Practical Gamma-ray Spectrometry, 2nd Ed., ch. 2 (interactions), 9.2.3 (second-derivative peak search) and 10 (scintillation spectrometry).</p>',
-  helpText:'<p><b>What it is for.</b> The tool builds two files for BecqMoni out of a snapshot of IAEA Live Chart (ENSDF) nuclear data: an <b>ROI configuration</b> (markers and zones on the energy axis) and a <b>nuclide set</b> — a named <code>NuclideSet</code> appended to your <code>NuclideDefinition.xml</code> library. The page is self-contained: the data sit as a snapshot in <code>data/nuclides.js</code>, nothing is fetched over the network.</p><p><b>Step 1 · Nuclides.</b> Three ways to gather sources: search by name (or by family code), a ready-made group — 8 families per ANSI N42.34 and 3 decay series — and the XRF panel (characteristic X-rays of shielding and detector materials). Search and group share the same three buttons: <b>add</b> the nuclide on its own, <b>+ family lines</b> (daughter lines go under the parent’s name as one entry) and <b>+ chain</b> (daughters as separate nuclides, parent in brackets). The brackets are not cosmetic: BecqMoni reads the chain from them and couples the line amplitudes. The five presets under the search box give a working example in one click.</p><p><b>Step 2 · Chains.</b> The three NORM decay series as trees: forks carry branching ratios (IAEA NDS), gaseous members (radon) are flagged — secular equilibrium below them may be broken. “From here” takes the member with all its descendants, “✕” drops everything fed only through the chosen member; dropping a minor branch leaves the common trunk intact. The selection is synchronised with the Nuclides and Lines steps.</p><p><b>Step 3 · Lines.</b> <b>R</b> is the rated detector resolution at 662 keV; FWHM(E) = R·√(662·E)/100 follows from it (a scintillator model). <b>Merge close lines</b> merges what your detector cannot resolve anyway: the <b>Sparrow limit, 0.85·FWHM</b>, is the physical resolvability limit of two peaks and applies to ROI markers; the <b>anchored set, 0.25·FWHM</b>, is for library exports, because pairs between 0.25 and 0.85 FWHM are resolved by the library fit and merging them only impoverishes the set. Filters (intensity, energy, half-life) drive the <b>selection</b> of lines, while the type checkboxes only control visibility. Below are the secondary peaks (backscatter, Compton edge, 511 and 1022 escapes, summing, pile-up) and the whole-database nearby-line search: who else emits around this energy.</p><p><b>Step 4 · Styling and export.</b> Markers or zones, zone width as a percentage of energy or via k·FWHM, colours by chain or by nuclide. <b>Download ROI .xml</b> gives the file for <code>%APPDATA%\BecqMoni\config\ROI\</code>. <b>Append to the library</b> asks for your <code>NuclideDefinition.xml</code> and returns a copy with the set added — existing nuclides and sets are kept, and a backup of the original is downloaded alongside.</p><p><b>The anchor.</b> Exactly one line of the set is marked <code>IsAnchor=true</code>: once BecqMoni finds it in the spectrum, the remaining lines are placed at their tabulated positions and their amplitudes fitted. Without an anchor the library fit never starts. The automatic choice takes a strong and isolated line (2614.5 keV for Th-232, 609.3 for U-238), but you can set it by hand. The <b>full set</b> checkbox exports every line of the selected nuclides bypassing the filters: in the BecqMoni developer’s runs the gain comes precisely from the complete chain, while a set of strong lines alone adds nothing to the fit.</p><p><b>Before saving</b> the data are checked. For an ROI, coinciding energies, zero yield and overlapping zones are advisory — you can still save. For a set the first two are errors: two lines at one energy make the amplitude fit degenerate, and zero intensity drops a line out of the chain coupling.</p><p><b>Limits.</b> The database is a snapshot, not a live IAEA query (the API sends no CORS headers); it is refreshed by <code>update_nuclides.py</code> or by a GitHub Actions button. The peak-width model is for scintillators; for HPGe it underestimates the width at low energies. XRF intensities are nominal (Kα1 = 100) — markers, not yields. Secondary peaks are computed. Bq/cps coefficients are left empty: set them in BecqMoni from your efficiency curve. The tool is unofficial and not part of BecqMoni.</p><p><b>Sources and standards.</b> The table lists what exactly was taken and from where.</p><table class="srctbl"><thead><tr><th>What was taken</th><th>From where</th></tr></thead><tbody><tr><td>Energies and intensities of gamma lines, half-lives, decay branching — a base of <b>121 nuclides</b>, gamma threshold 0.05 %</td><td><a href="https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" target="_blank" rel="noopener">IAEA Live Chart of Nuclides</a>, evaluated <a href="https://www.nndc.bnl.gov/ensdf/" target="_blank" rel="noopener">ENSDF</a> data (NNDC, Brookhaven National Laboratory). The snapshot lives in <code>data/nuclides.js</code>; its date is in the &laquo;about the data sources&raquo; footer</td></tr><tr><td>X-rays accompanying decay (K and L series of the daughter atoms), threshold 0.5 %</td><td>the same IAEA/ENSDF snapshot, separate line table</td></tr><tr><td>XRF energies for <b>10 elements</b> of shielding and detector (Fe, Cu, Cd, Sn, Te, I, Ba, La, W, Pb); intensities are nominal, K&alpha;1 = 100</td><td><a href="https://physics.nist.gov/PhysRefData/XrayTrans/Html/search.html" target="_blank" rel="noopener">NIST X-ray Transition Energies Database</a>, Bearden compilation</td></tr><tr><td>Family codes <b>NORM, MED, IND, SNM</b></td><td><a href="https://standards.ieee.org/standard/N42_34-2021.html" target="_blank" rel="noopener">IEEE/ANSI N42.34-2021</a> — performance criteria for handheld radionuclide identifiers (RIID). The FISS, NAA and WASTE groups sit outside the standard and were added for spectrometry work</td></tr><tr><td>Secondary-peak formulas: BS = E/(1+2E/511), CE = E − BS, SE = E − 511, DE = E − 1022, iodine K X-ray escape <b>−28 keV</b></td><td>G. F. Knoll, <a href="https://www.wiley.com/en-us/Radiation+Detection+and+Measurement,+4th+Edition-p-9780470131480" target="_blank" rel="noopener">Radiation Detection and Measurement</a> (Wiley), ch. 10: Compton edge in sec. II.B; backscatter peak (0.2–0.25 MeV), escape peaks and cascade summing in sec. III; iodine escape in fig. 10.10</td></tr><tr><td>Why the corrections are needed: the edge is smeared by the resolution while the peak is found by a <b>second-derivative</b> method, so the centroid cannot coincide with the drop</td><td>Knoll, ch. 10, sec. II.B (effect of electron binding); G. Gilmore, <a href="https://www.wiley.com/en-us/practical-gamma-ray-spectrometry-3rd-edition-p-9781119896081" target="_blank" rel="noopener">Practical Gamma-ray Spectrometry</a> (Wiley), sec. 9.2.3 — the Mariscotti algorithm</td></tr><tr><td>The correction figures: Compton edge <b>−0.8·FWHM</b>, backscatter <b>+10 keV</b>; fractions of the parent line BS 8 %, CE 6 %, SE 6 %</td><td>measurements on the Gamma-1C complex (NaI(Tl) 63×63, Pb 50 mm shield with a Cd/Cu liner): 9 nuclides, 18 primary lines, <b>31 records of 41</b> used — the rest dropped as overlaps. See <code>docs/REFERENCES-secondary-peaks.md</code></td></tr><tr><td>Series equilibrium factors: Tl-208 <b>×0.3594</b>, Po-212 ×0.6406, Th-227 ×0.9862, Fr-223 ×0.0138, Tl-207 ×0.99724, Po-211 ×0.00276</td><td>branching at the series forks (Bi-212 &beta; 64.06 % / &alpha; 35.94 %; Ac-227; Bi-211) from ENSDF data</td></tr><tr><td>Merge thresholds <b>0.85·FWHM</b> (Sparrow limit) and <b>0.25·FWHM</b> (anchored set), Fisher significance gate <b>z &ge; 4</b>, the single <code>IsAnchor</code> requirement</td><td>the <a href="https://github.com/Am6er/BecqMoni" target="_blank" rel="noopener">Am6er/BecqMoni</a> sources, <code>BecquerelMonitor/LibraryPeakFitter.cs</code></td></tr><tr><td>File formats: ROI <code>FormatVersion 120920</code>, the <code>NuclideDefinitionFile</code> structure (NuclideDefinitions + NuclideSets, guid binding)</td><td>the same sources: <code>ROIConfigData.cs</code>, <code>ROIDefinitionData.cs</code>, <code>NuclideDefinition.cs</code>, <code>NuclideSet.cs</code></td></tr></tbody></table>',
+  helpText:'<p><b>What it is for.</b> The tool builds two files for BecqMoni out of a snapshot of IAEA Live Chart (ENSDF) nuclear data: an <b>ROI configuration</b> (markers and zones on the energy axis) and a <b>nuclide set</b> — a named <code>NuclideSet</code> appended to your <code>NuclideDefinition.xml</code> library. The page is self-contained: the data sit as a snapshot in <code>data/nuclides.js</code>, nothing is fetched over the network.</p><p><b>Step 1 · Nuclides.</b> Three ways to gather sources: search by name (or by family code), a ready-made group — 8 families per ANSI N42.34 and 3 decay series — and the XRF panel (characteristic X-rays of shielding and detector materials). Search and group share the same three buttons: <b>add</b> the nuclide on its own, <b>+ family lines</b> (daughter lines go under the parent’s name as one entry) and <b>+ chain</b> (daughters as separate nuclides, parent in brackets). The brackets are not cosmetic: BecqMoni reads the chain from them and couples the line amplitudes. The five presets under the search box give a working example in one click.</p><p><b>Step 2 · Chains.</b> A NORM series reference in the spirit of NUCLÉIDE-LARA (LNHB). “Who emits at this energy” lists candidates within ±W keV; for series members the intensity is given per decay of the series root (branching and equilibrium already folded in), next to the candidate’s check lines in the same normalisation — they confirm or reject it; the buttons add the nuclide or the whole series to the selection. The “Series emission table” shows every γ and X line of a series per 100 root decays with a threshold, sorting and CSV export; it does not depend on the set and works as a standalone reference.</p><p><b>Step 3 · Lines.</b> <b>R</b> is the rated detector resolution at 662 keV; FWHM(E) = R·√(662·E)/100 follows from it (a scintillator model). <b>Merge close lines</b> merges what your detector cannot resolve anyway: the <b>Sparrow limit, 0.85·FWHM</b>, is the physical resolvability limit of two peaks and applies to ROI markers; the <b>anchored set, 0.25·FWHM</b>, is for library exports, because pairs between 0.25 and 0.85 FWHM are resolved by the library fit and merging them only impoverishes the set. Filters (intensity, energy, half-life) drive the <b>selection</b> of lines, while the type checkboxes only control visibility. Below are the secondary peaks (backscatter, Compton edge, 511 and 1022 escapes, summing, pile-up) and the whole-database nearby-line search: who else emits around this energy.</p><p><b>Step 4 · Styling and export.</b> Markers or zones, zone width as a percentage of energy or via k·FWHM, colours by chain or by nuclide. <b>Download ROI .xml</b> gives the file for <code>%APPDATA%\BecqMoni\config\ROI\</code>. <b>Append to the library</b> asks for your <code>NuclideDefinition.xml</code> and returns a copy with the set added — existing nuclides and sets are kept, and a backup of the original is downloaded alongside.</p><p><b>The anchor.</b> Exactly one line of the set is marked <code>IsAnchor=true</code>: once BecqMoni finds it in the spectrum, the remaining lines are placed at their tabulated positions and their amplitudes fitted. Without an anchor the library fit never starts. The automatic choice takes a strong and isolated line (2614.5 keV for Th-232, 609.3 for U-238), but you can set it by hand. The <b>full set</b> checkbox exports every line of the selected nuclides bypassing the filters: in the BecqMoni developer’s runs the gain comes precisely from the complete chain, while a set of strong lines alone adds nothing to the fit.</p><p><b>Before saving</b> the data are checked. For an ROI, coinciding energies, zero yield and overlapping zones are advisory — you can still save. For a set the first two are errors: two lines at one energy make the amplitude fit degenerate, and zero intensity drops a line out of the chain coupling.</p><p><b>Limits.</b> The database is a snapshot, not a live IAEA query (the API sends no CORS headers); it is refreshed by <code>update_nuclides.py</code> or by a GitHub Actions button. The peak-width model is for scintillators; for HPGe it underestimates the width at low energies. XRF intensities are nominal (Kα1 = 100) — markers, not yields. Secondary peaks are computed. Bq/cps coefficients are left empty: set them in BecqMoni from your efficiency curve. The tool is unofficial and not part of BecqMoni.</p><p><b>Sources and standards.</b> The table lists what exactly was taken and from where.</p><table class="srctbl"><thead><tr><th>What was taken</th><th>From where</th></tr></thead><tbody><tr><td>Energies and intensities of gamma lines, half-lives, decay branching — a base of <b>121 nuclides</b>, gamma threshold 0.05 %</td><td><a href="https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" target="_blank" rel="noopener">IAEA Live Chart of Nuclides</a>, evaluated <a href="https://www.nndc.bnl.gov/ensdf/" target="_blank" rel="noopener">ENSDF</a> data (NNDC, Brookhaven National Laboratory). The snapshot lives in <code>data/nuclides.js</code>; its date is in the &laquo;about the data sources&raquo; footer</td></tr><tr><td>X-rays accompanying decay (K and L series of the daughter atoms), threshold 0.5 %</td><td>the same IAEA/ENSDF snapshot, separate line table</td></tr><tr><td>XRF energies for <b>10 elements</b> of shielding and detector (Fe, Cu, Cd, Sn, Te, I, Ba, La, W, Pb); intensities are nominal, K&alpha;1 = 100</td><td><a href="https://physics.nist.gov/PhysRefData/XrayTrans/Html/search.html" target="_blank" rel="noopener">NIST X-ray Transition Energies Database</a>, Bearden compilation</td></tr><tr><td>Family codes <b>NORM, MED, IND, SNM</b></td><td><a href="https://standards.ieee.org/standard/N42_34-2021.html" target="_blank" rel="noopener">IEEE/ANSI N42.34-2021</a> — performance criteria for handheld radionuclide identifiers (RIID). The FISS, NAA and WASTE groups sit outside the standard and were added for spectrometry work</td></tr><tr><td>Secondary-peak formulas: BS = E/(1+2E/511), CE = E − BS, SE = E − 511, DE = E − 1022, iodine K X-ray escape <b>−28 keV</b></td><td>G. F. Knoll, <a href="https://www.wiley.com/en-us/Radiation+Detection+and+Measurement,+4th+Edition-p-9780470131480" target="_blank" rel="noopener">Radiation Detection and Measurement</a> (Wiley), ch. 10: Compton edge in sec. II.B; backscatter peak (0.2–0.25 MeV), escape peaks and cascade summing in sec. III; iodine escape in fig. 10.10</td></tr><tr><td>Why the corrections are needed: the edge is smeared by the resolution while the peak is found by a <b>second-derivative</b> method, so the centroid cannot coincide with the drop</td><td>Knoll, ch. 10, sec. II.B (effect of electron binding); G. Gilmore, <a href="https://www.wiley.com/en-us/practical-gamma-ray-spectrometry-3rd-edition-p-9781119896081" target="_blank" rel="noopener">Practical Gamma-ray Spectrometry</a> (Wiley), sec. 9.2.3 — the Mariscotti algorithm</td></tr><tr><td>The correction figures: Compton edge <b>−0.8·FWHM</b>, backscatter <b>+10 keV</b>; fractions of the parent line BS 8 %, CE 6 %, SE 6 %</td><td>measurements on the Gamma-1C complex (NaI(Tl) 63×63, Pb 50 mm shield with a Cd/Cu liner): 9 nuclides, 18 primary lines, <b>31 records of 41</b> used — the rest dropped as overlaps. See <code>docs/REFERENCES-secondary-peaks.md</code></td></tr><tr><td>Series equilibrium factors: Tl-208 <b>×0.3594</b>, Po-212 ×0.6406, Th-227 ×0.9862, Fr-223 ×0.0138, Tl-207 ×0.99724, Po-211 ×0.00276</td><td>branching at the series forks (Bi-212 &beta; 64.06 % / &alpha; 35.94 %; Ac-227; Bi-211) from ENSDF data</td></tr><tr><td>Merge thresholds <b>0.85·FWHM</b> (Sparrow limit) and <b>0.25·FWHM</b> (anchored set), Fisher significance gate <b>z &ge; 4</b>, the single <code>IsAnchor</code> requirement</td><td>the <a href="https://github.com/Am6er/BecqMoni" target="_blank" rel="noopener">Am6er/BecqMoni</a> sources, <code>BecquerelMonitor/LibraryPeakFitter.cs</code></td></tr><tr><td>File formats: ROI <code>FormatVersion 120920</code>, the <code>NuclideDefinitionFile</code> structure (NuclideDefinitions + NuclideSets, guid binding)</td><td>the same sources: <code>ROIConfigData.cs</code>, <code>ROIDefinitionData.cs</code>, <code>NuclideDefinition.cs</code>, <code>NuclideSet.cs</code></td></tr></tbody></table>',
   expHint:'<p><b>ROI configuration</b> goes into <code>%APPDATA%\\BecqMoni\\config\\ROI\\</code> (usually <code>C:\\Users\\&lt;name&gt;\\AppData\\Roaming\\BecqMoni\\config\\ROI\\</code>) and appears in the BecqMoni ROI list. </p><p><b>Nuclide library</b> — the same line selection is appended to your <code>NuclideDefinition.xml</code> as a named <b>NuclideSet</b>: pick your file (<code>%APPDATA%\\BecqMoni\\config\\NuclideDefinition.xml</code>), a copy with the added entries and set is downloaded — your existing nuclides and sets are preserved. With “save a backup of the original” ticked, the untouched file is downloaded alongside it (<code>…backup-YYYYMMDD-HHMM.xml</code>). Replace the file with BecqMoni closed. </p><p>The <b>anchor line</b> gets <code>IsAnchor=true</code>: once BecqMoni finds it in a spectrum, the remaining lines of the set are placed at their tabulated energies and their amplitudes are fitted (library fit) — without an anchor that machinery never starts. </p><p><b>Full set</b> exports every line of the selected nuclides, bypassing checkboxes, filters and merging: in the BecqMoni author’s runs the gain comes precisely from the complete decay chain, while a set of strong lines only adds nothing to the fit. Weights of tied lines come from <code>Intencity</code>, so keep “Series equilibrium” on for chains, and add nuclides as a chain or as a single parent — the parent in brackets is what marks the chain for BecqMoni.</p>',
   wHint:'FWHM(E) = R₆₆₂·√(662·E)/100; zone = E ± k·FWHM/2. Limits are rounded outward to whole keV.',
   footerText:'<p>Data: IAEA Live Chart of Nuclides API snapshot (ENSDF) — <code>data/nuclides.js</code>, updated by <code>update_nuclides.py</code> (the API sends no CORS headers, so updates run via the script; the page is fully offline). </p><p>XRF: NIST/Bearden. Secondary peaks: computed (Knoll, Gilmore &amp; Joss). Bq/cps coefficients are left at 0 — set them in BecqMoni from your efficiency curve. </p><p><a href="https://github.com/VibeEngineering-LLC/becqmoni-roi-wizard" target="_blank" rel="noopener">Sources on GitHub</a> · VibeEngineering · 2026 · unofficial tool, not part of <a href="https://github.com/Am6er/BecqMoni" target="_blank" rel="noopener">BecqMoni</a>.</p>'
@@ -1964,7 +1960,7 @@ function setLang(l){
   });
   applyTitles(l); applyValues(l);
   updDbInfo(); updMergeHint(); buildPresets();
-  buildSelectors(); rebuildLines(); renderTable(); renderChains();
+  buildSelectors(); rebuildLines(); renderTable();
   if ($("nearOut").innerHTML) searchNear();
   if ($("laraOut").innerHTML) laraSearch();
   $("laraEqLbl").textContent = T("интенсивность на распад корня ряда",
@@ -1981,55 +1977,7 @@ $("helpBack").addEventListener("click", function(ev){ if (ev.target===this) show
 document.addEventListener("keydown", function(ev){ if (ev.key==="Escape") showHelp(false); });
 
 
-// ── вкладка «Цепочки»: ряды распада деревом ──
-// Списки chains.order в базе плоские; развилки и доли ветвления добавлены здесь.
-// BR — IAEA NDS (relnsd, поле decay_%), проверено 30.07.2026:
-//   Bi-212: β− 64,06 % → Po-212, α 35,94 % → Tl-208
-//   Ac-227: β− 98,62 % → Th-227, α 1,38 % → Fr-223
-//   Bi-214: β− 99,979 % → Po-214 (минорная ветвь Tl-210 в каталоге отсутствует)
-//   Bi-211: α 99,724 % → Tl-207 (минорная ветвь Po-211 в каталоге отсутствует,
-//           ребро Bi-211→Tl-207 показано без подписи доли)
-// Fr-223 возвращается в ряд на Ra-223 (β−); Tl-208 и Po-212 — листья (Pb-208 стабилен).
-var CHAIN_GRAPH = {
-  // пары, которых НЕТ в последовательном чтении order (добавить)
-  add:  { th232: [["Bi-212","Po-212"]],
-          u235:  [["Ac-227","Fr-223"], ["Th-227","Ra-223"]] },
-  // последовательные пары order, которые НЕ являются распадом (убрать)
-  skip: { th232: [["Tl-208","Po-212"]],
-          u235:  [["Th-227","Fr-223"]] },
-  // подписи долей ветвления на рёбрах (только проверенные)
-  br:   { "Bi-212>Tl-208":"35,94 %", "Bi-212>Po-212":"64,06 %",
-          "Ac-227>Th-227":"98,62 %", "Ac-227>Fr-223":"1,38 %" },
-  // раскладка ветвей: у кого отступ и уголок, и куда минорная ветвь возвращается
-  branch: { "Tl-208":{glyph:"├─"}, "Po-212":{glyph:"└─"},
-            "Th-227":{glyph:"├─"}, "Fr-223":{glyph:"└─", rejoin:"Ra-223"} },
-  // конец видимой части ряда (стабильный потомок, в каталоге его нет)
-  tail: { th232:"Pb-208", u238:"Pb-206", u235:"Pb-207" }
-};
-
-function chainEdges(c){
-  var ord = DB.chains[c].order, edges = {}, i, k;
-  var skip = (CHAIN_GRAPH.skip[c]||[]).map(function(p){ return p[0]+">"+p[1]; });
-  for (i=0; i<ord.length-1; i++){
-    k = ord[i]+">"+ord[i+1];
-    if (skip.indexOf(k)<0) (edges[ord[i]] = edges[ord[i]]||[]).push(ord[i+1]);
-  }
-  (CHAIN_GRAPH.add[c]||[]).forEach(function(p){
-    (edges[p[0]] = edges[p[0]]||[]).push(p[1]);
-  });
-  return edges;
-}
-function chainReach(c, from, without){
-  var edges = chainEdges(c), seen = {}, st = [from];
-  while (st.length){
-    var n = st.pop();
-    if (seen[n] || n===without) continue;
-    seen[n] = 1;
-    (edges[n]||[]).forEach(function(d){ st.push(d); });
-  }
-  delete seen[without];
-  return seen;
-}
+// ── вкладка «Цепочки»: справочник по рядам ──
 function chainMembersSelected(){
   var n = 0;
   Object.keys(DB.chains).forEach(function(c){
@@ -2037,95 +1985,7 @@ function chainMembersSelected(){
   });
   return n;
 }
-function chainApply(){ buildSelectors(); rebuildLines(); renderTable(); renderChains(); renderSum(); }
-
-function renderChains(){
-  var box = $("chainsBox"); if (!box) return;
-  $("chainsHint").textContent = T(
-    "Ряд показан деревом: развилки — с долями ветвления, газообразные члены помечены. "+
-    "«Отсюда» берёт член со всеми потомками; «✕» снимает всё, что питается только через него.",
-    "Each series is a tree: forks carry branching ratios, gaseous members are flagged. "+
-    "“From here” takes the member with all descendants; “✕” drops everything fed only through it.");
-  $("chainsFoot").innerHTML = T(
-    "Выбор поддерева предполагает вековое равновесие от выбранного родителя; линии дочерних "+
-    "собираются на шаге «Линии» как обычно. Доли ветвления — IAEA NDS (ENSDF). "+
-    "Корень ряда станет атрибутом набора после правок формата в BecqMoni.",
-    "Taking a subtree assumes secular equilibrium from the chosen parent; daughter lines are "+
-    "collected on the Lines step as usual. Branching ratios — IAEA NDS (ENSDF). "+
-    "The series root will become a set attribute once the BecqMoni format lands.");
-  box.innerHTML = "";
-  Object.keys(DB.chains).forEach(function(c){
-    var col = document.createElement("div"); col.className = "chainCol gbox";
-    var root = chainRootName(c);
-    var h = document.createElement("div"); h.className = "chainHead";
-    h.innerHTML = "<b>"+esc(chainTitle(c))+"</b><br>"+
-      '<span class="hl">'+T("корень ряда — ","series root — ")+"<b>"+esc(root)+"</b></span> "+
-      '<button class="mini" data-chain-all="'+c+'">'+T("весь ряд","whole series")+"</button> "+
-      '<button class="mini" data-chain-none="'+c+'">'+T("снять","clear")+"</button>";
-    col.appendChild(h);
-    DB.chains[c].order.forEach(function(m){
-      var e = DB.nuclides[m]; if (!e) return;
-      var b = CHAIN_GRAPH.branch[m] || null;
-      var brKey = null;
-      Object.keys(CHAIN_GRAPH.br).forEach(function(k){
-        if (k.split(">")[1]===m) brKey = k;
-      });
-      var row = document.createElement("div");
-      row.className = "chainRow"+(sel.nuc[m] ? " inset" : "")+
-        ((e.g.length+e.x.length)===0 ? " nolines" : "");
-      row.innerHTML =
-        '<span class="glyph">'+(b ? b.glyph : "│")+"</span>"+
-        '<input type="checkbox" data-chain-nuc="'+m+'" '+(sel.nuc[m]?"checked":"")+">"+
-        "<b>"+m+"</b>"+
-        (brKey ? '<span class="brb">'+CHAIN_GRAPH.br[brKey]+"</span>" : "")+
-        (m.indexOf("Rn-")===0 ? '<span class="gasb" title="'+
-          T("Радон покидает пробу — вековое равновесие ниже этой точки может быть нарушено",
-            "Radon escapes the sample — secular equilibrium below this point may be broken")+
-          '">'+T("газ","gas")+"</span>" : "")+
-        '<span class="hl">'+hlText(m)+
-          ' <span style="color:var(--accent)">γ'+e.g.length+"</span>"+
-          (e.x.length ? ' <span style="color:#8a3d72">X'+e.x.length+"</span>" : "")+"</span>"+
-        (b && b.rejoin ? '<span class="hl">→ '+b.rejoin+"</span>" : "")+
-        '<span class="chainAct">'+
-          '<a data-chain-from="'+c+"|"+m+'" title="'+
-            T("взять член ряда и всех его потомков","take the member and all descendants")+'">'+
-            T("отсюда","from here")+"</a> "+
-          '<a data-chain-cut="'+c+"|"+m+'" title="'+
-            T("снять член ряда и всё, что питается только через него",
-              "drop the member and everything fed only through it")+'">✕</a></span>';
-      col.appendChild(row);
-    });
-    var t = document.createElement("div"); t.className = "chainRow tail";
-    t.innerHTML = '<span class="glyph">└→</span><span class="hl">'+
-      esc(CHAIN_GRAPH.tail[c]||"")+" "+T("(стабилен, вне каталога)","(stable, outside the catalog)")+"</span>";
-    col.appendChild(t);
-    box.appendChild(col);
-  });
-}
-$("chainsBox").addEventListener("click", function(ev){
-  var t = ev.target.closest("[data-chain-all],[data-chain-none],[data-chain-from],[data-chain-cut]");
-  if (!t) return;
-  var v, c, m, keep;
-  if (t.dataset.chainAll){
-    DB.chains[t.dataset.chainAll].order.forEach(addNuc);
-  } else if (t.dataset.chainNone){
-    DB.chains[t.dataset.chainNone].order.forEach(delNuc);
-  } else if (t.dataset.chainFrom){
-    v = t.dataset.chainFrom.split("|"); c = v[0]; m = v[1];
-    var sub = chainReach(c, m); sub[m] = 1;
-    Object.keys(sub).forEach(addNuc);
-  } else if (t.dataset.chainCut){
-    v = t.dataset.chainCut.split("|"); c = v[0]; m = v[1];
-    keep = chainReach(c, chainRootName(c), m);
-    DB.chains[c].order.forEach(function(n){ if (!keep[n]) delNuc(n); });
-  }
-  chainApply();
-});
-$("chainsBox").addEventListener("change", function(ev){
-  var cb = ev.target.closest("input[data-chain-nuc]"); if (!cb) return;
-  if (cb.checked) addNuc(cb.dataset.chainNuc); else delNuc(cb.dataset.chainNuc);
-  chainApply();
-});
+function chainApply(){ buildSelectors(); rebuildLines(); renderTable(); renderSum(); }
 
 // ── «кто светит на этой энергии»: поиск соседей с равновесным весом ряда ──
 // По образцу таблицы эмиссий NUCLEIDE-LARA (LNHB): интенсивность члена ряда
