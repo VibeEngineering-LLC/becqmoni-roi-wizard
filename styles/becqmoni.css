@@ -97,12 +97,35 @@ button.exp{height:19px; min-width:24px; border-radius:0; font-size:11px}
 .chip{padding:1px 7px; border-radius:0}
 .chip.on{background:var(--sel); border-color:#7aa7ce; color:var(--accent-ink); font-weight:400}
 
-/* ── 4. Шаг 2: настройки ≤ ~300 px, таблица получает 20+ строк ───────── */
-.tabbody[data-body="2"] > .gbox,
-.tabbody[data-body="2"] > .cols2{flex:0 0 auto}
-.tabbody[data-body="2"] > .cols2 + .cols2{margin-top:5px}
-.tabbody[data-body="2"] .tblscroll{flex:1 1 auto; min-height:260px; margin-top:6px}
-.tabbody[data-body="2"] .gbox .hint{margin:2px 0 0}
+/* ── 4. Шаг 3 «Линии»: настройки ≤ ~300 px, таблица получает 20+ строк ── */
+.tabbody[data-body="3"] > .gbox,
+.tabbody[data-body="3"] > .cols2{flex:0 0 auto}
+.tabbody[data-body="3"] > .cols2 + .cols2{margin-top:5px}
+.tabbody[data-body="3"] .tblscroll{flex:1 1 auto; min-height:260px; margin-top:6px}
+.tabbody[data-body="3"] .gbox .hint{margin:2px 0 0}
+
+/* ── Шаг 2 «Цепочки»: три ряда колонками, дерево строками ── */
+.chainCols{display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap; margin-top:6px}
+.chainCol{flex:1 1 320px; min-width:300px; padding:6px 8px}
+.chainHead{margin-bottom:5px; line-height:1.5}
+.chainHead .mini{padding:0 7px; font-size:11px}
+.chainRow{display:flex; align-items:center; gap:5px; padding:1px 2px; line-height:1.7;
+  white-space:nowrap}
+.chainRow > b{flex:0 0 auto}
+.chainRow .brb{flex:0 0 auto}
+.chainRow.inset{background:var(--sel)}
+.chainRow.nolines > b{color:#999}
+.chainRow .glyph{width:20px; color:#9aa7b4; text-align:center; flex:0 0 auto;
+  font-family:Consolas,monospace}
+.chainRow .hl{margin-left:2px}
+.chainRow.tail{color:#9aa7b4}
+.chainAct{margin-left:auto; white-space:nowrap; visibility:hidden}
+.chainRow:hover .chainAct{visibility:visible}
+.chainAct a{cursor:pointer; color:var(--accent-ink); text-decoration:underline dotted; font-size:11px}
+.brb{background:#eef4e2; border:1px solid #b9cf8e; color:#4a6320; font-size:10.5px;
+  padding:0 5px; border-radius:2px}
+.gasb{background:#fdf2df; border:1px solid #e0bd7e; color:#7a5a17; font-size:10.5px;
+  padding:0 5px; border-radius:2px; cursor:help}
 /* длинные комбобоксы — по содержимому, но с потолком, чтобы не давить соседей */
 #iMode{width:auto !important; max-width:270px !important; min-width:0}
 #anchorSel{width:auto !important; max-width:300px !important; min-width:0}
@@ -159,8 +182,8 @@ tr.hovered{outline:1px solid var(--accent); outline-offset:-1px}
 .colorchips{gap:5px; margin-top:6px}
 .cchip{padding:1px 5px; border-radius:0; font-size:11.5px; gap:5px}
 .cchip input[type=color]{width:22px; height:18px}
-.tabbody[data-body="3"] > .gbox{flex:0 0 auto}
-.tabbody[data-body="3"] > details.doc{margin-top:8px}
+.tabbody[data-body="4"] > .gbox{flex:0 0 auto}
+.tabbody[data-body="4"] > details.doc{margin-top:8px}
 
 /* ── 8. Экспорт и сообщения ─────────────────────────────────────────── */
 pre{border-radius:0; font-size:11.5px; padding:5px 7px; max-height:260px}
@@ -182,6 +205,6 @@ pre{border-radius:0; font-size:11.5px; padding:5px 7px; max-height:260px}
   #mMode,#iMode{max-width:100% !important; flex:1 1 100%; min-width:0}
   .line{gap:3px 6px}
   .line > .hint{display:none}          /* пояснения — под «?», в узкой панели их нет */
-  .tabbody[data-body="2"] .tblscroll{min-height:180px}
+  .tabbody[data-body="3"] .tblscroll{min-height:180px}
   input[type=number],input[type=text],select{max-width:100%}
 }
